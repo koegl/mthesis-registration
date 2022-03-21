@@ -1,10 +1,12 @@
+# adapted from http://campar.in.tum.de/Main/LC2Code
+
 import numpy as np
 
 
 def lc2_similarity(img1 = None,img2 = None):
     # img1: one channel image of size n*m
     # img2: multi-channel image of size n*m*c
-    
+
     # get amount of pixels
     pixels_amount = img2.shape[0] * img2.shape[1]
 
