@@ -38,30 +38,24 @@ def lc2_similarity(us=None, mr=None):
     us_variance = np.var(us_non_zero)  # slightly different from matlab var
 
     # if the variance is 'significant'
-    if us_variance > 10 ** - 12:
-        if len(ids) > pixels_amount / 2:
-            # flatten and reshape img2
-            mr_and_grad_reshaped = np.reshape(mr, (pixels_amount, mr.shape[2]))
+    if us_variance > 10 ** - 12 and len(ids) > pixels_amount / 2:
+        # flatten and reshape img2
+        mr_and_grad_reshaped = np.reshape(mr_and_grad, (pixels_amount, mr_and_grad.shape[2]))
 
-            # concatenate with ones
-            ones = np.ones((pixels_amount, 1))
-            mr_and_grad_and_ones = np.concatenate((mr_and_grad_reshaped, ones), 1)
+        # concatenate with ones
+        ones = np.ones((pixels_amount, 1))
+        mr_and_grad_and_ones = np.concatenate((mr_and_grad_reshaped, ones), 1)
 
-            # get the pseudo-inverse of the array with only non-zero elements
-            mr_pseudo_inverse = np.linalg.pinv(mr_and_grad_and_ones[ids, :])
+        # get the pseudo-inverse of the array with only non-zero elements
+        mr_pseudo_inverse = np.linalg.pinv(mr_and_grad_and_ones[ids, :])
 
-            parameter = np.dot(mr_pseudo_inverse, us_non_zero)
+        parameter = np.dot(mr_pseudo_inverse, us_non_zero)
 
-            similarity = 1 - (np.var(us_non_zero - np.dot(mr_and_grad_and_ones[ids, :], parameter)) / us_variance)
-            weight = np.sqrt(us_variance)
+        similarity = 1 - (np.var(us_non_zero - np.dot(mr_and_grad_and_ones[ids, :], parameter)) / us_variance)
+        weight = np.sqrt(us_variance)
 
-            measure = weight * similarity
+        measure = weight * similarity
 
-        else:
-            similarity = 0
-            weight = 0
-            measure = 0
-    
     else:
         similarity = 0
         weight = 0
