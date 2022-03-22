@@ -80,7 +80,6 @@ def lc2_similarity_patch(img1, img2, patchsize=9):
     # half of the maximal size of the patch
     total_size = ((2*patchsize + 1)**2) / 2
 
-    sim = np.zeros(img1.shape)
     measure = np.zeros(img1.shape)
     weights = np.zeros(img1.shape)
 
@@ -109,9 +108,9 @@ def lc2_similarity_patch(img1, img2, patchsize=9):
                      ]
 
             # if a patch is bigger than half the maximal size of the patch calculate the similarity
-            # todo what happens with border pixels?
+            # patches that are too small (too close to the border get ignored)
             if patch1.size > total_size:
-                sim[x, y], measure[x, y], weights[x, y] = lc2_similarity(patch1, patch2)
+                _, measure[x, y], weights[x, y] = lc2_similarity(patch1, patch2)
 
     if sum(weights.flatten()) == 0:
         return 0
