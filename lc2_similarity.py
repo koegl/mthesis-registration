@@ -6,8 +6,8 @@ from scipy import ndimage
 
 def lc2_similarity(us=None, mr=None):
     """
-    Calculates the LC2 similarity between a US image and the corresponding MR images. The images have to be of equal
-    size. Based on  http://campar.in.tum.de/Main/LC2Code -> however, this implementation gives slightly different
+    Calculates the LC2 similarity between a 2D US image and the corresponding 2D MR image. The images have to be of
+    equal size. Based on  http://campar.in.tum.de/Main/LC2Code -> however, this implementation gives slightly different
     results, because the matlab gradient() function gives different results than the scipy sobel() function.
     :param us: The US image (one channel image of size n*m)
     :param mr: The MR image (one channel image of size n*m)
