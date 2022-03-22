@@ -13,8 +13,8 @@ def lc2_similarity(us=None, mr=None):
     :param mr: The MR image (one channel image of size n*m)
     :return: similarity, measure, weight
     """
-    # todo update documentation
-    # todo add asserts for sizes of images
+    if us.shape != mr.shape:
+        raise ValueError("US and MR images have different dimensions! (they have to be equal)")
 
     shape = us.shape
 
