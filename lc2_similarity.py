@@ -10,14 +10,16 @@ def lc2_similarity(img1 = None,img2 = None):
     # get amount of pixels
     pixels_amount = img2.shape[0] * img2.shape[1]
 
-    # find indices of non-zero elements
-    ids = np.flatnonzero(img1)
+    # find indices of elements > 0 elements
+    buf = img1.copy()
+    buf[buf < 0] = 0  # change negatives to zero
+    ids = np.flatnonzero(buf)
 
     # get non-zero elements in a flat array
     img1_non_zero = img1.flatten()[ids]
 
     # get variance of non-zero elements
-    v1 = np.var(img1_non_zero)
+    v1 = np.var(img1_non_zero)  # slightly different from matlab var
 
     # if the variance is 'significant'
     if v1 > 10 ** - 12:
