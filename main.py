@@ -2,7 +2,7 @@ from lc2_similarity import lc2_similarity
 
 import numpy as np
 from PIL import Image
-import cv2
+import argparse
 from scipy import ndimage
 import matplotlib.pyplot as plt
 import pickle
@@ -13,11 +13,11 @@ def plot(array):
     plt.show()
 
 
-def main():
+def main(params):
     # load images
-    mr = Image.open("/Users/fryderykkogl/Documents/university/master/thesis/code/mthesis-registration/misc/test_mr.png")
+    mr = Image.open(params.mr_path)
     mr = np.asarray(mr).astype('float64') / 255
-    us = Image.open("/Users/fryderykkogl/Documents/university/master/thesis/code/mthesis-registration/misc/test_us.png")
+    us = Image.open(params.ultrasound_path)
     us = np.asarray(us).astype('float64') / 255
 
     # create a combined image of the MR and MR-gradient
@@ -31,4 +31,15 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+
+    current_directory = pathlib.Path(__file__).parent.resolve()
+
+    parser.add_argument("-up", "--ultrasound_path", default=os.path.join(current_directory, "misc/test_us.png"),
+                        help="Path to the Ultrasound image")
+    parser.add_argument("-mp", "--mr_path", default=os.path.join(current_directory, "misc/test_mr.png"),
+                        help="Path to the MR image")
+
+    args = parser.parse_args()
+
+    main(args)
