@@ -2,23 +2,18 @@ import numpy as np
 from utils import set_up_progressbar
 
 
-def lc2_similarity(us, mr):
+def lc2_similarity(us, mr_and_grad):
     """
-    Calculates the LC2 similarity between a 2D US image and the corresponding 2D MR image. The images have to be of
+    Calculates the LC2 similarity between a 2D US image and the corresponding 2D MR+grad image. The images have to be of
     equal size. Based on  http://campar.in.tum.de/Main/LC2Code (LC2Similarity)
     :param us: The US image (one channel image of size n*m)
-    :param mr: The MR image (one channel image of size n*m)
+    :param mr_and_grad: The MR+grad image (c channel image of size n*m*c)
     :return: similarity, measure, weight
     """
-    if us.shape != mr.shape:
+    if us.shape != mr_and_grad.shape[0:2]:
         raise ValueError("US and MR images have different dimensions! (they have to be equal)")
 
     shape = us.shape
-
-    # create an MR+gradient matrix
-    mr_and_grad = np.zeros((shape[0], shape[1], 2))
-    mr_and_grad[:, :, 0] = mr
-    mr_and_grad[:, :, 1] = np.absolute(np.gradient(mr, axis=1))
 
     # get amount of pixels
     pixels_amount = shape[0] * shape[1]
