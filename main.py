@@ -1,11 +1,12 @@
+import os.path
+
 from lc2_similarity import lc2_similarity
 
 import numpy as np
 from PIL import Image
 import argparse
-from scipy import ndimage
 import matplotlib.pyplot as plt
-import pickle
+import pathlib
 
 
 def plot(array):
@@ -20,12 +21,7 @@ def main(params):
     us = Image.open(params.ultrasound_path)
     us = np.asarray(us).astype('float64') / 255
 
-    # create a combined image of the MR and MR-gradient
-    mr_and_grad = np.zeros((us.shape[0], us.shape[1], 2))
-    mr_and_grad[:, :, 0] = mr
-    mr_and_grad[:, :, 1] = np.absolute(ndimage.sobel(mr, axis=1))  # matlab gradient is a bit different
-
-    similarity, measure, weight = lc2_similarity(us, mr_and_grad)
+    similarity, measure, weight = lc2_similarity(us, mr)
 
     print(f"{similarity=}\n{measure=},\n{weight=}")
 
