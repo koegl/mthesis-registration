@@ -1,17 +1,12 @@
 import os.path
 
 from lc2_similarity import lc2_similarity
+from utils import plot
 
 import numpy as np
 from PIL import Image
 import argparse
-import matplotlib.pyplot as plt
 import pathlib
-
-
-def plot(array):
-    plt.imshow(array)
-    plt.show()
 
 
 def main(params):
