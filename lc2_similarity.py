@@ -1,4 +1,5 @@
 import numpy as np
+from utils import set_up_progressbar
 
 
 def lc2_similarity(us, mr):
@@ -88,9 +89,17 @@ def lc2_similarity_patch(img1, img2, patchsize=9):
     measure = np.zeros(img1.shape)
     weights = np.zeros(img1.shape)
 
+    # set up progressbar
+    progress_bar = set_up_progressbar(max_x * max_y)
+    counter = 1
+    progress_bar.start()
+
     # loop through all pixels
     for y in range(max_y):
         for x in range(max_x):
+
+            progress_bar.update(counter)
+            counter += 1
 
             # extract patches from us and mr+grad
             patch1 = img1[
