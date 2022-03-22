@@ -1,6 +1,6 @@
 import os.path
 
-from lc2_similarity import lc2_similarity
+from lc2_similarity import lc2_similarity_patch
 
 import numpy as np
 from PIL import Image
@@ -15,9 +15,9 @@ def main(params):
     us = Image.open(params.ultrasound_path)
     us = np.asarray(us).astype('float64') / 255
 
-    similarity, measure, weight = lc2_similarity(us, mr)
+    similarity = lc2_similarity_patch(us, mr, params.patch_size)
 
-    print(f"{similarity=}\n{measure=},\n{weight=}")
+    print(f"{similarity=}")
 
 
 if __name__ == "__main__":
@@ -29,6 +29,7 @@ if __name__ == "__main__":
                         help="Path to the Ultrasound image")
     parser.add_argument("-mp", "--mr_path", default=os.path.join(current_directory, "misc/test_mr.png"),
                         help="Path to the MR image")
+    parser.add_argument("-ps", "--patch_size", default=9, help="The patch size for calculating LC2")
 
     args = parser.parse_args()
 
