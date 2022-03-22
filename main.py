@@ -1,7 +1,6 @@
 import os.path
 
 from lc2_similarity import lc2_similarity
-from utils import plot
 
 import numpy as np
 from PIL import Image
