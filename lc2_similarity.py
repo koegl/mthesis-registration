@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def lc2_similarity(us=None, mr=None):
+def lc2_similarity(us, mr):
     """
     Calculates the LC2 similarity between a 2D US image and the corresponding 2D MR image. The images have to be of
     equal size. Based on  http://campar.in.tum.de/Main/LC2Code (LC2Similarity)
