@@ -1,43 +1,58 @@
 # adapted from http://campar.in.tum.de/Main/LC2Code
 
 import numpy as np
+from scipy import ndimage
 
 
-def lc2_similarity(img1 = None,img2 = None):
-    # img1: one channel image of size n*m
-    # img2: multi-channel image of size n*m*c
+def lc2_similarity(us=None, mr=None):
+    """
+    Calculates the LC2 similarity between a US image and the corresponding MR images. The images have to be of equal
+    size
+    :param us: The US image (one channel image of size n*m)
+    :param mr: The MR image (one channel image of size n*m)
+    :return: similarity, measure, weight
+    """
+    # todo update documentation
+    # todo add asserts for sizes of images
+
+    shape = us.shape
+
+    # create an MR+gradient matrix
+    mr_and_grad = np.zeros((shape[0], shape[1], 2))
+    mr_and_grad[:, :, 0] = mr
+    mr_and_grad[:, :, 1] = np.absolute(ndimage.sobel(mr, axis=1))  # matlab gradient is a bit different
 
     # get amount of pixels
-    pixels_amount = img2.shape[0] * img2.shape[1]
+    pixels_amount = shape[0] * shape[1]
 
-    # find indices of elements > 0 elements
-    buf = img1.copy()
+    # find indices of elements > 0
+    buf = us.copy()
     buf[buf < 0] = 0  # change negatives to zero
     ids = np.flatnonzero(buf)
 
     # get non-zero elements in a flat array
-    img1_non_zero = img1.flatten()[ids]
+    us_non_zero = us.flatten()[ids]
 
     # get variance of non-zero elements
-    v1 = np.var(img1_non_zero)  # slightly different from matlab var
+    us_variance = np.var(us_non_zero)  # slightly different from matlab var
 
     # if the variance is 'significant'
-    if v1 > 10 ** - 12:
+    if us_variance > 10 ** - 12:
         if len(ids) > pixels_amount / 2:
             # flatten and reshape img2
-            img2_flat_reshape = np.reshape(img2, (pixels_amount, img2.shape[2]))
+            mr_and_grad_reshaped = np.reshape(mr, (pixels_amount, mr.shape[2]))
 
             # concatenate with ones
             ones = np.ones((pixels_amount, 1))
-            img2r = np.concatenate((img2_flat_reshape, ones), 1)
+            mr_and_grad_and_ones = np.concatenate((mr_and_grad_reshaped, ones), 1)
 
             # get the pseudo-inverse of the array with only non-zero elements
-            pimg2r = np.linalg.pinv(img2r[ids, :])
+            mr_pseudo_inverse = np.linalg.pinv(mr_and_grad_and_ones[ids, :])
 
-            parameter = np.dot(pimg2r, img1_non_zero)
+            parameter = np.dot(mr_pseudo_inverse, us_non_zero)
 
-            similarity = 1 - (np.var(img1_non_zero - np.dot(img2r[ids, :], parameter)) / v1)
-            weight = np.sqrt(v1)
+            similarity = 1 - (np.var(us_non_zero - np.dot(mr_and_grad_and_ones[ids, :], parameter)) / us_variance)
+            weight = np.sqrt(us_variance)
 
             measure = weight * similarity
 
