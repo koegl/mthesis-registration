@@ -1,4 +1,4 @@
-# Python implementation of the LC2 method [1,2]
+# Python + Tensorflow (GPU) implementation of the LC2 method [1,2]
 
 [1] Wein, W., Ladikos, A., Fuerst, B., Shah, A., Sharma, K., & Navab, N. (2013). Global Registration of Ultrasound to 
 MRI Using the LC2 Metric for Enabling Neurosurgical Guidance. In Advanced Information Systems Engineering (pp. 34-41). 
