@@ -17,7 +17,7 @@ def main(params):
 
     similarity = lc2_similarity_patch(us, mr, params.patch_size)
 
-    print(f"{similarity=}")
+    print(f"Similarity = {similarity}")
 
 
 if __name__ == "__main__":
