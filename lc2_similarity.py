@@ -97,13 +97,13 @@ def lc2_similarity_patch(img1, img2, patchsize=9):
 
             # extract patches from us and mr+grad
             patch1 = img1[
-                            max(1, x-patchsize):min(max_x, x+patchsize),
-                            max(1, y-patchsize):min(max_y, y+patchsize)
+                            max(0, x-patchsize):min(max_x, x+patchsize),
+                            max(0, y-patchsize):min(max_y, y+patchsize)
                      ]
 
             patch2 = img2[
-                            max(1, x-patchsize):min(max_x, x+patchsize),
-                            max(1, y-patchsize):min(max_y, y+patchsize),
+                            max(0, x-patchsize):min(max_x, x+patchsize),
+                            max(0, y-patchsize):min(max_y, y+patchsize),
                             :
                      ]
 
