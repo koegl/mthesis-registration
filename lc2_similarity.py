@@ -1,5 +1,7 @@
 import numpy as np
-from utils import set_up_progressbar
+from joblib import Parallel, delayed
+import multiprocessing
+import sys
 
 
 def lc2_similarity(us, mr_and_grad):
@@ -56,6 +58,40 @@ def lc2_similarity(us, mr_and_grad):
     return similarity, measure, weight
 
 
+def inner_loop(y, max_y, max_x, img1, img2, patchsize, total_size):
+    """
+    The inner loop of the double for loop in lc2_similarity_patch
+    """
+    b = "\033[1;31;31mProgress: " + str(y) + " / " + str(max_y)
+    sys.stdout.write('\r' + b)
+
+    measure_list = []
+    weights_list = []
+
+    for x in range(max_x):
+
+        # extract patches from us and mr+grad
+        patch1 = img1[
+                 max(1, x - patchsize):min(max_x, x + patchsize),
+                 max(1, y - patchsize):min(max_y, y + patchsize)
+                 ]
+
+        patch2 = img2[
+                 max(1, x - patchsize):min(max_x, x + patchsize),
+                 max(1, y - patchsize):min(max_y, y + patchsize),
+                 :
+                 ]
+
+        # if a patch is bigger than half the maximal size of the patch calculate the similarity
+        # patches that are too small (too close to the border get ignored)
+        if patch1.size > total_size:
+            _, measure, weights = lc2_similarity(patch1, patch2)
+            measure_list.append(measure)
+            weights_list.append(weights)
+
+    return sum(measure_list), sum(weights_list)
+
+
 def lc2_similarity_patch(img1, img2, patchsize=9):
     """
     Calculates the LC2 similarity patch-wise between a 2D US image and the corresponding 2D MR image. The images have to
@@ -80,41 +116,18 @@ def lc2_similarity_patch(img1, img2, patchsize=9):
     # half of the maximal size of the patch
     total_size = ((2*patchsize + 1)**2) / 2
 
-    measure = np.zeros(img1.shape)
-    weights = np.zeros(img1.shape)
-
-    # set up progressbar
-    progress_bar = set_up_progressbar(max_x * max_y)
-    counter = 1
-    progress_bar.start()
-
     # loop through all pixels
-    for y in range(max_y):
-        for x in range(max_x):
+    num_cores = multiprocessing.cpu_count()
+    return_list = Parallel(n_jobs=num_cores)(delayed(inner_loop)(i, max_y, max_x, img1, img2, patchsize, total_size)
+                                             for i in range(max_y))
 
-            progress_bar.update(counter)
-            counter += 1
+    measure_sum = 0
+    weights_sum = 0
 
-            # extract patches from us and mr+grad
-            patch1 = img1[
-                            max(1, x-patchsize):min(max_x, x+patchsize),
-                            max(1, y-patchsize):min(max_y, y+patchsize)
-                     ]
+    for elem in return_list:
+        measure_sum += elem[0]
+        weights_sum += elem[1]
 
-            patch2 = img2[
-                            max(1, x-patchsize):min(max_x, x+patchsize),
-                            max(1, y-patchsize):min(max_y, y+patchsize),
-                            :
-                     ]
-
-            # if a patch is bigger than half the maximal size of the patch calculate the similarity
-            # patches that are too small (too close to the border get ignored)
-            if patch1.size > total_size:
-                _, measure[x, y], weights[x, y] = lc2_similarity(patch1, patch2)
-
-    if sum(weights.flatten()) == 0:
-        return 0
-
-    similarity = sum(measure.flatten()) / sum(weights.flatten())
+    similarity = measure_sum / weights_sum
 
     return similarity
