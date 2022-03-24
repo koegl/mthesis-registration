@@ -44,12 +44,16 @@ def plot_images(x, y):
     # Display the two images.
     plot1.imshow(x, cmap=plt.cm.gray)
     plot1.axis('off')
+    plot1.set_title("Fixed image")
+
     plot2.imshow(y, cmap=plt.cm.gray)
     plot2.axis('off')
+    plot2.set_title("Moving image")
 
     # Computing the difference of the two images and display it.
     diff = x - y
     plot3.imshow(diff, cmap=plt.cm.gray)
     plot3.axis('off')
+    plot3.set_title("Image difference")
 
     plt.show()
