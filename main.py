@@ -6,6 +6,7 @@ import numpy as np
 from PIL import Image
 import argparse
 import pathlib
+import time
 
 
 def main(params):
@@ -15,9 +16,12 @@ def main(params):
     us = Image.open(params.ultrasound_path)
     us = np.asarray(us).astype('float64') / 255
 
+    start_time_parallel = time.time()
     similarity = lc2_similarity_patch(us, mr, params.patch_size)
+    compute_time = time.time() - start_time_parallel
 
-    print(f"Similarity = {similarity}")
+    print(f"\033[0;0m\n{similarity=}"
+          f"\n{compute_time=}")
 
 
 if __name__ == "__main__":
