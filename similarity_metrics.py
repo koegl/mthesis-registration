@@ -154,6 +154,9 @@ def lc2(img1, img2, patchsize=9):
         measure_sum += elem[0]
         weights_sum += elem[1]
 
+    if weights_sum == 0:
+        return measure_sum
+
     similarity = measure_sum / weights_sum
 
     return similarity
