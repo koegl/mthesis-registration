@@ -29,3 +29,27 @@ def plot(array, cmap=None):
     """
     plt.imshow(array, cmap=cmap)
     plt.show()
+
+
+def plot_images(x, y):
+    """
+    Display two images and their difference
+    :param x: first image
+    :param y: second image
+    """
+
+    # Creating a figure with subplots of a certain size.
+    fig, (plot1, plot2, plot3) = plt.subplots(1, 3, figsize=(10, 3))
+
+    # Display the two images.
+    plot1.imshow(x, cmap=plt.cm.gray)
+    plot1.axis('off')
+    plot2.imshow(y, cmap=plt.cm.gray)
+    plot2.axis('off')
+
+    # Computing the difference of the two images and display it.
+    diff = x - y
+    plot3.imshow(diff, cmap=plt.cm.gray)
+    plot3.axis('off')
+
+    plt.show()

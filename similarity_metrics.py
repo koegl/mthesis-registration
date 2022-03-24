@@ -4,6 +4,32 @@ import multiprocessing
 import sys
 
 
+def mi(x, y):
+    """
+    Computes the mutual information between the given matrices
+    :param x: first image
+    :param y: second image
+    :return: mutual information
+    """
+
+    # compute joint histogram
+    jh = np.histogram2d(x.ravel(), y.ravel())[0]
+    jh = jh + np.finfo(float).eps # add eps for stability
+
+    # Normalize.
+    sh = np.sum(jh)
+    jh /= sh
+
+    # get individual distributions
+    s1 = np.sum(jh, axis=0, keepdims=True)
+    s2 = np.sum(jh, axis=1, keepdims=True)
+
+    # Compute MI
+    mi_result = np.sum(-s1 * np.log2(s1)) + np.sum(-s2 * np.log2(s2)) - np.sum(-jh * np.log2(jh))
+
+    return mi_result
+
+
 def lc2_similarity(us, mr_and_grad):
     """
     Calculates the LC2 similarity between a 2D US image and the corresponding 2D MR+grad image. The images have to be of
@@ -58,7 +84,7 @@ def lc2_similarity(us, mr_and_grad):
     return similarity, measure, weight
 
 
-def inner_loop(y, max_y, max_x, img1, img2, patchsize, total_size):
+def lc2_inner_loop(y, max_y, max_x, img1, img2, patchsize, total_size):
     """
     The inner loop of the double for loop in lc2_similarity_patch
     """
@@ -72,13 +98,13 @@ def inner_loop(y, max_y, max_x, img1, img2, patchsize, total_size):
 
         # extract patches from us and mr+grad
         patch1 = img1[
-                 max(1, x - patchsize):min(max_x, x + patchsize),
-                 max(1, y - patchsize):min(max_y, y + patchsize)
+                 max(0, x - patchsize):min(max_x, x + patchsize),
+                 max(0, y - patchsize):min(max_y, y + patchsize)
                  ]
 
         patch2 = img2[
-                 max(1, x - patchsize):min(max_x, x + patchsize),
-                 max(1, y - patchsize):min(max_y, y + patchsize),
+                 max(0, x - patchsize):min(max_x, x + patchsize),
+                 max(0, y - patchsize):min(max_y, y + patchsize),
                  :
                  ]
 
@@ -92,7 +118,7 @@ def inner_loop(y, max_y, max_x, img1, img2, patchsize, total_size):
     return sum(measure_list), sum(weights_list)
 
 
-def lc2_similarity_patch(img1, img2, patchsize=9):
+def lc2(img1, img2, patchsize=9):
     """
     Calculates the LC2 similarity patch-wise between a 2D US image and the corresponding 2D MR image. The images have to
     be of equal size. Based on http://campar.in.tum.de/Main/LC2Code (LC2SimilarityPatch)
@@ -118,7 +144,7 @@ def lc2_similarity_patch(img1, img2, patchsize=9):
 
     # loop through all pixels
     num_cores = multiprocessing.cpu_count()
-    return_list = Parallel(n_jobs=num_cores)(delayed(inner_loop)(i, max_y, max_x, img1, img2, patchsize, total_size)
+    return_list = Parallel(n_jobs=num_cores)(delayed(lc2_inner_loop)(i, max_y, max_x, img1, img2, patchsize, total_size)
                                              for i in range(max_y))
 
     measure_sum = 0
