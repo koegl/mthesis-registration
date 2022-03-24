@@ -1,6 +1,6 @@
 import os.path
 import tensorflow as tf
-from lc2_similarity import lc2_similarity_patch
+from lc2_similarity_tf import lc2_similarity_patch_tf
 
 import numpy as np
 from PIL import Image
@@ -17,7 +17,7 @@ def main(params):
     us = np.asarray(us).astype('float64') / 255
     us = tf.convert_to_tensor(us)
 
-    similarity = lc2_similarity_patch(us, mr, params.patch_size)
+    similarity = lc2_similarity_patch_tf(us, mr, params.patch_size)
 
     print(f"{similarity=}")
 
