@@ -20,8 +20,9 @@ def main(params):
     similarity = lc2_similarity_patch(us, mr, params.patch_size)
     compute_time = time.time() - start_time_parallel
 
-    print(f"\033[0;0m\n{similarity=}"
-          f"\n{compute_time=}")
+    print("\033[0;0m\n")
+    print("Similarity = {}\n"
+          "Compute time = {}".format(similarity, compute_time))
 
 
 if __name__ == "__main__":
