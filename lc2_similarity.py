@@ -1,5 +1,4 @@
 import numpy as np
-import tensorflow as tf
 from utils import set_up_progressbar
 
 
@@ -20,31 +19,32 @@ def lc2_similarity(us, mr_and_grad):
     pixels_amount = shape[0] * shape[1]
 
     # find indices of elements > 0
-    mask = tf.greater(us, 0)
-    us_non_zero = tf.boolean_mask(us, mask)
+    buf = us.copy()
+    buf[buf < 0] = 0  # change negatives to zero
+    ids = np.flatnonzero(buf)
 
     # get non-zero elements in a flat array
+    us_non_zero = us.flatten()[ids]
 
     # get variance of non-zero elements
-    _, us_variance = tf.nn.moments(tf.reshape(us_non_zero, [-1]))  # slightly different from matlab var
+    us_variance = np.var(us_non_zero)  # slightly different from matlab var
 
     # if the variance is 'significant'
-    if us_variance > 10 ** - 12 and len(us_non_zero) > pixels_amount / 2:
+    if us_variance > 10 ** - 12 and len(ids) > pixels_amount / 2:
         # flatten and reshape img2
-        mr_and_grad_reshaped = tf.reshape(mr_and_grad, (pixels_amount, mr_and_grad.shape[2]))
+        mr_and_grad_reshaped = np.reshape(mr_and_grad, (pixels_amount, mr_and_grad.shape[2]))
 
         # concatenate with ones
-        ones = tf.ones((pixels_amount, 1))
-        mr_and_grad_and_ones = tf.stack([mr_and_grad_reshaped, ones])
+        ones = np.ones((pixels_amount, 1))
+        mr_and_grad_and_ones = np.concatenate((mr_and_grad_reshaped, ones), 1)
 
         # get the pseudo-inverse of the array with only non-zero elements
-        mr_pseudo_inverse = tf.linalg.pinv(mr_and_grad_and_ones[ids, :])
+        mr_pseudo_inverse = np.linalg.pinv(mr_and_grad_and_ones[ids, :])
 
-        parameter = tf.multiply(mr_pseudo_inverse, us_non_zero)
+        parameter = np.dot(mr_pseudo_inverse, us_non_zero)
 
-        buf_var = tf.nn.moments(us_non_zero - np.dot(mr_and_grad_and_ones[ids, :], parameter))
-        similarity = 1 - (buf_var / us_variance)
-        weight = tf.sqrt(us_variance)
+        similarity = 1 - (np.var(us_non_zero - np.dot(mr_and_grad_and_ones[ids, :], parameter)) / us_variance)
+        weight = np.sqrt(us_variance)
 
         measure = weight * similarity
 
@@ -67,12 +67,10 @@ def lc2_similarity_patch(img1, img2, patchsize=9):
     """
     # calculate gradient of MR
     # create an MR+gradient matrix
-    # mr_and_grad = tf.zeros((img1.shape[0], img1.shape[1], 2))
+    mr_and_grad = np.zeros((img1.shape[0], img1.shape[1], 2))
+    mr_and_grad[:, :, 0] = img2
+    mr_and_grad[:, :, 1] = np.absolute(np.gradient(img2, axis=1))
 
-    buf0 = img2
-    buf1 = tf.math.abs(tf.image.image_gradients(tf.expand_dims(tf.expand_dims(img2, axis=0), axis=0)))  # , axis=1))
-    buf1 = tf.squeeze(buf1[0, :, :, :])
-    mr_and_grad = tf.stack([buf0, buf1], axis=2)
     img2 = mr_and_grad
 
     # set parameters
@@ -82,8 +80,8 @@ def lc2_similarity_patch(img1, img2, patchsize=9):
     # half of the maximal size of the patch
     total_size = ((2*patchsize + 1)**2) / 2
 
-    measure = tf.zeros(img1.shape)
-    weights = tf.zeros(img1.shape)
+    measure = np.zeros(img1.shape)
+    weights = np.zeros(img1.shape)
 
     # set up progressbar
     progress_bar = set_up_progressbar(max_x * max_y)
@@ -111,7 +109,7 @@ def lc2_similarity_patch(img1, img2, patchsize=9):
 
             # if a patch is bigger than half the maximal size of the patch calculate the similarity
             # patches that are too small (too close to the border get ignored)
-            if patch1.shape[0] * patch1.shape[1] > total_size:
+            if patch1.size > total_size:
                 _, measure[x, y], weights[x, y] = lc2_similarity(patch1, patch2)
 
     if sum(weights.flatten()) == 0:
