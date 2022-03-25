@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import progressbar
+import cv2
 
 
 def set_up_progressbar(max_value):
