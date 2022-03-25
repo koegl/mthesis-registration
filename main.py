@@ -20,11 +20,11 @@ def main(params):
     us = np.asarray(us).astype('float64') / 255
 
     # this initial transformation is important - changing it too much will lead the optimiser into a local minimum
-    initial_transform = [30, -1, 1]
+    initial_transform = [1, 20, 1]
 
     start_time = time.time()
     # you can use two metrics: lc2 and mi (mutual information)
-    optimisation_result = pybobyqa.solve(rigid_transformation_cost_function, initial_transform, args=(mr, us, "lc2"))
+    optimisation_result = pybobyqa.solve(rigid_transformation_cost_function, initial_transform, args=(us, mr, "mi"))
     result_parameters_pybobyqa = optimisation_result.x
     compute_time_pybobyqa = time.time() - start_time
 
@@ -44,9 +44,9 @@ if __name__ == "__main__":
 
     current_directory = pathlib.Path(__file__).parent.resolve()
 
-    parser.add_argument("-up", "--ultrasound_path", default=os.path.join(current_directory, "misc/sq_rot_big.png"),
+    parser.add_argument("-up", "--ultrasound_path", default=os.path.join(current_directory, "misc/sq_rot_small.png"),
                         help="Path to the Ultrasound image")
-    parser.add_argument("-mp", "--mr_path", default=os.path.join(current_directory, "misc/sq_normal.png"),
+    parser.add_argument("-mp", "--mr_path", default=os.path.join(current_directory, "misc/full_mr_256.png"),
                         help="Path to the MR image")
     parser.add_argument("-ps", "--patch_size", default=9, help="The patch size for calculating LC2")
 
