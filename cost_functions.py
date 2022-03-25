@@ -4,8 +4,6 @@ import numpy as np
 from similarity_metrics import compute_similarity_metric ,ssd, ncc, mi, lc2
 from image_manipulation import rigid_transform, affine_transform
 
-# todo make one cost function that determines if it's affine or rigid based on the parameters/transform matrix
-
 
 def rigid_transformation_cost_function(transform_parameters, fixed_image, moving_image, similarity="lc2"):
     """
@@ -29,7 +27,7 @@ def rigid_transformation_cost_function(transform_parameters, fixed_image, moving
     # compute the similarity value
     s = compute_similarity_metric(transformed_moving_image, fixed_image, similarity)
 
-    return s
+    return s, transformed_moving_image
 
 
 def affine_transformation_cost_function(transform_parameters, fixed_image, moving_image, similarity="lc2"):
@@ -56,7 +54,7 @@ def affine_transformation_cost_function(transform_parameters, fixed_image, movin
     # compute the similarity value
     s = compute_similarity_metric(transformed_moving_image, fixed_image, similarity)
 
-    return s
+    return s, transformed_moving_image
 
 
 def perspective_transformation_cost_function(transform_parameters, fixed_image, moving_image, similarity="lc2"):
@@ -81,10 +79,10 @@ def perspective_transformation_cost_function(transform_parameters, fixed_image, 
     # compute the similarity value
     s = compute_similarity_metric(transformed_moving_image, fixed_image, similarity)
 
-    return s
+    return s, transformed_moving_image
 
 
-def cost_function(transform_parameters, fixed_image, moving_image, similarity="ssd"):
+def cost_function(transform_parameters, fixed_image, moving_image, similarity="ssd", symmetry=False):
     """
     Cost function for several transformation types.
     Computes a similarity measure between the given images using the given similarity metric
@@ -92,16 +90,89 @@ def cost_function(transform_parameters, fixed_image, moving_image, similarity="s
     :param fixed_image: the reference image
     :param moving_image: the image which will be transformed to match the reference image
     :param similarity: the name of the similarity metric
+    :param symmetry: Regularisation to enforce symmetry
     :return: the computed similarity metric
     """
 
     if len(transform_parameters) == 3:  # rotate + translate
-        s = rigid_transformation_cost_function(transform_parameters, fixed_image, moving_image, similarity)
+        s, transformed = rigid_transformation_cost_function(transform_parameters, fixed_image, moving_image, similarity)
     elif len(transform_parameters) == 5:  # scale + rotate + translate
-        s = affine_transformation_cost_function(transform_parameters, fixed_image, moving_image, similarity)
+        s, transformed = affine_transformation_cost_function(transform_parameters, fixed_image, moving_image, similarity)
     elif len(transform_parameters) == 9:  # scale + rotate + translate + skew
-        s = perspective_transformation_cost_function(transform_parameters, fixed_image, moving_image, similarity)
+        s, transformed = perspective_transformation_cost_function(transform_parameters, fixed_image, moving_image, similarity)
     else:
         raise NotImplementedError("Wrong number of transformation parameters in cost_function()")
 
+    if symmetry:
+        reg_val = symmetry_regulariser(transformed, 3)
+        s *= reg_val
+
     return s
+
+
+def extract_mask(mask):
+    """
+    crops the image so that it only contains the mask
+    :param mask: the mask to crop
+    :return: cropped mask
+    """
+
+    x, y = mask.shape
+    x_left = 0
+    x_right = x + 0
+    y_top = 0
+    y_bottom = y + 0
+
+    # new left index
+    for i in range(x):
+        if np.sum(mask[i, :]) > 0:
+            x_left = i - 1
+            break
+
+    # new right index
+    for i in reversed(range(x)):
+        if np.sum(mask[i, :]) > 0:
+            x_right = i + 1
+            break
+
+    # new top index
+    for i in range(y):
+        if np.sum(mask[:, i]) > 0:
+            y_top = i - 1
+            break
+
+    # new bottom index
+    for i in reversed(range(y)):
+        if np.sum(mask[:, i]) > 0:
+            y_bottom = i + 1
+            break
+
+    new_mask = mask[x_left:x_right, y_top:y_bottom]
+
+    return new_mask
+
+
+def symmetry_regulariser(image, reg=1.5):
+    """
+    Checks if an image is qpproximately symmetric. if Yes it returns True.
+    :param image: The image
+    :param reg: regulariser factor by which the similarity metric will be multiplied
+    :return: 1 if symmetric, 1.5 otherwise
+    """
+
+    mask = extract_mask(image)
+
+    if mask.shape[1] % 2 == 0:
+        left = mask[:, :int(mask.shape[1]/2)]
+    else:
+        left = mask[:, :int(mask.shape[1]/2)+1]
+    right = mask[:, int(mask.shape[1]/2):]
+
+    right_flip = cv2.flip(right, 1)
+
+    diff = np.abs(right_flip - left)
+
+    if np.sum(diff) < 480000:
+        return 1.0
+
+    return reg
