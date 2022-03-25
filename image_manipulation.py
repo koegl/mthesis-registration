@@ -13,7 +13,7 @@ def translate_image(image, dx, dy):
 
     cols, rows = image.shape
 
-    # create the transformation matrix (3x3)
+    # create the transformation matrix (2x3)
     transform = np.float32([[1, 0, dx], [0, 1, dy]])
 
     return cv2.warpAffine(image, transform, (cols, rows))
