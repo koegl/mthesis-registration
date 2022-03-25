@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 import progressbar
 
 
@@ -57,3 +58,60 @@ def plot_images(x, y):
     plot3.set_title("Image difference")
 
     plt.show()
+
+
+def pad_smaller_image(im1, im2):
+    """
+    Function to pad two images so that they have the same size
+    :param im1: image 1
+    :param im2: image 2
+    :return: im1, im2 (one is padded)
+    """
+
+    if len(im1.shape) != 2 or len(im2.shape) != 2:
+        raise ValueError("Images must be 2D")
+
+    if im1.shape == im2.shape:
+        return im1, im2
+
+    # x padding
+    if im1.shape[0] < im2.shape[0]:
+        smaller = im1
+        bigger = im2
+    else:
+        smaller = im2
+        bigger = im1
+
+    dx = abs(im1.shape[0] - im2.shape[0])
+    y = smaller.shape[1]
+    zeros = np.zeros((dx, y))
+
+    smaller = np.concatenate((smaller, zeros), 0)
+
+    im1 = smaller
+    im2 = bigger
+
+    if im1.shape == im2.shape:
+        return im1, im2
+
+    # y padding
+    if im1.shape[1] < im2.shape[1]:
+        smaller = im1
+        bigger = im2
+    else:
+        smaller = im2
+        bigger = im1
+
+    dy = abs(im1.shape[1] - im2.shape[1])
+    x = smaller.shape[0]
+    zeros = np.zeros((x, dy))
+
+    smaller = np.concatenate((smaller, zeros), 1)
+
+    im1 = smaller
+    im2 = bigger
+
+    return im1, im2
+
+
+
