@@ -1,7 +1,13 @@
 import numpy as np
-from utils import set_up_progressbar
+from numba import jit, vectorize
 
+@vectorize
+def clip_below(value, threshold):
+    if value < threshold:
+        value = threshold
+    return value
 
+@jit(nopython=True)
 def lc2_similarity(us, mr_and_grad):
     """
     Calculates the LC2 similarity between a 2D US image and the corresponding 2D MR+grad image. The images have to be of
@@ -10,18 +16,21 @@ def lc2_similarity(us, mr_and_grad):
     :param mr_and_grad: The MR+grad image (c channel image of size n*m*c)
     :return: similarity, measure, weight
     """
+    # check the shape of the input images
     if us.shape != mr_and_grad.shape[0:2]:
         raise ValueError("US and MR images have different dimensions! (they have to be equal)")
 
-    shape = us.shape
+    # define output variables
+    similarity = 0
+    weight = 0
+    measure = 0
 
     # get amount of pixels
-    pixels_amount = shape[0] * shape[1]
+    pixels_amount = us.size
 
     # find indices of elements > 0
-    buf = us.copy()
-    buf[buf < 0] = 0  # change negatives to zero
-    ids = np.flatnonzero(buf)
+    us_clipped = clip_below(us, 0.0)  # change negatives to zero
+    ids = np.flatnonzero(us_clipped)
 
     # get non-zero elements in a flat array
     us_non_zero = us.flatten()[ids]
@@ -30,31 +39,30 @@ def lc2_similarity(us, mr_and_grad):
     us_variance = np.var(us_non_zero)  # slightly different from matlab var
 
     # if the variance is 'significant'
-    if us_variance > 10 ** - 12 and len(ids) > pixels_amount / 2:
-        # flatten and reshape img2
-        mr_and_grad_reshaped = np.reshape(mr_and_grad, (pixels_amount, mr_and_grad.shape[2]))
+    if len(ids) > pixels_amount / 2:
+        if us_variance > 10 ** - 12:
 
-        # concatenate with ones
-        ones = np.ones((pixels_amount, 1))
-        mr_and_grad_and_ones = np.concatenate((mr_and_grad_reshaped, ones), 1)
+            # make array contiguous
+            mr_and_grad = np.ascontiguousarray(mr_and_grad)
+            
+            # flatten and reshape img2
+            mr_and_grad_reshaped = mr_and_grad.reshape((pixels_amount, mr_and_grad.shape[2]))
+            
+            # concatenate with ones
+            ones = np.ones((pixels_amount, 1))
+            mr_and_grad_and_ones = np.concatenate((mr_and_grad_reshaped, ones), 1)
 
-        # get the pseudo-inverse of the array with only non-zero elements
-        mr_pseudo_inverse = np.linalg.pinv(mr_and_grad_and_ones[ids, :])
+            # get the pseudo-inverse of the array with only non-zero elements
+            mr_pseudo_inverse = np.linalg.pinv(mr_and_grad_and_ones[ids, :])
 
-        parameter = np.dot(mr_pseudo_inverse, us_non_zero)
+            parameter = np.dot(mr_pseudo_inverse, us_non_zero)
 
-        similarity = 1 - (np.var(us_non_zero - np.dot(mr_and_grad_and_ones[ids, :], parameter)) / us_variance)
-        weight = np.sqrt(us_variance)
+            similarity = 1 - (np.var(us_non_zero - np.dot(mr_and_grad_and_ones[ids, :], parameter)) / us_variance)
+            weight = np.sqrt(us_variance)
 
-        measure = weight * similarity
-
-    else:
-        similarity = 0
-        weight = 0
-        measure = 0
+            measure = weight * similarity
 
     return similarity, measure, weight
-
 
 def lc2_similarity_patch(img1, img2, patchsize=9):
     """
@@ -65,13 +73,9 @@ def lc2_similarity_patch(img1, img2, patchsize=9):
     :param patchsize: Size of the patch
     :return: similarity
     """
-    # calculate gradient of MR
-    # create an MR+gradient matrix
-    mr_and_grad = np.zeros((img1.shape[0], img1.shape[1], 2))
-    mr_and_grad[:, :, 0] = img2
-    mr_and_grad[:, :, 1] = np.absolute(np.gradient(img2, axis=1))
-
-    img2 = mr_and_grad
+    # calculate gradient of MR and create an MR+gradient matrix
+    img2_grad = np.absolute(np.gradient(img2, axis=1))
+    img2 = np.concatenate((img2[..., None], img2_grad[..., None]), -1)
 
     # set parameters
     max_x = img1.shape[0]
@@ -83,17 +87,9 @@ def lc2_similarity_patch(img1, img2, patchsize=9):
     measure = np.zeros(img1.shape)
     weights = np.zeros(img1.shape)
 
-    # set up progressbar
-    progress_bar = set_up_progressbar(max_x * max_y)
-    counter = 1
-    progress_bar.start()
-
     # loop through all pixels
     for y in range(max_y):
         for x in range(max_x):
-
-            progress_bar.update(counter)
-            counter += 1
 
             # extract patches from us and mr+grad
             patch1 = img1[
@@ -112,9 +108,9 @@ def lc2_similarity_patch(img1, img2, patchsize=9):
             if patch1.size > total_size:
                 _, measure[x, y], weights[x, y] = lc2_similarity(patch1, patch2)
 
-    if sum(weights.flatten()) == 0:
+    if np.sum(weights) == 0:
         return 0
 
-    similarity = sum(measure.flatten()) / sum(weights.flatten())
+    similarity = np.sum(measure) / np.sum(weights)
 
     return similarity

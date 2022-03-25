@@ -1,12 +1,12 @@
 import os.path
-
-from lc2_similarity import lc2_similarity_patch
+import pathlib
+import argparse
 
 import numpy as np
 from PIL import Image
-import argparse
-import pathlib
+from time import perf_counter
 
+from lc2_similarity import lc2_similarity_patch
 
 def main(params):
     # load images
@@ -15,9 +15,11 @@ def main(params):
     us = Image.open(params.ultrasound_path)
     us = np.asarray(us).astype('float64') / 255
 
+    start_time = perf_counter()
     similarity = lc2_similarity_patch(us, mr, params.patch_size)
-
-    print(f"Similarity = {similarity}")
+    end_time = perf_counter()
+    
+    print(f"Similarity = {similarity}, time = {end_time-start_time:0.2f}s")
 
 
 if __name__ == "__main__":
