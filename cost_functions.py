@@ -2,7 +2,7 @@ from similarity_metrics import mi, lc2
 from image_manipulation import rigid_transform
 
 
-def rigid_transformation_cost_function(transform_parameters, fixed_image, moving_image, similarity="lc2"):
+def rigid_transformation_cost_function(transform_parameters, moving_image, fixed_image, similarity="lc2"):
     """
     Cost function for a rigid transformation.
     Computes a similarity measure between the given images using the given similarity metric
