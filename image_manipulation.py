@@ -14,7 +14,7 @@ def scale_image(image, sx, sy):
     rows, cols = image.shape
 
     # create the transformation matrix (3x3)
-    transform = np.float32([[1, sx, 0], [0, sy, 0]])
+    transform = np.float32([[sx, 0, 0], [0, sy, 0]])
 
     return cv2.warpAffine(image, transform, (cols, rows))
 
