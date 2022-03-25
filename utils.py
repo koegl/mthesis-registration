@@ -41,7 +41,7 @@ def plot_images(x, y, z):
     """
 
     # Creating a figure with subplots of a certain size.
-    fig, (plot1, plot2, plot3, plot4, plot5, plot6) = plt.subplots(2, 3, figsize=(10, 8))
+    fig, ((plot1, plot2, plot3), (plot4, plot5, plot6)) = plt.subplots(2, 3, figsize=(10, 8))
 
     # Display the two images.
     plot1.imshow(x, cmap=plt.cm.gray)
@@ -56,31 +56,28 @@ def plot_images(x, y, z):
     plot3.axis('off')
     plot3.set_title("Initial overlap")
 
-    # Computing the difference of the two images and display it.
     plot4.imshow(x, cmap=plt.cm.gray)
     plot4.axis('off')
     plot4.set_title("Fixed image")
 
-    plot4.imshow(z, cmap=plt.cm.gray)
-    plot4.axis('off')
-    plot4.set_title("Transformed moving image")
+    plot5.imshow(z, cmap=plt.cm.gray)
+    plot5.axis('off')
+    plot5.set_title("Transformed moving image")
 
-    plot4.imshow(x-z, cmap=plt.cm.gray)
-    plot4.axis('off')
-    plot4.set_title("Final overlap")
+    plot6.imshow(x-z, cmap=plt.cm.gray)
+    plot6.axis('off')
+    plot6.set_title("Final overlap")
 
     plt.show()
 
 
-def pad_smaller_image(im1, im2):
+def pad_images_to_same_size(im1, im2, new_resolution=500):
     """
     Function to pad two images so that they have the same size
     :param im1: image 1
     :param im2: image 2
     :return: im1, im2 (one is padded)
     """
-
-    smaller_id = ""
 
     if len(im1.shape) != 2 or len(im2.shape) != 2:
         raise ValueError("Images must be 2D")
