@@ -28,7 +28,7 @@ def translate_image(image, dx, dy):
     :return: The translated image
     """
 
-    cols, rows = image.shape
+    rows, cols = image.shape
 
     # create the transformation matrix (3x3)
     transform = np.float32([[1, 0, dx], [0, 1, dy]])
@@ -44,7 +44,7 @@ def rotate_image(image, angle):
     :return: The rotated image
     """
 
-    cols, rows = image.shape
+    rows, cols = image.shape
 
     # create the transformation matrix (3x3)
     transform = cv2.getRotationMatrix2D((cols / 2, rows / 2), angle, 1)
