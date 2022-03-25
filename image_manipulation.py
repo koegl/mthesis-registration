@@ -2,6 +2,23 @@ import numpy as np
 import cv2
 
 
+def scale_image(image, sx, sy):
+    """
+    Returns the image scaled by sx and sy
+    :param image: numpy image to scale
+    :param sx: scale in x direction
+    :param sy: scale in y direction
+    :return: The scaled image
+    """
+
+    rows, cols = image.shape
+
+    # create the transformation matrix (3x3)
+    transform = np.float32([[1, sx, 0], [0, sy, 0]])
+
+    return cv2.warpAffine(image, transform, (cols, rows))
+
+
 def translate_image(image, dx, dy):
     """
     Returns the image translated along x and y by dx and dy, respectively
