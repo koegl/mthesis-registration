@@ -32,15 +32,16 @@ def plot(array, cmap=None):
     plt.show()
 
 
-def plot_images(x, y):
+def plot_images(x, y, z):
     """
     Display two images and their difference
     :param x: first image
     :param y: second image
+    :param z: third image
     """
 
     # Creating a figure with subplots of a certain size.
-    fig, (plot1, plot2, plot3) = plt.subplots(1, 3, figsize=(10, 3))
+    fig, (plot1, plot2, plot3, plot4, plot5, plot6) = plt.subplots(2, 3, figsize=(10, 8))
 
     # Display the two images.
     plot1.imshow(x, cmap=plt.cm.gray)
@@ -49,13 +50,24 @@ def plot_images(x, y):
 
     plot2.imshow(y, cmap=plt.cm.gray)
     plot2.axis('off')
-    plot2.set_title("Moving image")
+    plot2.set_title("Initial moving image")
+
+    plot3.imshow(x-y, cmap=plt.cm.gray)
+    plot3.axis('off')
+    plot3.set_title("Initial overlap")
 
     # Computing the difference of the two images and display it.
-    diff = x - y
-    plot3.imshow(diff, cmap=plt.cm.gray)
-    plot3.axis('off')
-    plot3.set_title("Image difference")
+    plot4.imshow(x, cmap=plt.cm.gray)
+    plot4.axis('off')
+    plot4.set_title("Fixed image")
+
+    plot4.imshow(z, cmap=plt.cm.gray)
+    plot4.axis('off')
+    plot4.set_title("Transformed moving image")
+
+    plot4.imshow(x-z, cmap=plt.cm.gray)
+    plot4.axis('off')
+    plot4.set_title("Final overlap")
 
     plt.show()
 
@@ -68,6 +80,8 @@ def pad_smaller_image(im1, im2):
     :return: im1, im2 (one is padded)
     """
 
+    smaller_id = ""
+
     if len(im1.shape) != 2 or len(im2.shape) != 2:
         raise ValueError("Images must be 2D")
 
@@ -77,9 +91,11 @@ def pad_smaller_image(im1, im2):
     # x padding
     if im1.shape[0] < im2.shape[0]:
         smaller = im1
+        smaller_id = "im1"
         bigger = im2
     else:
         smaller = im2
+        smaller_id = "im2"
         bigger = im1
 
     dx = abs(im1.shape[0] - im2.shape[0])
@@ -88,8 +104,12 @@ def pad_smaller_image(im1, im2):
 
     smaller = np.concatenate((smaller, zeros), 0)
 
-    im1 = smaller
-    im2 = bigger
+    if smaller_id == "im1":
+        im1 = smaller
+        im2 = bigger
+    else:
+        im2 = smaller
+        im1 = bigger
 
     if im1.shape == im2.shape:
         return im1, im2
@@ -97,9 +117,11 @@ def pad_smaller_image(im1, im2):
     # y padding
     if im1.shape[1] < im2.shape[1]:
         smaller = im1
+        smaller_id = "im1"
         bigger = im2
     else:
         smaller = im2
+        smaller_id = "im2"
         bigger = im1
 
     dy = abs(im1.shape[1] - im2.shape[1])
@@ -108,8 +130,12 @@ def pad_smaller_image(im1, im2):
 
     smaller = np.concatenate((smaller, zeros), 1)
 
-    im1 = smaller
-    im2 = bigger
+    if smaller_id == "im1":
+        im1 = smaller
+        im2 = bigger
+    else:
+        im2 = smaller
+        im1 = bigger
 
     return im1, im2
 
