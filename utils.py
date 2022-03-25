@@ -140,4 +140,18 @@ def pad_smaller_image(im1, im2):
     return im1, im2
 
 
+def resize_image(img, new_resolution):
+    """
+    Function to resize an image (new_resolution is the new x-resolution)).
+    :param img: image 1
+    :param new_resolution: new resolution in x, y scaled accoridngly
+    :return: im
+    """
 
+    quotient = new_resolution / img.shape[0]
+    width = int(img.shape[0] * quotient)
+    height = int(img.shape[1] * quotient)
+
+    img = cv2.resize(img, (height, width), interpolation=cv2.INTER_AREA)
+
+    return img
