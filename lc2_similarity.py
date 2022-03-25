@@ -124,9 +124,6 @@ def lc2_similarity_patch(img1, img2, patchsize=9):
     # half of the maximal size of the patch
     total_size = ((2*patchsize + 1)**2) / 2
 
-    # measure = np.zeros(img1.shape)
-    # weights = np.zeros(img1.shape)
-
     num_cores = multiprocessing.cpu_count()
 
     return_list = Parallel(n_jobs=num_cores)(delayed(inner_loop)(i, max_y, max_x, img1, img2, patchsize, total_size)
