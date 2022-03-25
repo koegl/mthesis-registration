@@ -63,3 +63,23 @@ def rigid_transform(image, angle, dx, dy):
     """
 
     return translate_image(rotate_image(image, angle), dx, dy)
+
+
+def affine_transform(image, a, dx, dy, sx, sy):
+    """
+    Returns the image trasnformed with an affine transformation matrix
+    :param image: numpy image to transform
+    :param a: counter-clockwise rotation angle
+    :param dx: displacement in x
+    :param dy: displacement in y
+    :param sx: x scale
+    :param sy: y scale
+    :return: The transformed image
+    """
+
+    scale = scale_image(image, sx, sy)
+    scale_rot = rotate_image(scale, a)
+    scale_rot_tran = translate_image(scale_rot, dx, dy)
+
+    return scale_rot_tran
+
