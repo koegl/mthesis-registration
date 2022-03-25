@@ -1,6 +1,6 @@
 from cost_functions import rigid_transformation_cost_function, affine_transformation_cost_function
 from image_manipulation import rigid_transform, affine_transform
-from utils import plot_images, pad_smaller_image, plot
+from utils import plot_images, pad_images_to_same_size, plot, resize_image
 
 import os.path
 import numpy as np
@@ -15,24 +15,17 @@ import cv2
 
 def main(params):
     # load images
-    fixed = Image.open(params.mr_path)
-    fixed = np.asarray(fixed).astype('float64') / 255
-    moving = Image.open(params.ultrasound_path)
-    moving = np.asarray(moving).astype('float64') / 255
+    template = cv2.imread(params.template_path)
+    template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY).astype('float64') / 255
 
-    fixed = fixed[:, :, 0] + fixed[:, :, 1] + fixed[:, :, 2] + fixed[:, :, 3]
+    us = cv2.imread(params.us_path)
+    us = cv2.cvtColor(us, cv2.COLOR_BGR2GRAY).astype('float64') / 255
 
-    fixed, moving = pad_smaller_image(fixed, moving)
-
-    # resize
-    quotient = 500/fixed.shape[0]
-    width = int(fixed.shape[0] * quotient)
-    height = int(fixed.shape[1] * quotient)
-    fixed = cv2.resize(fixed, (height, width), interpolation=cv2.INTER_AREA)
-    moving = cv2.resize(moving, (height, width), interpolation=cv2.INTER_AREA)
-
-    fixed = np.pad(fixed, 100)
-    moving = np.pad(moving, 100)
+    us, template = pad_images_to_same_size(us, template)
+    us = resize_image(us, 500)
+    template = resize_image(template, 500)
+    us = np.pad(us, 100)
+    template = np.pad(template, 100)
 
     # this initial transformation is important - changing it too much will lead the optimiser into a local minimum
     initial_transform = [1, 1, 1, 1, 1]
@@ -63,11 +56,10 @@ if __name__ == "__main__":
 
     current_directory = pathlib.Path(__file__).parent.resolve()
 
-    parser.add_argument("-up", "--ultrasound_path", default=os.path.join(current_directory, "misc/us_cone_template.png"),
+    parser.add_argument("-tp", "--template_path", default=os.path.join(current_directory, "misc/us_cone_template.png"),
+                        help="Path to the cone template")
+    parser.add_argument("-up", "--us_path", default=os.path.join(current_directory, "misc/us_cone.png"),
                         help="Path to the Ultrasound image")
-    parser.add_argument("-mp", "--mr_path", default=os.path.join(current_directory, "misc/us_cone.png"),
-                        help="Path to the MR image")
-    parser.add_argument("-ps", "--patch_size", default=9, help="The patch size for calculating LC2")
 
     args = parser.parse_args()
 
