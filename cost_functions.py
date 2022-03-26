@@ -104,8 +104,8 @@ def cost_function(transform_parameters, fixed_image, moving_image, similarity="s
         raise NotImplementedError("Wrong number of transformation parameters in cost_function()")
 
     if symmetry:
-        reg_val = symmetry_regulariser(transformed, 3)
-        s *= reg_val
+        reg_val = symmetry_regulariser(transformed, 0.0)
+        s += reg_val
 
     return s
 
@@ -152,11 +152,11 @@ def extract_mask(mask):
     return new_mask
 
 
-def symmetry_regulariser(image, reg=1.5):
+def symmetry_regulariser(image, factor=0.5):
     """
     Checks if an image is qpproximately symmetric. if Yes it returns True.
     :param image: The image
-    :param reg: regulariser factor by which the similarity metric will be multiplied
+    :param factor: regulariser factor by which the similarity metric will be multiplied
     :return: 1 if symmetric, 1.5 otherwise
     """
 
@@ -170,9 +170,6 @@ def symmetry_regulariser(image, reg=1.5):
 
     right_flip = cv2.flip(right, 1)
 
-    diff = np.abs(right_flip - left)
+    reg = ssd(left, right_flip)
 
-    if np.sum(diff) < 480000:
-        return 1.0
-
-    return reg
+    return reg * factor
