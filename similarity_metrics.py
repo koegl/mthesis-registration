@@ -2,6 +2,9 @@ import numpy as np
 from joblib import Parallel, delayed
 import multiprocessing
 import sys
+import scipy
+
+from utils import plot
 
 
 def compute_similarity_metric(im1, im2, metric="ssd", patchsize=None):
@@ -22,6 +25,10 @@ def compute_similarity_metric(im1, im2, metric="ssd", patchsize=None):
         s = -mi(im1, im2)  # we want to maximise it, so '-'
     elif metric.lower() == "lc2":
         s = lc2(im1, im2)
+    elif metric.lower() == "bce":
+        s = bce(im1, im2)  # reversed order, because the second parameter must be the label (0s or 1s)
+    elif metric.lower() == "dice":
+        s = dice(im1, im2)
     else:
         raise NotImplementedError("Wrong similarity metric. Only lc2 is implemented at the moment.")
 
@@ -86,6 +93,36 @@ def mi(x, y):
     mi_result = np.sum(-s1 * np.log2(s1)) + np.sum(-s2 * np.log2(s2)) - np.sum(-jh * np.log2(jh))
 
     return mi_result
+
+
+def bce(label, prediction):
+    """
+    Compute binary cross-entropy
+    :param prediction: first image (valuesbetween 0 and 1)
+    :param label: second image (values 0 or 1)
+    :return: bce
+    """
+    # scale to [0,1]
+    if np.max(prediction) > 1:
+        prediction /= 255
+    if np.max(label) > 1:
+        label /= 255
+        label[label > 0.01] = 1
+        label = label.astype(np.uint8)
+
+    return -(label * np.log(prediction) + (1 - label) * np.log(1 - prediction)).mean()
+
+
+def dice(prediction, ground_truth):
+    i_flat = prediction.flatten()
+    t_flat = ground_truth.flatten()
+
+    i_flat = i_flat.astype(np.bool)
+    t_flat = t_flat.astype(np.bool)
+
+    score = scipy.spatial.distance.dice(i_flat, t_flat)
+
+    return score
 
 
 def lc2_similarity(us, mr_and_grad):
