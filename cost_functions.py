@@ -104,7 +104,7 @@ def cost_function(transform_parameters, fixed_image, moving_image, similarity="s
         raise NotImplementedError("Wrong number of transformation parameters in cost_function()")
 
     if symmetry:
-        reg_val = symmetry_regulariser(transformed, 0.0)
+        reg_val = symmetry_regulariser(transformed, 1.0)
         s += reg_val
 
     return s
