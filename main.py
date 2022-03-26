@@ -13,10 +13,10 @@ import cv2
 def preprocess_images(params):
     # load images
     template = cv2.imread(params.template_path)
-    template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY).astype('float64')# / 255
+    template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY).astype('float64') / 255
 
     us = cv2.imread(params.us_path)
-    us = cv2.cvtColor(us, cv2.COLOR_BGR2GRAY).astype('float64')# / 255
+    us = cv2.cvtColor(us, cv2.COLOR_BGR2GRAY).astype('float64') / 255
 
     us, template = pad_images_to_same_size(us, template)
     us = resize_image(us, 500)
@@ -33,6 +33,9 @@ def main(params):
 
     us_ori = us.copy()
     template_ori = template.copy()
+
+    us[us > 0] = 1
+    template[template > 0] = 1
 
     # us = np.gradient(us)[0]
     # template = np.gradient(template)[0]
