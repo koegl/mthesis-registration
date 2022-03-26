@@ -39,9 +39,9 @@ def main(params):
 
     # initial transformation
     transform_perspective = np.identity(3) # + (np.random.rand(3, 3) - 0.5) * 0.000001
-    transform_affine = np.asarray([30, 70, 60, 0.9, 0.9])
+    transform_affine = np.asarray([10, 70, 60, 0.9, 0.9])
     transform_rigid = np.asarray([30, 30, 60])
-    transform_init = transform_perspective
+    transform_init = transform_affine
 
     optimisation_result = scipy.optimize.fmin(cost_function, transform_init,
                                               args=(us, template, "ncc", True))
