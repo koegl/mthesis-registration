@@ -48,8 +48,8 @@ def main(params):
     # Transform the moving images with the found parameters
     result_image = transform_image(moving_image, result_params)
 
-    initial_metric = compute_similarity_metric(fixed_image, moving_image, similarity_metric)
-    final_metric = compute_similarity_metric(fixed_image, result_image, similarity_metric)
+    initial_metric = compute_similarity_metric(fixed_image, moving_image, similarity_metric, params.patch_size)
+    final_metric = compute_similarity_metric(fixed_image, result_image, similarity_metric, params.patch_size)
 
     moving_image = transform_image(moving_image, initial_transform)
 
