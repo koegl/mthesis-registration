@@ -35,9 +35,15 @@ def main(params):
     initial_transform = np.asarray(rigid_transform)
 
     # Choose with similarity metric to use
-    similarity_metric = "ncc"
+    similarity_metric = "mi"
+    optimiser = "scipy"
 
-    result_params = scipy.optimize.fmin(cost_function, initial_transform, args=(fixed_image, moving_image, similarity_metric))
+    start_time = perf_counter()
+    result_params = optimise(optimiser, initial_transform, fixed_image, moving_image, similarity_metric,
+                             params.patch_size)
+    end_time = perf_counter()
+
+    print(f"\nTime: {end_time - start_time}\n")
 
     # Transform the moving images with the found parameters
     result_image = transform_image(moving_image, result_params)
