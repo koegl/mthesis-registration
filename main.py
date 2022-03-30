@@ -1,42 +1,46 @@
-from cost_functions import rigid_transformation_cost_function
-from image_manipulation import rigid_transform
-from utils import plot_images
-
-import os.path
-import numpy as np
-from PIL import Image
 import argparse
 import pathlib
-import time
+import os
 import scipy.optimize
-import pybobyqa
+import numpy as np
+
+from utils import plot_images, load_images
+from image_manipulation import transform_image
+from cost_functions import cost_function
+from similarity_metrics import compute_similarity_metric
 
 
 def main(params):
     # load images
-    mr = Image.open(params.mr_path)
-    mr = np.asarray(mr).astype('float64') / 255
-    us = Image.open(params.ultrasound_path)
-    us = np.asarray(us).astype('float64') / 255
+    fixed_image, moving_image = load_images(params)
 
-    # this initial transformation is important - changing it too much will lead the optimiser into a local minimum
-    initial_transform = [1, 20, 1]
+    # Give some initial values to the transformation parameters
 
-    start_time = time.time()
-    # you can use two metrics: lc2 and mi (mutual information)
-    optimisation_result = pybobyqa.solve(rigid_transformation_cost_function, initial_transform, args=(us, mr, "mi"))
-    result_parameters_pybobyqa = optimisation_result.x
-    compute_time_pybobyqa = time.time() - start_time
+    perspective_transform = [[0.258, 0.966, 0.001],
+                             [0.966, 0.258, 0.001],
+                             [0.001, 0.001, 1.001]]
+    affine_transform = [70, -5, -15, 1.01, 1.01]
+    rigid_transform = [75, -10, 10]
 
-    result_image = rigid_transform(us,
-                                   result_parameters_pybobyqa[0],
-                                   result_parameters_pybobyqa[1],
-                                   result_parameters_pybobyqa[2])
-    plot_images(mr, result_image)
+    initial_transform = np.asarray(rigid_transform)
 
-    print("\033[0;0m\n")
-    print("Compute time BOBYQA = {}".format(compute_time_pybobyqa))
-    print("Resulting parameters (BOBYQA):\t{}".format(result_parameters_pybobyqa))
+    # Choose with similarity metric to use
+    similarity_metric = "ncc"
+
+    result_params = scipy.optimize.fmin(cost_function, initial_transform, args=(fixed_image, moving_image, similarity_metric))
+
+    # Transform the moving images with the found parameters
+    result_image = transform_image(moving_image, result_params)
+
+    initial_metric = compute_similarity_metric(fixed_image, moving_image, similarity_metric)
+    final_metric = compute_similarity_metric(fixed_image, result_image, similarity_metric)
+
+    moving_image = transform_image(moving_image, initial_transform)
+
+    plot_images(fixed_image, moving_image, result_image)
+
+    print(f"\n\n{initial_metric=}\n"
+          f"{final_metric=}")
 
 
 if __name__ == "__main__":
@@ -44,11 +48,10 @@ if __name__ == "__main__":
 
     current_directory = pathlib.Path(__file__).parent.resolve()
 
-    parser.add_argument("-up", "--ultrasound_path", default=os.path.join(current_directory, "misc/sq_rot_small.png"),
-                        help="Path to the Ultrasound image")
-    parser.add_argument("-mp", "--mr_path", default=os.path.join(current_directory, "misc/full_mr_256.png"),
-                        help="Path to the MR image")
-    parser.add_argument("-ps", "--patch_size", default=9, help="The patch size for calculating LC2")
+    parser.add_argument("-fp", "--fixed_path", default=os.path.join(current_directory, "misc/ct_fixed.png"),
+                        help="Path to the fixed image")
+    parser.add_argument("-mp", "--moving_path", default=os.path.join(current_directory, "misc/ct_moving.png"),
+                        help="Path to the moving image")
 
     args = parser.parse_args()
 
