@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+import numpy as np
+import cv2
 
 
 def plot_images(x, y):
@@ -24,3 +26,102 @@ def plot_images(x, y):
     plot3.axis('off')
 
     plt.show()
+
+
+def load_images(params):  # todo (if max over 1 -> divide by 255, else don't divide)
+
+    # load fixed image
+    fixed_image = cv2.imread(params.fixed_path)
+
+    if fixed_image.max() > 1:
+        fixed_divisor = 255
+    else:
+        fixed_divisor = 1
+
+    try:
+        fixed_image = cv2.cvtColor(fixed_image, cv2.COLOR_BGR2GRAY).astype('float64') / fixed_divisor
+    except:
+        fixed_image = fixed_image.astype('float64') / fixed_divisor
+
+    # laod moving image
+    moving_image = cv2.imread(params.moving_path)
+
+    if moving_image.max() > 1:
+        moving_divisor = 255
+    else:
+        moving_divisor = 1
+
+    try:
+        moving_image = cv2.cvtColor(moving_image, cv2.COLOR_BGR2GRAY).astype('float64') / moving_divisor
+    except:
+        moving_image = moving_image.astype('float64') / moving_divisor
+
+    fixed_image, moving_image = pad_images_to_same_size(fixed_image, moving_image)
+
+    return fixed_image, moving_image
+
+
+def pad_images_to_same_size(im1, im2):
+    """
+    Function to pad two images so that they have the same size
+    :param im1: image 1
+    :param im2: image 2
+    :return: im1, im2 (one is padded)
+    """
+
+    if len(im1.shape) != 2 or len(im2.shape) != 2:
+        raise ValueError("Images must be 2D")
+
+    if im1.shape == im2.shape:
+        return im1, im2
+
+    # x padding
+    if im1.shape[0] < im2.shape[0]:
+        smaller = im1
+        smaller_id = "im1"
+        bigger = im2
+    else:
+        smaller = im2
+        smaller_id = "im2"
+        bigger = im1
+
+    dx = abs(im1.shape[0] - im2.shape[0])
+    y = smaller.shape[1]
+    zeros = np.zeros((dx, y))
+
+    smaller = np.concatenate((smaller, zeros), 0)
+
+    if smaller_id == "im1":
+        im1 = smaller
+        im2 = bigger
+    else:
+        im2 = smaller
+        im1 = bigger
+
+    if im1.shape == im2.shape:
+        return im1, im2
+
+    # y padding
+    if im1.shape[1] < im2.shape[1]:
+        smaller = im1
+        smaller_id = "im1"
+        bigger = im2
+    else:
+        smaller = im2
+        smaller_id = "im2"
+        bigger = im1
+
+    dy = abs(im1.shape[1] - im2.shape[1])
+    x = smaller.shape[0]
+    zeros = np.zeros((x, dy))
+
+    smaller = np.concatenate((smaller, zeros), 1)
+
+    if smaller_id == "im1":
+        im1 = smaller
+        im2 = bigger
+    else:
+        im2 = smaller
+        im1 = bigger
+
+    return im1, im2
