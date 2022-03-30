@@ -24,7 +24,15 @@ def main(params):
     # Transform the moving images with the found parameters
     result_image = transform_image(moving_image, result_params)
 
-    plot_images(result_image, fixed_image)
+    initial_metric = compute_similarity_metric(fixed_image, moving_image, similarity_metric)
+    final_metric = compute_similarity_metric(fixed_image, result_image, similarity_metric)
+
+    moving_image = transform_image(moving_image, initial_transform)
+
+    plot_images(fixed_image, moving_image, result_image)
+
+    print(f"\n\n{initial_metric=}\n"
+          f"{final_metric=}")
 
 
 if __name__ == "__main__":
