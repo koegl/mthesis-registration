@@ -25,8 +25,8 @@ def main(params):
     initial_transform = np.asarray(rigid_transform)
 
     # Choose with similarity metric to use
-    similarity_metric = "mi"
-    optimiser = "scipy"
+    similarity_metric = "lc2"
+    optimiser = "bobyqa"
 
     start_time = perf_counter()
     result_params = optimise(optimiser, initial_transform, fixed_image, moving_image, similarity_metric,
