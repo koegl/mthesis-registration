@@ -90,7 +90,7 @@ def clip_below(value, threshold):
     return value
 
 @njit(parallel=True)
-def LC2_similarity_patch(us, mr, mr_gm, patch_size):
+def lc2(mr, us, mr_gm, patch_size):
     """
     Computes the patch-wise LC2 similarity metric for the entire image. 
     :param us: US image
