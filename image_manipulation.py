@@ -13,6 +13,8 @@ def transform_image(image, t):
         return rigid_transform(image, t[0], t[1], t[2])
     elif t.size == 5:
         return affine_transform(image, t[0], t[1], t[2], t[3], t[4])
+    elif t.size == 9:
+        return perspective_transform(image, t)
     else:
         raise NotImplementedError("Wrong number of transformation parameters in transform()")
 
@@ -105,3 +107,18 @@ def affine_transform(image, a, dx, dy, sx, sy):
     scale_rot_tran = translate_image(scale_rot, dx, dy)
 
     return scale_rot_tran
+
+
+def perspective_transform(image, parameters):
+    """
+    Returns the image transformed with a perspective transformation matrix
+    :param image: numpy image to transform
+    :param parameters: the transformation 3x3 matrix
+    :return: The transformed image
+    """
+
+    parameters = np.reshape(parameters, (3, 3))
+
+    result = cv2.warpPerspective(image, parameters, (image.shape[1], image.shape[0]))
+
+    return result

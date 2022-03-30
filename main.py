@@ -15,7 +15,12 @@ def main(params):
     fixed_image, moving_image = load_images(params)
 
     # Give some initial values to the transformation parameters
-    initial_transform = np.asarray([70, -5, -15, 1.01, 1.01])
+
+    perspective_transform = [[0.258, 0.966, 0.001],
+                             [0.966, 0.258, 0.001],
+                             [0.001, 0.001, 1.001]]
+
+    initial_transform = np.asarray(perspective_transform)  # [70, -5, -15, 1.01, 1.01])
 
     # Choose with similarity metric to use
 
