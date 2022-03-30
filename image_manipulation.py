@@ -11,6 +11,8 @@ def transform_image(image, t):
     """
     if t.size == 3:
         return rigid_transform(image, t[0], t[1], t[2])
+    elif t.size == 5:
+        return affine_transform(image, t[0], t[1], t[2], t[3], t[4])
     else:
         raise NotImplementedError("Wrong number of transformation parameters in transform()")
 

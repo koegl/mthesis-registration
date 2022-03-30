@@ -1,4 +1,4 @@
-from image_manipulation import rigid_transform
+from image_manipulation import rigid_transform, affine_transform
 from similarity_metrics import compute_similarity_metric
 
 
