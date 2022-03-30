@@ -1,5 +1,7 @@
 import numpy as np
 
+from LC2_similarity_metric import lc2, gradient_magnitude
+
 
 def compute_similarity_metric(im1, im2, metric="ssd", patchsize=None):
     """
@@ -17,6 +19,8 @@ def compute_similarity_metric(im1, im2, metric="ssd", patchsize=None):
         s = -ncc(im1, im2)  # we want to maximise it, so '-'
     elif metric.lower() == "mi":
         s = -mi(im1, im2)  # we want to maximise it, so '-'
+    elif metric.lower() == "lc2":
+        s = -lc2(im1, im2, gradient_magnitude(im2), patchsize)
     else:
         raise NotImplementedError("Wrong similarity metric.")
 
