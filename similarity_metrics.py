@@ -111,7 +111,7 @@ def bce(label, prediction):
         label = label.astype(np.uint8)
 
     return -(label * np.log(prediction) + (1 - label) * np.log(1 - prediction)).mean()
-
+# todo problem: when the image gets moved out of the frame it gets cropped and then you loose information
 
 def dice(prediction, ground_truth):
     i_flat = prediction.flatten()
