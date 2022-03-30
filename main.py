@@ -38,16 +38,18 @@ def main(params):
     # Transform the moving images with the found parameters
     result_image = transform_image(moving_image, result_params)
 
+    # calculate the initial and final metrics
     initial_metric = compute_similarity_metric(fixed_image, moving_image, similarity_metric, params.patch_size)
     final_metric = compute_similarity_metric(fixed_image, result_image, similarity_metric, params.patch_size)
 
+    # transform the original moving image with the initial transformation
     moving_image = transform_image(moving_image, initial_transform)
 
     plot_images(fixed_image, moving_image, result_image,
                 main_title=f"{similarity_metric} --- {optimiser}")
 
-    print(f"\n\n{initial_metric=}\n"
-          f"{final_metric=}")
+    print(f"Initial metric({similarity_metric}) value= {initial_metric:0.3f}\n"
+          f"Final metric({similarity_metric}) value= {final_metric:0.3f}")
     print(result_params)
 
 
