@@ -3,41 +3,11 @@ from PIL import Image
 import argparse
 import pathlib
 import os
-import matplotlib.pyplot as plt
-import cv2
 import scipy.optimize
 
 from utils import plot_images
 from image_manipulation import transform_image
-
-
-def cost_function(transform_params, fixed_image, moving_image, similarity):
-    ''' Computes a similarity measure between the given images using the given similarity metric
-    :param transform_params: 3 element array with values for rotation, displacement along x axis, dislplacement along y axis.
-                             The moving_image will be transformed using these values before the computation of similarity.
-    :param fixed_image: the reference image for registration
-    :param moving_image: the image to register to the fixed_image
-    :param similarity: a string naming the similarity metric to use. e.g. SSD, SAD, ...
-    :return: the compute similarity
-    '''
-
-    # Transform the moving_image with the current parameters (We already have code for this)
-    transformed_moving_img = transform_image(moving_image, transform_params)
-
-    # Compute the similarity value using the given method.
-    #
-    if similarity == "SSD":
-        s = ssd(transformed_moving_img, fixed_image)
-    elif similarity == "SAD":
-        s = sad(transformed_moving_img, fixed_image)
-    elif similarity == "NCC":  # Since we want to maximize NCC, we can minimize its negative
-        s = -ncc(transformed_moving_img, fixed_image)
-    elif similarity == "MI":
-        s = -mi(transformed_moving_img, fixed_image)  # Since we want to maximize MI, we can minimize its negative
-    else:
-        print("Wrong similarity measure given.")
-        return -1
-    return s
+from cost_functions import cost_function
 
 
 def main(params):
