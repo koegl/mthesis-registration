@@ -1,21 +1,13 @@
-import argparse
-import pathlib
-import os
-import scipy.optimize
-import numpy as np
 import os.path
 import pathlib
 import argparse
-
 import numpy as np
-from PIL import Image
 from time import perf_counter
 
 from utils import plot_images, load_images
 from image_manipulation import transform_image
-from cost_functions import cost_function
 from similarity_metrics import compute_similarity_metric
-from lc2_similarity_2 import LC2_similarity_patch, gradient_magnitude
+from optimisers import optimise
 
 
 def main(params):
@@ -28,9 +20,7 @@ def main(params):
                              [0.966, 0.258, 0.001],
                              [0.001, 0.001, 1.001]]
     affine_transform = [70, -5, -15, 1.01, 1.01]
-    rigid_transform = [75, -10, 10]
-    start_time = perf_counter()
-    end_time = perf_counter()
+    rigid_transform = [75, -15, -15]
 
     initial_transform = np.asarray(rigid_transform)
 
@@ -58,6 +48,7 @@ def main(params):
 
     print(f"\n\n{initial_metric=}\n"
           f"{final_metric=}")
+    print(result_params)
 
 
 if __name__ == "__main__":
