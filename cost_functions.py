@@ -5,7 +5,7 @@ from image_manipulation import rigid_transform, affine_transform
 from similarity_metrics import compute_similarity_metric
 
 
-def cost_function(transform_parameters, fixed_image, moving_image, similarity="ssd"):
+def cost_function(transform_parameters, fixed_image, moving_image, similarity="ssd", patchsize=None):
     """
     Cost function for several transformation types.
     Computes a similarity measure between the given images using the given similarity metric
@@ -17,18 +17,18 @@ def cost_function(transform_parameters, fixed_image, moving_image, similarity="s
     """
 
     if len(transform_parameters) == 3:  # rotate + translate
-        s = rigid_transformation_cost_function(transform_parameters, fixed_image, moving_image, similarity)
+        s = rigid_transformation_cost_function(transform_parameters, fixed_image, moving_image, similarity, patchsize)
     elif len(transform_parameters) == 5:  # scale + rotate + translate
-        s = affine_transformation_cost_function(transform_parameters, fixed_image, moving_image, similarity)
+        s = affine_transformation_cost_function(transform_parameters, fixed_image, moving_image, similarity, patchsize)
     elif len(transform_parameters) == 9:  # scale + rotate + translate + skew
-        s = perspective_transformation_cost_function(transform_parameters, fixed_image, moving_image, similarity)
+        s = perspective_transformation_cost_function(transform_parameters, fixed_image, moving_image, similarity, patchsize)
     else:
         raise NotImplementedError("Wrong number of transformation parameters in cost_function()")
 
     return s
 
 
-def rigid_transformation_cost_function(transform_parameters, fixed_image, moving_image, similarity="lc2"):
+def rigid_transformation_cost_function(transform_parameters, fixed_image, moving_image, similarity="lc2", patchsize=None):
     """
     Cost function for a rigid transformation.
     Computes a similarity measure between the given images using the given similarity metric
@@ -48,12 +48,12 @@ def rigid_transformation_cost_function(transform_parameters, fixed_image, moving
     transformed_moving_image = rigid_transform(moving_image, angle, dx, dy)
 
     # compute the similarity value
-    s = compute_similarity_metric(transformed_moving_image, fixed_image, similarity)
+    s = compute_similarity_metric(transformed_moving_image, fixed_image, similarity, patchsize)
 
     return s
 
 
-def affine_transformation_cost_function(transform_parameters, fixed_image, moving_image, similarity="lc2"):
+def affine_transformation_cost_function(transform_parameters, fixed_image, moving_image, similarity="lc2", patchsize=None):
     """
     Cost function for a rigid transformation.
     Computes a similarity measure between the given images using the given similarity metric
@@ -75,12 +75,12 @@ def affine_transformation_cost_function(transform_parameters, fixed_image, movin
     transformed_moving_image = affine_transform(moving_image, angle, dx, dy, sx, sy)
 
     # compute the similarity value
-    s = compute_similarity_metric(transformed_moving_image, fixed_image, similarity)
+    s = compute_similarity_metric(transformed_moving_image, fixed_image, similarity, patchsize)
 
     return s
 
 
-def perspective_transformation_cost_function(transform_parameters, fixed_image, moving_image, similarity="lc2"):
+def perspective_transformation_cost_function(transform_parameters, fixed_image, moving_image, similarity="lc2", patchsize=None):
     """
     Cost function for a rigid transformation.
     Computes a similarity measure between the given images using the given similarity metric
@@ -100,6 +100,6 @@ def perspective_transformation_cost_function(transform_parameters, fixed_image, 
                                                    (moving_image.shape[1], moving_image.shape[0]))
 
     # compute the similarity value
-    s = compute_similarity_metric(transformed_moving_image, fixed_image, similarity)
+    s = compute_similarity_metric(transformed_moving_image, fixed_image, similarity, patchsize)
 
     return s
