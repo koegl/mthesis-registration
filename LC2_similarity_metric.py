@@ -138,6 +138,6 @@ def LC2_similarity_patch(us, mr, mr_gm, patch_size):
             LC2_map[row, col], weight_map[row, col] = LC2_metric(us_patch, mr_patch, mr_gm_patch)
     
     if np.sum(weight_map) == 0:
-        return 0, LC2_map, weight_map
+        return 0
     else:
-        return np.sum(LC2_map*weight_map) / np.sum(weight_map), LC2_map, weight_map
+        return np.sum(LC2_map*weight_map) / np.sum(weight_map)
