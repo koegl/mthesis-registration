@@ -45,7 +45,7 @@ def translate_image(image, dx, dy):
     :return: The translated image
     """
 
-    cols, rows = image.shape  # size of the matrix.
+    rows, cols = image.shape  # size of the matrix.
 
     # A way to build a transformation is to manually enter its values.
     # Here we only need to fill the translational part of a 3x3 matrix.
@@ -64,7 +64,7 @@ def rotate_image(image, angle):
     :return: The rotated image
     """
 
-    cols, rows = image.shape  # size of the matrix.
+    rows, cols = image.shape  # size of the matrix.
 
     # Creates a rotation matrix to rotate around a rotation center of a certain angle.
     # In this case we rotate around the center of the image (cols / 2, rows / 2) by the given angle.

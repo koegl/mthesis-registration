@@ -19,11 +19,12 @@ def main(params):
     perspective_transform = [[0.258, 0.966, 0.001],
                              [0.966, 0.258, 0.001],
                              [0.001, 0.001, 1.001]]
+    affine_transform = [70, -5, -15, 1.01, 1.01]
+    rigid_transform = [75, -10, 10]
 
-    initial_transform = np.asarray(perspective_transform)  # [70, -5, -15, 1.01, 1.01])
+    initial_transform = np.asarray(rigid_transform)
 
     # Choose with similarity metric to use
-
     similarity_metric = "ncc"
 
     result_params = scipy.optimize.fmin(cost_function, initial_transform, args=(fixed_image, moving_image, similarity_metric))
