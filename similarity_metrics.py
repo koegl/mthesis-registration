@@ -120,7 +120,7 @@ def dice(prediction, ground_truth):
     i_flat = i_flat.astype(np.bool)
     t_flat = t_flat.astype(np.bool)
 
-    score = scipy.spatial.distance.dice(i_flat, t_flat)
+    score = 1 - scipy.spatial.distance.dice(i_flat, t_flat)
 
     return score
 
