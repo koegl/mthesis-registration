@@ -48,11 +48,11 @@ def ncc(x, y):
     n, m = y.shape
 
     # Demean the images
-    x -= np.mean(x)
-    y -= np.mean(y)
+    x_demean = x - np.mean(x)
+    y_demean = y - np.mean(y)
 
     # calculate ncc
-    s = (1/(n*m)) * np.sum((x * y) / (x.std() * y.std()))
+    s = (1/(n*m)) * np.sum((x_demean * y_demean) / (x_demean.std() * y_demean.std()))
 
     return s
 
