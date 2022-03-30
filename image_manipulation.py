@@ -5,6 +5,21 @@ import numpy as np
 def translate_image(x, dx, dy):
     ''' Returns the matrix [x] translated along x and y of [dx] and [dy] respectively.
     :param x: numpy matrix to translate
+def scale_image(image, sx, sy):
+    """
+    Returns the image scaled by sx and sy
+    :param image: numpy image to scale
+    :param sx: scale in x direction
+    :param sy: scale in y direction
+    :return: The scaled image
+    """
+
+    rows, cols = image.shape
+
+    # create the transformation matrix (3x3)
+    transform = np.float32([[sx, 0, 0], [0, sy, 0]])
+
+    return cv2.warpAffine(image, transform, (cols, rows))
     :param dx: displacement in x
     :param dy: displacement in y
     :return: the translated matrix
