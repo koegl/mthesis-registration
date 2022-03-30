@@ -3,12 +3,13 @@ import numpy as np
 import cv2
 
 
-def plot_images(x, y=None, z=None):
+def plot_images(x, y=None, z=None, main_title=""):
     """
     Display two images and their difference
     :param x: first image
     :param y: second image
     :param z: third image
+    :param main_title: The main title over all the sub-plots
     """
 
     if y is None and z is None:
@@ -18,6 +19,8 @@ def plot_images(x, y=None, z=None):
 
     # Creating a figure with subplots of a certain size.
     fig, ((plot1, plot2, plot3), (plot4, plot5, plot6)) = plt.subplots(2, 3, figsize=(10, 8))
+
+    fig.suptitle(r"$\bf{" + main_title + "}$", fontsize=16)
 
     # Display the two images.
     plot1.imshow(x, cmap=plt.cm.gray)
@@ -43,6 +46,8 @@ def plot_images(x, y=None, z=None):
     plot6.imshow(x-z, cmap=plt.cm.gray)
     plot6.axis('off')
     plot6.set_title("Final overlap")
+
+    fig.tight_layout()
 
     plt.show()
 

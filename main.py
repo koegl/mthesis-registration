@@ -53,7 +53,8 @@ def main(params):
 
     moving_image = transform_image(moving_image, initial_transform)
 
-    plot_images(fixed_image, moving_image, result_image)
+    plot_images(fixed_image, moving_image, result_image,
+                main_title=f"{similarity_metric} --- {optimiser}")
 
     print(f"\n\n{initial_metric=}\n"
           f"{final_metric=}")
