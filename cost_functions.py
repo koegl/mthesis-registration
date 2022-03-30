@@ -147,6 +147,15 @@ def extract_mask(mask):
             y_bottom = i + 1
             break
 
+    if x_left < 0:
+        x_left = 0
+    if x_right > x:
+        x_right = x
+    if y_top < 0:
+        y_top = 0
+    if y_bottom > y:
+        y_bottom = y
+
     new_mask = mask[x_left:x_right, y_top:y_bottom]
 
     return new_mask
