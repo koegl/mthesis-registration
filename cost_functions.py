@@ -1,8 +1,13 @@
 import numpy as np
 import cv2
+import sys
+from time import perf_counter
 
 from image_manipulation import rigid_transform, affine_transform
 from similarity_metrics import compute_similarity_metric
+
+
+step = 0
 
 
 def cost_function(transform_parameters, fixed_image, moving_image, similarity="ssd", patchsize=None):
@@ -13,6 +18,7 @@ def cost_function(transform_parameters, fixed_image, moving_image, similarity="s
     :param fixed_image: the reference image
     :param moving_image: the image which will be transformed to match the reference image
     :param similarity: the name of the similarity metric
+    :param patchsize: the patchsize for lc2
     :return: the computed similarity metric
     """
 
@@ -24,6 +30,11 @@ def cost_function(transform_parameters, fixed_image, moving_image, similarity="s
         s = perspective_transformation_cost_function(transform_parameters, fixed_image, moving_image, similarity, patchsize)
     else:
         raise NotImplementedError("Wrong number of transformation parameters in cost_function()")
+
+    global step
+    step += 1
+    b = f"\033[1;31;31mStep: {step}; \tSimilarity = {s:0.2f}"
+    sys.stdout.write('\r' + b)
 
     return s
 
@@ -48,7 +59,7 @@ def rigid_transformation_cost_function(transform_parameters, fixed_image, moving
     transformed_moving_image = rigid_transform(moving_image, angle, dx, dy)
 
     # compute the similarity value
-    s = compute_similarity_metric(transformed_moving_image, fixed_image, similarity, patchsize)
+    s = compute_similarity_metric(fixed_image, transformed_moving_image, similarity, patchsize)
 
     return s
 
@@ -75,7 +86,7 @@ def affine_transformation_cost_function(transform_parameters, fixed_image, movin
     transformed_moving_image = affine_transform(moving_image, angle, dx, dy, sx, sy)
 
     # compute the similarity value
-    s = compute_similarity_metric(transformed_moving_image, fixed_image, similarity, patchsize)
+    s = compute_similarity_metric(fixed_image, transformed_moving_image, similarity, patchsize)
 
     return s
 
@@ -100,6 +111,6 @@ def perspective_transformation_cost_function(transform_parameters, fixed_image, 
                                                    (moving_image.shape[1], moving_image.shape[0]))
 
     # compute the similarity value
-    s = compute_similarity_metric(transformed_moving_image, fixed_image, similarity, patchsize)
+    s = compute_similarity_metric(fixed_image, transformed_moving_image, similarity, patchsize)
 
     return s
