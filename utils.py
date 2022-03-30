@@ -3,13 +3,18 @@ import numpy as np
 import cv2
 
 
-def plot_images(x, y, z):
+def plot_images(x, y=None, z=None):
     """
     Display two images and their difference
     :param x: first image
     :param y: second image
     :param z: third image
     """
+
+    if y is None and z is None:
+        plt.imshow(x)
+        plt.show()
+        return
 
     # Creating a figure with subplots of a certain size.
     fig, ((plot1, plot2, plot3), (plot4, plot5, plot6)) = plt.subplots(2, 3, figsize=(10, 8))
