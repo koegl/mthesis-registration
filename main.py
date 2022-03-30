@@ -84,17 +84,6 @@ def transform_image(x, angle, dx, dy):
     return translate_image(rotate_image(x, angle), dx, dy)
 
 
-def transform_image_param(x, parameters):
-    '''
-    :param x: numpy matrix to transform
-    :param parameters: array containing the 3 parameters for the transformation: angle, dx and dy
-    :return: the transformed matrix
-    '''
-
-    # We just call transform_image unfolding the parameters
-    return transform_image(x, parameters[0], parameters[1], parameters[2])
-
-
 def ssd(x, y):
     ''' Returns the sum of the squared differences of the given matrices
     '''
@@ -169,8 +158,6 @@ def cost_function(transform_params, fixed_image, moving_image, similarity):
     # Transform the moving_image with the current parameters (We already have code for this)
     transformed_moving_img = transform_image(moving_image, angle, dx, dy)
 
-    d_moving_image = transformed_moving_img.astype('double')
-
     # Compute the similarity value using the given method.
     #
     if similarity == "SSD":
@@ -185,9 +172,6 @@ def cost_function(transform_params, fixed_image, moving_image, similarity):
         print("Wrong similarity measure given.")
         return -1
     return s
-
-
-
 
 
 def main(params):
@@ -213,7 +197,7 @@ def main(params):
     result_params = scipy.optimize.fmin(cost_function, x0, args=(fixed_image, moving_image, similarity_metric))
 
     # Transform the moving images with the found parameters
-    result_image = transform_image_param(moving_image, result_params)
+    result_image = transform_image(moving_image, result_params[0], result_params[1], result_params[2])
     # Let's have a look at the result!
     plot_images(result_image, fixed_image)
 
