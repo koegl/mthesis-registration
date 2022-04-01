@@ -5,11 +5,19 @@ from numba import njit, vectorize, prange
 def gradient_magnitude(img):
     """
     Computes the gradient magnitude of an image.
-    :param img:  2D image
-    :return: gradient_magnitude
+    :param img:  nD image
+    :return: gradient_magnitude image
     """
-    grad_y, grad_x = np.gradient(img)
-    gradient_magnitude = np.sqrt(grad_x**2 + grad_y**2)
+    sum_squared_grad = None
+    
+    grads = np.gradient(img)
+    for grad in grads:
+        if sum_squared_grad is None:
+            sum_squared_grad = grad**2
+        else:
+            sum_squared_grad = sum_squared_grad + grad**2
+    
+    gradient_magnitude = np.sqrt(sum_squared_grad)
     return gradient_magnitude
 
 @njit
