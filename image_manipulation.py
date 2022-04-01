@@ -30,7 +30,7 @@ def scale_image(image, sx, sy):
 
     rows, cols = image.shape
 
-    # create the transformation matrix (3x3)
+    # create the transformation matrix (2x3)
     transform = np.float32([[sx, 0, 0], [0, sy, 0]])
 
     return cv2.warpAffine(image, transform, (cols, rows))
@@ -48,7 +48,7 @@ def translate_image(image, dx, dy):
     rows, cols = image.shape  # size of the matrix.
 
     # A way to build a transformation is to manually enter its values.
-    # Here we only need to fill the translational part of a 3x3 matrix.
+    # Here we only need to fill the translational part of a 2x3 matrix.
     transform = np.float32([[1, 0, dx], [0, 1, dy]])
 
     # Transforms the image with the given transformation.
