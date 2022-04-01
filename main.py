@@ -6,7 +6,7 @@ import numpy as np
 from PIL import Image
 from time import perf_counter
 
-from lc2_similarity_2 import LC2_similarity_patch, gradient_magnitude
+from LC2_similarity_metric import LC2_similarity_patch, gradient_magnitude
 
 def main(params):
     # load images
@@ -16,7 +16,7 @@ def main(params):
     mr = np.asarray(mr).astype('float64') / 255
     mr_gm = gradient_magnitude(mr)
 
-    # first time executing is not representative because of JIT compilation of Numba function
+    # first time executing is not representative because of JIT compilation of Numba functions
     LC2_similarity_patch(us, mr, mr_gm, params.patch_size)
 
     # we therefore time the second function call
