@@ -20,7 +20,7 @@ def optimise(optimiser, initial_transform, fixed_image, moving_image, similarity
         parameters = scipy.optimize.fmin(cost_function, initial_transform,
                                          args=(fixed_image, moving_image, similarity_metric, patch_size))
     elif optimiser.lower() == "bobyqa":
-        bobyqa_result = pybobyqa.solve(cost_function, initial_transform,
+        bobyqa_result = pybobyqa.solve(cost_function, initial_transform.flatten(),
                                        args=(fixed_image, moving_image, similarity_metric, patch_size))
         parameters = bobyqa_result.x
     else:
