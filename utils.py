@@ -33,7 +33,7 @@ def plot_slice(volume, title=None):
     :param volume: the 3d volume
     :param title: the title of the plot
     """
-    image = plt.imshow(volume[0, :, :], cmap=plt.cm.gray)
+    image = plt.imshow(volume[0, :, :], vmin=0.0, vmax=volume.max(), cmap=plt.cm.gray)
     plt.axis('off')
     plt.title(title)
     plt.subplots_adjust(bottom=0.25)
@@ -42,7 +42,7 @@ def plot_slice(volume, title=None):
     slice_slider_ax = plt.axes([0.25, 0.1, 0.65, 0.03])
     slice_slider = Slider(slice_slider_ax, label='Slice', valmin=0, valmax=volume.shape[0]-1, valinit=0, valstep=1)
 
-    # register the callback function with the slider
+    # register the callback function with the slider (package the image and volume with functools - parameter passing)
     slice_slider.on_changed(functools.partial(update_slice, image, volume))
 
     plt.show()
@@ -145,17 +145,8 @@ def load_nii(params):
     fixed_image = np.asarray(fixed_image.get_data())
     moving_image = np.asarray(moving_image.get_data())
 
-    if fixed_image.max() > 1:
-        fixed_divisor = 255
-    else:
-        fixed_divisor = 1
-    if moving_image.max() > 1:
-        moving_divisor = 255
-    else:
-        moving_divisor = 1
-
-    fixed_image /= fixed_divisor
-    moving_image /= moving_divisor
+    fixed_image /= fixed_image.max()
+    moving_image /= moving_image.max()
 
     return fixed_image, moving_image
 
