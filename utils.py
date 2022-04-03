@@ -142,13 +142,13 @@ def load_nii(params):
     fixed_image = nib.load(params.fixed_path)
     moving_image = nib.load(params.moving_path)
 
-    fixed_image = np.asarray(fixed_image.get_data())
-    moving_image = np.asarray(moving_image.get_data())
+    fixed_image_data = np.asarray(fixed_image.get_data())
+    moving_image_data = np.asarray(moving_image.get_data())
 
-    fixed_image /= fixed_image.max()
-    moving_image /= moving_image.max()
+    fixed_image_data /= fixed_image_data.max()
+    moving_image_data /= moving_image_data.max()
 
-    return fixed_image, moving_image
+    return fixed_image_data, moving_image_data
 
 
 def load_images(params):
