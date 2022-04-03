@@ -19,14 +19,14 @@ def main(params):
     perspective_transform = [[0.258, 0.966, 0.001],
                              [0.966, 0.258, 0.001],
                              [0.001, 0.001, 1.001]]
-    affine_transform = [70, -5, -15, 1.01, 1.01]
+    affine_transform = [70, -5, -15, 0.8, 0.8]
     rigid_transform = [75, -15, -15]
 
-    initial_transform = np.asarray(rigid_transform)
+    initial_transform = np.asarray(perspective_transform)
 
     # Choose with similarity metric to use
-    similarity_metric = "lc2"
-    optimiser = "bobyqa"
+    similarity_metric = "mi"
+    optimiser = "scipy"
 
     start_time = perf_counter()
     result_params = optimise(optimiser, initial_transform, fixed_image, moving_image, similarity_metric,
