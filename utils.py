@@ -52,7 +52,12 @@ def plot_images(x, y=None, z=None, main_title=""):
     plt.show()
 
 
-def load_images(params):  # todo (if max over 1 -> divide by 255, else don't divide)
+def load_jpgs_or_pngs(params):
+    """
+    Load jpegs or pngs
+    :param params: contains the paths to the two images
+    :return: the fixed and moving image
+    """
 
     # load fixed image
     fixed_image = cv2.imread(params.fixed_path)
@@ -83,6 +88,48 @@ def load_images(params):  # todo (if max over 1 -> divide by 255, else don't div
     fixed_image, moving_image = pad_images_to_same_size(fixed_image, moving_image)
 
     return fixed_image, moving_image
+
+
+def load_nii(params):
+    """
+    Function to load niftii images
+    :param params: the user parameters
+    :return: fixed and moving images
+    """
+    fixed_image = nib.load(params.fixed_path)
+    moving_image = nib.load(params.moving_path)
+
+    fixed_image = np.asarray(fixed_image.get_data())
+    moving_image = np.asarray(moving_image.get_data())
+
+    if fixed_image.max() > 1:
+        fixed_divisor = 255
+    else:
+        fixed_divisor = 1
+    if moving_image.max() > 1:
+        moving_divisor = 255
+    else:
+        moving_divisor = 1
+
+    fixed_image /= fixed_divisor
+    moving_image /= moving_divisor
+
+    return fixed_image, moving_image
+
+
+def load_images(params):
+    """
+    Overachring image loading function that invokes the correct loading function based on the extension of the files
+    :param params: The user input parameters
+    :return: the fixed and moving images
+    """
+
+    if params.fixed_path.lower().endswith(".jpg") or params.fixed_path.lower().endswith(".png"):
+        return load_jpgs_or_pngs(params)
+    elif params.fixed_path.lower().endswith(".nii"):
+        return load_nii(params)
+    else:
+        raise NotImplementedError("Only loading jpg/png and .nii is implemented at the moment")
 
 
 def pad_images_to_same_size(im1, im2):
