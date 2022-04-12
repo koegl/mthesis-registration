@@ -4,6 +4,7 @@ import cv2
 import nibabel as nib
 from matplotlib.widgets import Slider
 import functools
+from skimage import data, color, io, img_as_float
 
 
 def plot_images(x, y=None, z=None, main_title=""):
@@ -52,8 +53,8 @@ def update_slice(image, volume, value):
     image.set_data(volume[int(value), :, :])
 
 
-def plot_one_image(image, title=""):
-    plt.imshow(image, cmap=plt.cm.gray)
+def plot_one_image(image, title="", cmap="gray"):
+    plt.imshow(image, cmap=cmap)
     plt.axis('off')
     plt.title(title)
     plt.show()
@@ -230,3 +231,24 @@ def pad_images_to_same_size(im1, im2):
         im1 = bigger
 
     return im1, im2
+
+
+def create_two_image_overlay(image1, overlay, alpha=0.4, cmap="plasma"):
+    # create RGB images from image and variance
+    image1_color = np.dstack((image1, image1, image1))
+
+    cm = plt.get_cmap(cmap)
+    overlay_color = cm(overlay)
+    overlay_color = overlay_color[:, :, :3]
+
+    # convert to HSV
+    image1_hsv = color.rgb2hsv(image1_color)
+    overlay_hsv = color.rgb2hsv(overlay_color)
+
+    # combine
+    image1_hsv[..., 0] = overlay_hsv[..., 0]
+    image1_hsv[..., 1] = overlay_hsv[..., 1] * alpha
+
+    combined = color.hsv2rgb(image1_hsv)
+
+    return combined
