@@ -45,12 +45,19 @@ def main(params):
     # transform the original moving image with the initial transformation
     moving_image = transform_image(moving_image, initial_transform)
 
+    # print the initial and final metrics with 2 siffificant digits
+    print(f"Initial metric({similarity_metric}) value = {initial_metric:0.3f}\n"
+          f"Final metric({similarity_metric}) value =   {final_metric:0.3f}")
+
+    # print numpy array with three significant digits
+    # print(f"Initial transformation: {initial_transform:0.3f}")
+    print(f"\nInitial transform: {np.around(initial_transform, 3)}")
+    print(f"Final transform:   {np.around(result_params, 3)}")
+
     plot_images(fixed_image, moving_image, result_image,
                 main_title=f"{similarity_metric} --- {optimiser}")
 
-    print(f"Initial metric({similarity_metric}) value= {initial_metric:0.3f}\n"
-          f"Final metric({similarity_metric}) value= {final_metric:0.3f}")
-    print(result_params)
+    print(5)
 
 
 if __name__ == "__main__":
