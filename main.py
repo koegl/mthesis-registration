@@ -47,9 +47,9 @@ def main(params):
                                    [8.72527131e-04,  9.99464513e-01,  5.00000000e+00],
                                    [-1.43820521e-03,  1.38813994e-03,  1.00001295e+00]],
 
-                                  [[1.00022373e+00,  1.79532565e-03,  5.00000000e+00],
-                                   [1.49052863e-03,  1.00074024e+00, -5.00000000e+00],
-                                   [2.18009167e-03, - 1.62779992e-03,  1.00009343e+00]],
+                                  # [[1.00022373e+00,  1.79532565e-03,  5.00000000e+00],
+                                  #  [1.49052863e-03,  1.00074024e+00, -5.00000000e+00],
+                                  #  [2.18009167e-03, - 1.62779992e-03,  1.00009343e+00]],
 
                                   [[1.00047720e+00, - 1.92540739e-04,  5.00000000e+00],
                                    [2.17379389e-03,  1.00074264e+00,  5.00000000e+00],
@@ -82,13 +82,12 @@ def main(params):
         result_params_list.append(optimise(optimiser, initial_transform, fixed_image, moving_image_list[i],
                                            similarity_metric, params.patch_size))
 
-        fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(10, 10))
-        ax0.imshow(moving_image_list[i] - fixed_image, cmap='gray')
-        ax0.set_title("before reg")
-        ax1.imshow(transform_image(moving_image, result_params_list[i]) - fixed_image, cmap='gray')
-        ax1.set_title("after reg")
-        plt.show()
-
+        # fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(10, 10))
+        # ax0.imshow(moving_image_list[i] - fixed_image, cmap='gray')
+        # ax0.set_title("before reg")
+        # ax1.imshow(transform_image(moving_image, result_params_list[i]) - fixed_image, cmap='gray')
+        # ax1.set_title("after reg")
+        # plt.show()
         # return
 
         # Transform the moving images with the found parameters
