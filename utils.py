@@ -264,3 +264,36 @@ def create_two_image_overlay(image, overlay, alpha=0.4, cmap="plasma"):
     combined = color.hsv2rgb(image1_hsv)
 
     return combined
+
+
+def create_gird(image_shape, min_resolution: int):
+    """
+    Creates a grid on an image with a minimum amount of points in x and y min_resolution
+    :param image_shape: Shape of the image on which the grid will be calculated
+    :param min_resolution: minimal resolution in x and y
+    :return: grid, points
+    """
+
+    assert image_shape[0] == image_shape[1], "Image must be square"
+    assert min_resolution > 0, "Minimal resolution must be greater than 0"
+    assert image_shape[0] > min_resolution, "Image must be larger than minimal resolution"
+
+    # create points on x and y
+    x_points = np.arange(0, image_shape[0], min_resolution)
+    y_points = np.arange(0, image_shape[0], min_resolution)
+
+    # create grid out of x_points and y_points
+    grid = np.meshgrid(x_points, y_points)
+
+    # extract all points from the grid
+    points = np.zeros((len(x_points)**2, 2))
+
+    counter = 0
+
+    for i in range(len(x_points)):
+        for j in range(len(y_points)):
+            points[counter] = grid[0][i][j], grid[1][i][j]
+
+            counter += 1
+
+    return grid, points
