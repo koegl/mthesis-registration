@@ -35,7 +35,6 @@ def main(params):
                             [1, -5, 5],
                             [1, -5, -5]]
 
-    result_image_list = []
     moving_image_display_list = []
     combined = np.zeros((fixed_image.shape[0], fixed_image.shape[1], len(rigid_transform_list)))
 
@@ -43,37 +42,14 @@ def main(params):
 
         initial_transform = np.asarray(rigid_transform_list[i])
 
-        start_time = perf_counter()
         result_params = optimise(optimiser, initial_transform, fixed_image, moving_image, similarity_metric,
                                  params.patch_size)
-        end_time = perf_counter()
-
-        print(f"\nTime: {end_time - start_time}\n")
-
+        
         # Transform the moving images with the found parameters
-        result_image = transform_image(moving_image, result_params)
-        result_image_list.append(result_image)
-        combined[:, :, i] = result_image
-
-        # calculate the initial and final metrics
-        initial_metric = compute_similarity_metric(fixed_image, moving_image, similarity_metric, params.patch_size)
-        final_metric = compute_similarity_metric(fixed_image, result_image, similarity_metric, params.patch_size)
+        combined[:, :, i] = transform_image(moving_image, result_params)
 
         # transform the original moving image with the initial transformation
-        moving_image_display = transform_image(moving_image, initial_transform)
-        moving_image_display_list.append(moving_image_display)
-
-        # print the initial and final metrics with 2 siffificant digits
-        print(f"Initial metric({similarity_metric}) value = {initial_metric:0.3f}\n"
-              f"Final metric({similarity_metric}) value =   {final_metric:0.3f}")
-
-        # print numpy array with three significant digits
-        # print(f"Initial transformation: {initial_transform:0.3f}")
-        print(f"\nInitial transform: {np.around(initial_transform, 3)}")
-        print(f"Final transform:   {np.around(result_params, 3)}")
-
-        # plot_images(fixed_image, moving_image_display_list[i], result_image_list[i],
-        #             main_title=f"{similarity_metric} --- {optimiser}")
+        moving_image_display_list.append(transform_image(moving_image, initial_transform))
 
     # calculate variance of the combined results
     combined_variance = np.var(combined, axis=2)
