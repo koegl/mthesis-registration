@@ -285,8 +285,8 @@ def create_gird(image_shape, min_resolution: int):
     # create grid out of x_points and y_points
     grid = np.meshgrid(x_points, y_points)
 
-    # extract all points from the grid
-    points = np.zeros((len(x_points)**2, 2))
+    # extract all points from the grid (we use ones because we use homogeneous coordinates)
+    points = np.ones((len(x_points)**2, 3))
 
     counter = 0
 
