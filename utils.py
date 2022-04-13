@@ -233,9 +233,21 @@ def pad_images_to_same_size(im1, im2):
     return im1, im2
 
 
-def create_two_image_overlay(image1, overlay, alpha=0.4, cmap="plasma"):
+def create_two_image_overlay(image, overlay, alpha=0.4, cmap="plasma"):
+    """
+    Takes in two 2D numpy arrays and overlays the second with a colour map and transparency on the first
+    :param image: the image to overlay on
+    :param overlay: the overlay image
+    :param alpha: alpha value for the overlay
+    :param cmap: the colour map to use for the overlay
+    :return: the combined image
+    """
+
+    assert len(image.shape) == 2 and len(overlay.shape) == 2, "Image(s) must be 2D"
+    assert image.shape == overlay.shape, "Images must be the same size"
+
     # create RGB images from image and variance
-    image1_color = np.dstack((image1, image1, image1))
+    image1_color = np.dstack((image, image, image))
 
     cm = plt.get_cmap(cmap)
     overlay_color = cm(overlay)
