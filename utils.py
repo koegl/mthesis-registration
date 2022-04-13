@@ -292,8 +292,7 @@ def create_gird(image_shape, min_resolution: int):
 
     for i in range(len(x_points)):
         for j in range(len(y_points)):
-            points[counter] = grid[0][i][j], grid[1][i][j]
-
+            points[counter, 0:2] = grid[0][i][j], grid[1][i][j]
             counter += 1
 
     return grid, points
