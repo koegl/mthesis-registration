@@ -18,11 +18,14 @@ def main(params):
     fixed_image, moving_image = load_images(params)
 
     # Choose with similarity metric to use
-    similarity_metric = "ncc"
+    similarity_metric = "mi"
     optimiser = "scipy"
 
     # Give some initial values to the transformation parameters
-    perspective_transform = np.eye(3, dtype=np.float64) - 0.001 * np.random.randn(3, 3)
+    perspective_transform = np.eye(3, dtype=np.float64) - 0.002 * np.random.randn(3, 3)
+    # perspective_transform[0, 2] = 5
+    # perspective_transform[1, 2] = 15
+
     affine_transform = [70, -5, -15, 0.8, 0.8]
     rigid_transform = [1, 5, -6]
 
@@ -36,53 +39,68 @@ def main(params):
                              [5, -5, 5, 0.9, 0.90],
                              [5, 10, 10, 0.95, 0.95]]
     perspective_transform_list = [
-                                  [[1.00508982e+00,  1.87032770e-02, -1.84965684e-02],
-                                   [1.03065424e-02,  1.00111112e+00, -8.10246664e-03],
-                                   [5.19517157e-03, -4.79838201e-05,  1.00094246e+00]],
+                                  [[9.97962760e-01,  1.87656307e-03, -5.00000000e+00],
+                                   [-1.77597560e-04,  1.00062371e+00, -5.00000000e+00],
+                                   [-4.64119328e-04, -8.44921859e-05,  1.00048039e+00]],
 
-                                  [[1.00527385e+00, - 1.83330496e-03,  2.60316135e-02],
-                                   [-7.79680251e-04,  9.95856185e-01, - 8.55454218e-03],
-                                   [-2.09975064e-03,  6.75339944e-03,  9.97413635e-01]],
+                                  [[9.99622225e-01, - 1.45607355e-03, - 5.00000000e+00],
+                                   [8.72527131e-04,  9.99464513e-01,  5.00000000e+00],
+                                   [-1.43820521e-03,  1.38813994e-03,  1.00001295e+00]],
 
-                                  [[1.00014738e+00, - 4.26601060e-04, - 9.73921893e-04],
-                                   [-1.78478695e-03,  9.98879786e-01,  3.71800820e-04],
-                                   [-1.40905630e-03,  1.95891125e-03,  1.00154902e+00]],
+                                  [[1.00022373e+00,  1.79532565e-03,  5.00000000e+00],
+                                   [1.49052863e-03,  1.00074024e+00, -5.00000000e+00],
+                                   [2.18009167e-03, - 1.62779992e-03,  1.00009343e+00]],
 
-                                  [[1.00052328e+00, - 1.87763715e-03,  5.09990405e-04],
-                                   [2.11848499e-03, 9.98868515e-01, - 4.70762342e-04],
-                                   [-9.03543672e-04, - 1.15540717e-04,  9.98057178e-01]]
-                                  ]
+                                  [[1.00047720e+00, - 1.92540739e-04,  5.00000000e+00],
+                                   [2.17379389e-03,  1.00074264e+00,  5.00000000e+00],
+                                   [2.75700615e-04,  1.97223155e-04,  1.00077639e+00]],
+
+                                  [[9.99974479e-01, - 8.74546788e-04,  5.00000000e+00],
+                                   [-1.11169385e-03,  9.99651386e-01,  5.00000000e+00],
+                                   [2.95366985e-04,  4.35728917e-04,  9.99527605e-01]]
+    ]
+
+    # perspective_transform_list = [perspective_transform]
+
+    initial_perspective_transform = [[1.00000100e+00, 4.48563412e-07, 1.72053412e-07],
+                                     [1.21248831e-06, 9.99999259e-01, 2.72091069e-06],
+                                     [8.67668241e-07, 2.35931466e-06, 9.99999636e-01]]
+
+    initial_transform = np.asarray(initial_perspective_transform)
 
     transform_list = perspective_transform_list
     result_params_list = []
-    moving_image_display_list = []
+
+    moving_image_list = []
     combined = np.zeros((fixed_image.shape[0], fixed_image.shape[1], len(transform_list)))
 
     for i in range(len(transform_list)):
 
-        initial_transform = np.asarray(transform_list[i])
+        # apply transformation to the moving image (because moving and fixed are the same image)
+        moving_image_list.append(transform_image(moving_image, np.asarray(perspective_transform_list[i])))
 
-        result_params_list.append(optimise(optimiser, initial_transform, fixed_image, moving_image, similarity_metric,
-                                  params.patch_size))
+        result_params_list.append(optimise(optimiser, initial_transform, fixed_image, moving_image_list[i],
+                                           similarity_metric, params.patch_size))
 
-        # fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(10, 10))
-        # ax0.imshow(transform_image(moving_image, initial_transform) - fixed_image, cmap='gray')
-        # ax0.set_title("before reg")
-        # ax1.imshow(transform_image(moving_image, result_params_list[i]) - fixed_image, cmap='gray')
-        # ax1.set_title("after reg")
-        # plt.show()
+        fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(10, 10))
+        ax0.imshow(moving_image_list[i] - fixed_image, cmap='gray')
+        ax0.set_title("before reg")
+        ax1.imshow(transform_image(moving_image, result_params_list[i]) - fixed_image, cmap='gray')
+        ax1.set_title("after reg")
+        plt.show()
+
         # return
+
         # Transform the moving images with the found parameters
         combined[:, :, i] = transform_image(moving_image, result_params_list[i])
 
-        # transform the original moving image with the initial transformation
-        moving_image_display_list.append(transform_image(moving_image, initial_transform))
 
     # calculate variance of the combined results
     combined_variance = np.var(combined, axis=2)
     combined_variance = combined_variance / np.max(combined_variance)
 
-    moving_overlayed_with_var = create_two_image_overlay(moving_image, combined_variance, alpha=0.6, cmap="plasma")
+    # create an overlay of one of the registered images (in this case it's the first one) with the variance map
+    moving_overlayed_with_var = create_two_image_overlay(combined[:, :, 0], combined_variance, alpha=0.6, cmap="plasma")
 
     # Display the output
     fig = plt.figure(figsize=(12, 6))
@@ -92,16 +110,16 @@ def main(params):
     ax3 = plt.subplot(2, 4, 6)
     ax4 = plt.subplot(1, 2, 2)
 
-    ax0.imshow(fixed_image + moving_image_display_list[0], cmap=plt.cm.gray)
+    ax0.imshow(fixed_image + moving_image_list[0], cmap=plt.cm.gray)
     ax0.set_title("Perspective state 1")
     ax0.axis('off')
-    ax1.imshow(fixed_image + moving_image_display_list[1], cmap=plt.cm.gray)
+    ax1.imshow(fixed_image + moving_image_list[1], cmap=plt.cm.gray)
     ax1.set_title("Perspective state 2")
     ax1.axis('off')
-    ax2.imshow(fixed_image + moving_image_display_list[2], cmap=plt.cm.gray)
+    ax2.imshow(fixed_image + moving_image_list[2], cmap=plt.cm.gray)
     ax2.set_title("Perspective state 3")
     ax2.axis('off')
-    ax3.imshow(fixed_image + moving_image_display_list[3], cmap=plt.cm.gray)
+    ax3.imshow(fixed_image + moving_image_list[3], cmap=plt.cm.gray)
     ax3.set_title("Perspective state 4")
     ax3.axis('off')
     ax4.imshow(moving_overlayed_with_var)
