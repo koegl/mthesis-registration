@@ -18,8 +18,8 @@ def main(params):
     fixed_image, moving_image = load_images(params)
 
     # Choose with similarity metric to use
-    similarity_metric = "ssd"
-    optimiser = "bobyqa"
+    similarity_metric = "ncc"
+    optimiser = "scipy"
 
     # Give some initial values to the transformation parameters
     perspective_transform = [[0.258, 0.966, 0.001],
@@ -30,21 +30,35 @@ def main(params):
 
     initial_transform = np.asarray(rigid_transform)
 
-    rigid_transform_list = [[1.1, 5, -5.1],
-                            [1, 5, 5],
-                            [1, -5, 5],
-                            [1, -5, -5]]
+    rigid_transform_list = [[1.1,   5,  -5.1],
+                            [1,     5,   5],
+                            [1,    -5,   5],
+                            [1,    -5,  -5]]
+
+    affine_transform_list = [[5,   5,  -5,   0.90,   1.10],
+                             [5, -5, -5, 0.99, 0.88],
+                             [5, -5, 5, 0.9, 0.90],
+                             [5, 10, 10, 0.95, 0.95]]
+
+    transform_list = affine_transform_list
 
     moving_image_display_list = []
-    combined = np.zeros((fixed_image.shape[0], fixed_image.shape[1], len(rigid_transform_list)))
+    combined = np.zeros((fixed_image.shape[0], fixed_image.shape[1], len(transform_list)))
 
-    for i in range(len(rigid_transform_list)):
+    for i in range(len(transform_list)):
 
-        initial_transform = np.asarray(rigid_transform_list[i])
+        initial_transform = np.asarray(transform_list[i])
 
         result_params = optimise(optimiser, initial_transform, fixed_image, moving_image, similarity_metric,
                                  params.patch_size)
-        
+
+        # fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(10, 10))
+        # ax0.imshow(transform_image(moving_image, initial_transform) - fixed_image, cmap='gray')
+        # ax0.set_title("before reg")
+        # ax1.imshow(transform_image(moving_image, result_params) - fixed_image, cmap='gray')
+        # ax1.set_title("after reg")
+        # plt.show()
+
         # Transform the moving images with the found parameters
         combined[:, :, i] = transform_image(moving_image, result_params)
 
@@ -58,7 +72,7 @@ def main(params):
     moving_overlayed_with_var = create_two_image_overlay(moving_image, combined_variance, alpha=0.6, cmap="plasma")
 
     # Display the output
-    plt.figure(figsize=(12, 6))
+    fig = plt.figure(figsize=(12,6))
     ax0 = plt.subplot(2, 4, 1)
     ax1 = plt.subplot(2, 4, 2)
     ax2 = plt.subplot(2, 4, 5)
@@ -66,15 +80,23 @@ def main(params):
     ax4 = plt.subplot(1, 2, 2)
 
     ax0.imshow(fixed_image + moving_image_display_list[0], cmap=plt.cm.gray)
-    ax0.set_title("Initial state 1")
+    ax0.set_title("Affine state 1")
+    ax0.axis('off')
     ax1.imshow(fixed_image + moving_image_display_list[1], cmap=plt.cm.gray)
-    ax1.set_title("Initial state 2")
+    ax1.set_title("Affine state 2")
+    ax1.axis('off')
     ax2.imshow(fixed_image + moving_image_display_list[2], cmap=plt.cm.gray)
-    ax2.set_title("Initial state 3")
+    ax2.set_title("Affine state 3")
+    ax2.axis('off')
     ax3.imshow(fixed_image + moving_image_display_list[3], cmap=plt.cm.gray)
-    ax3.set_title("Initial state 4")
+    ax3.set_title("Affine state 4")
+    ax3.axis('off')
     ax4.imshow(moving_overlayed_with_var)
-    ax4.set_title("Variance of the results of the 4 registrations")
+    ax4.set_title("Variance of the results of the 4 affine registrations")
+    ax4.axis('off')
+
+    fig.tight_layout()
+
     plt.show()
 
     print(5)
