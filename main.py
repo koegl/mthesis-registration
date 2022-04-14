@@ -6,8 +6,9 @@ from time import perf_counter
 from skimage import data, color, io, img_as_float
 import matplotlib.pyplot as plt
 from PIL import Image
+import cv2
 
-from utils import plot_images, load_images, plot_one_image, create_two_image_overlay, create_gird
+from utils import plot_images, load_images, plot_one_image, mark_points_in_image, create_gird, calculate_distance_between_points
 from image_manipulation import transform_image
 from similarity_metrics import compute_similarity_metric
 from optimisers import optimise
@@ -20,6 +21,10 @@ def main(params):
     # Choose with similarity metric to use
     similarity_metric = "mi"
     optimiser = "scipy"
+
+    # load png image with cv2
+    grid_image = cv2.imread("/Users/fryderykkogl/Downloads/grid.png")
+    grid_image = cv2.cvtColor(grid_image, cv2.COLOR_BGR2GRAY)
 
     # Give some initial values to the transformation parameters
     perspective_transform = np.eye(3, dtype=np.float64) - 0.001 * np.random.randn(3, 3)
@@ -59,10 +64,17 @@ def main(params):
     moving_image_list = []
     registered_images_list = np.zeros((fixed_image.shape[0], fixed_image.shape[1], len(transform_list)))
 
+    # extract grid from the moving image
+    grid, points = create_gird(moving_image.shape, 8)
+
+    # mark points in moving image
+    moving_image = mark_points_in_image(moving_image, points)
+
     for i in range(len(transform_list)):
 
         # apply transformation to the moving image (because moving and fixed are the same image)
         moving_image_list.append(transform_image(moving_image, np.asarray(perspective_transform_list[i])))
+        points_moving = cv2.perspectiveTransform(points, np.asarray(perspective_transform_list[i]))
 
         result_params_list.append(optimise(optimiser, initial_transform, fixed_image, moving_image_list[i],
                                            similarity_metric, params.patch_size))
@@ -70,19 +82,18 @@ def main(params):
 
         # Transform the moving images with the found parameters
         registered_images_list[:, :, i] = transform_image(moving_image_list[i], result_params_list[i])
+        points_registered = cv2.perspectiveTransform(points_moving, np.reshape(result_params_list[i], (3, 3)))
 
-        # todo break is only temporary so we can stick to one registration
-        break
+        # calculate the error between the registered and true points (error being ecuclidean distance)
+        dist = calculate_distance_between_points(points, points_registered)
 
-    # extract grid from the moving image
-    grid, points = create_gird(moving_image_list[0].shape, 64)
+        # transform points
+        plt.figure()
+        plt.imshow(registered_images_list[:, :, i], cmap='gray')
+        plt.plot(points[:, :, 0], points[:, :, 1], 'ro', markersize=2)
+        plt.plot(points_registered[:, :, 0], points_registered[:, :, 1], 'bo', markersize=2)
 
-    # transform points
-    points_found_reg = np.dot(points, np.reshape(result_params_list[0], (3, 3)))
-    points_true_reg = np.dot(points, np.asarray(transform_list[0]))
-
-
-    print(5)
+        print(5)
 
 
 if __name__ == "__main__":
