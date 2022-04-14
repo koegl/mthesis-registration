@@ -279,8 +279,10 @@ def create_gird(image_shape, min_resolution: int):
     assert image_shape[0] > min_resolution, "Image must be larger than minimal resolution"
 
     # create points on x and y
-    x_points = np.arange(0, image_shape[0], min_resolution)
-    y_points = np.arange(0, image_shape[0], min_resolution)
+    min_step = int(image_shape[0] / min_resolution)
+
+    x_points = np.arange(0, image_shape[0], min_step)
+    y_points = np.arange(0, image_shape[0], min_step)
 
     # create grid out of x_points and y_points
     grid = np.meshgrid(x_points, y_points)
