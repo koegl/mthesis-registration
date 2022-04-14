@@ -298,3 +298,22 @@ def create_gird(image_shape, min_resolution: int):
             counter += 1
 
     return grid, points
+
+def calculate_distance_between_points(point_array1, point_array2):
+    """
+    Calculate the distance between each point pair from the two arrays
+    :param point_array1: First array of shape (n, 1, 2)
+    :param point_array2: Second array of shape (n, 1, 2)
+    :return: Array of points and distances of shape (n, 1)
+    """
+    assert len(point_array1.shape) == 3 and len(point_array2.shape) == 3, "Point arrays must be fake 3D"
+
+    # squeeze arrays
+    point_array1 = np.squeeze(point_array1)
+    point_array2 = np.squeeze(point_array2)
+
+    # calculate the distances between all point pairs from point_array1 and point_array2
+    distances = np.sqrt(np.sum(np.square(point_array1 - point_array2), axis=1))
+
+    return distances
+
