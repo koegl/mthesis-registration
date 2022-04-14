@@ -7,7 +7,7 @@ from skimage import data, color, io, img_as_float
 import matplotlib.pyplot as plt
 from PIL import Image
 
-from utils import plot_images, load_images, plot_one_image, create_two_image_overlay
+from utils import plot_images, load_images, plot_one_image, create_two_image_overlay, create_gird
 from image_manipulation import transform_image
 from similarity_metrics import compute_similarity_metric
 from optimisers import optimise
@@ -26,18 +26,6 @@ def main(params):
     perspective_transform[0, 2] = 5
     perspective_transform[1, 2] = 5
 
-    affine_transform = [70, -5, -15, 0.8, 0.8]
-    rigid_transform = [1, 5, -6]
-
-    rigid_transform_list = [[1.1,   5,  -5.1],
-                            [1,     5,   5],
-                            [1,    -5,   5],
-                            [1,    -5,  -5]]
-
-    affine_transform_list = [[5,   5,  -5,   0.90,   1.10],
-                             [5, -5, -5, 0.99, 0.88],
-                             [5, -5, 5, 0.9, 0.90],
-                             [5, 10, 10, 0.95, 0.95]]
     perspective_transform_list = [
         [[9.98973341e-01, - 7.31692941e-05,  9.37318374e-04],
          [-2.23558816e-03,  1.00117543e+00, - 3.75353094e-04],
@@ -83,50 +71,16 @@ def main(params):
         # Transform the moving images with the found parameters
         registered_images_list[:, :, i] = transform_image(moving_image_list[i], result_params_list[i])
 
-        fig, (ax0, ax1, ax2) = plt.subplots(1, 3, figsize=(10, 10))
-        ax0.imshow(moving_image_list[i] - fixed_image, cmap='gray')
-        ax0.set_title("before reg")
-        ax1.imshow(registered_images_list[:, :, i] - fixed_image, cmap='gray')
-        ax1.set_title("calculated reg")
-        ax2.imshow(transform_image(moving_image_list[i], true_transform_params_list[i]) - fixed_image, cmap="gray")
-        ax2.set_title("true reg")
-        plt.show()
-        # return
+        # todo break is only temporary so we can stick to one registration
+        break
 
-    # calculate variance of the combined results
-    combined_variance = np.var(registered_images_list, axis=2)
-    combined_variance = combined_variance / np.max(combined_variance)
+    # extract grid from the moving image
+    grid, points = create_gird(moving_image_list[0].shape, 64)
 
-    # create an overlay of one of the registered images (in this case it's the first one) with the variance map
-    moving_overlayed_with_var = create_two_image_overlay(registered_images_list[:, :, 0], combined_variance, alpha=0.6, cmap="plasma")
+    # transform points
+    points_found_reg = np.dot(points, np.reshape(result_params_list[0], (3, 3)))
+    points_true_reg = np.dot(points, np.asarray(transform_list[0]))
 
-    # Display the output
-    fig = plt.figure(figsize=(12, 6))
-    ax0 = plt.subplot(2, 4, 1)
-    ax1 = plt.subplot(2, 4, 2)
-    ax2 = plt.subplot(2, 4, 5)
-    ax3 = plt.subplot(2, 4, 6)
-    ax4 = plt.subplot(1, 2, 2)
-
-    ax0.imshow(fixed_image + moving_image_list[0], cmap=plt.cm.gray)
-    ax0.set_title("Perspective state 1")
-    ax0.axis('off')
-    ax1.imshow(fixed_image + moving_image_list[1], cmap=plt.cm.gray)
-    ax1.set_title("Perspective state 2")
-    ax1.axis('off')
-    ax2.imshow(fixed_image + moving_image_list[2], cmap=plt.cm.gray)
-    ax2.set_title("Perspective state 3")
-    ax2.axis('off')
-    ax3.imshow(fixed_image + moving_image_list[3], cmap=plt.cm.gray)
-    ax3.set_title("Perspective state 4")
-    ax3.axis('off')
-    ax4.imshow(moving_overlayed_with_var)
-    ax4.set_title("Variance of the results of the 4 perspective registrations")
-    ax4.axis('off')
-
-    fig.tight_layout()
-
-    plt.show()
 
     print(5)
 
