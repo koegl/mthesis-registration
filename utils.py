@@ -299,6 +299,30 @@ def create_gird(image_shape, min_resolution: int):
 
     return grid, points
 
+
+def mark_points_in_image(image, points):
+    """
+    Mark points as pixels in an image
+    :param image: The image to be marked
+    :param points: points to be marked
+    :param size: size in pixels of the points
+    :return: image with marked points
+    """
+
+    assert len(image.shape) == 2, "Image must be 2D"
+    assert len(points.shape) == 3, "Points must be 2D"
+    assert points.shape[2] >= 2, "Points must have 2 columns"
+
+    # create a copy of the image
+    image_copy = image.copy()
+
+    # mark points
+    for point in points:
+        image_copy[int(point[0][0]), int(point[0][1])] = 1
+
+    return image_copy
+
+
 def calculate_distance_between_points(point_array1, point_array2):
     """
     Calculate the distance between each point pair from the two arrays
