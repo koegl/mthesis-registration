@@ -22,7 +22,7 @@ def compute_similarity_metric(im1, im2, metric="ssd", patchsize=None):
         raise NotImplementedError("MI not implemented yet")
         # s = -mi(im1, im2)  # we want to maximise it, so '-'
     elif metric.lower() == "lc2":
-        s = -lc2_3d(im1, im2, gradient_magnitude(im2), patchsize)
+        s, _, _ = -lc2_3d(im1, im2, gradient_magnitude(im2), patchsize)
     else:
         raise NotImplementedError("Wrong similarity metric.")
 

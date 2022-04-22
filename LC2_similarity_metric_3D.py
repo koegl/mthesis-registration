@@ -1,7 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from numba import njit, vectorize, prange
+import pickle
 
+# list all files in the directory and subdirectories
 
 def gradient_magnitude(img):
     """
@@ -149,7 +151,7 @@ def lc2_3d(us, mr, mr_gm, patch_size):
                 ]
 
                 LC2_map[dim1, dim2, dim3], weight_map[dim1, dim2, dim3] = LC2_metric(us_patch, mr_patch, mr_gm_patch)
-    
+
     if np.sum(weight_map) == 0:
         return 0, LC2_map, weight_map
     else:
@@ -170,9 +172,9 @@ if __name__ == "__main__":
     target_image = 1*centers + 3*centers_gm
 
     # run the first time for JIT compilation
-    _ = LC2_similarity_3D_patch(np.zeros((1,1,1)), np.zeros((1,1,1)), np.zeros((1,1,1)), 1)
+    _ = lc2_3d(np.zeros((1,1,1)), np.zeros((1,1,1)), np.zeros((1,1,1)), 1)
 
     start = perf_counter()
-    LC2, _, _ = LC2_similarity_3D_patch(target_image, centers, centers_gm, 19)
+    LC2, _, _ = lc2_3d(target_image, centers, centers_gm, 19)
     end = perf_counter()
     print(f'LC2 similarity: {LC2:0.2f} ({end-start:0.1f})')

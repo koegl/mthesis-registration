@@ -6,6 +6,8 @@ from time import perf_counter
 from scipy.ndimage import affine_transform
 import nibabel as nib
 import matplotlib.pyplot as plt
+from skimage.data import cells3d
+import pickle
 
 from utils import plot_images, load_nifti_image
 from similarity_metrics import compute_similarity_metric
@@ -45,15 +47,31 @@ def main(params):
     optimiser = "bobyqa"
     deformation_type = "affine"
 
-    test_metric = lc2_3d(fixed_data, moving_data, gradient_magnitude(moving_data), 19)
+    # run the first time for JIT compilation
+    _ = lc2_3d(np.zeros((1,1,1)), np.zeros((1,1,1)), np.zeros((1,1,1)), 1)
+
+    fixed_data_small = fixed_data[20:130, 20:130, 20:130]
+    moving_data_small = moving_data[20:130, 20:130, 20:130]
+
+    start_time = perf_counter()
+    print(f"\nTime: {start_time - start_time}\n")
+    test_metric, lc2_map, weight_map = lc2_3d(fixed_data_small, moving_data_small, gradient_magnitude(moving_data), 19)
+    end_time = perf_counter()
+    print(f"\nTime: {end_time - start_time}\n")
+
+    # pickle LC2_map and weight_map
+    with open('LC2_map.pkl', 'wb') as f:
+        pickle.dump(lc2_map, f)
+    with open('weight_map.pkl', 'wb') as f:
+        pickle.dump(weight_map, f)
+    with open('test_metric.pkl', 'wb') as f:
+        pickle.dump(test_metric, f)
 
     return
 
-    start_time = perf_counter()
     result_params = optimise(optimiser, deformation_type, initial_transform, fixed_data, moving_data, similarity_metric,
                              params.patch_size)
-    end_time = perf_counter()
-    print(f"\nTime: {end_time - start_time}\n")
+
 
     # reshape transform to be homogeneous
     result_params = np.reshape(result_params, (3, 4))
