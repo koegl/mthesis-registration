@@ -3,7 +3,7 @@ import pathlib
 import argparse
 import numpy as np
 from utils import plot_images, load_images
-from image_manipulation import transform_image
+# from image_manipulation import transform_image
 from skimage.transform import ProjectiveTransform
 
 
@@ -19,7 +19,7 @@ def main(params):
     initial_transform = np.asarray(us_transform)
 
     # transform the original moving image with the initial transformation
-    moving_image = transform_image(moving_image, initial_transform)
+    # moving_image = transform_image(moving_image, initial_transform)
 
     # plot_images(moving_image, main_title="After initial transformation")
 

@@ -1,6 +1,6 @@
 import numpy as np
 
-from LC2_similarity_metric import lc2, gradient_magnitude
+from LC2_similarity_metric_3D import lc2_3d, gradient_magnitude
 
 
 def compute_similarity_metric(im1, im2, metric="ssd", patchsize=None):
@@ -16,11 +16,13 @@ def compute_similarity_metric(im1, im2, metric="ssd", patchsize=None):
     if metric.lower() == "ssd":
         s = ssd(im1, im2)
     elif metric.lower() == "ncc":
-        s = -ncc(im1, im2)  # we want to maximise it, so '-'
+        raise NotImplementedError("NCC not implemented yet")
+        # s = -ncc(im1, im2)  # we want to maximise it, so '-'
     elif metric.lower() == "mi":
-        s = -mi(im1, im2)  # we want to maximise it, so '-'
+        raise NotImplementedError("MI not implemented yet")
+        # s = -mi(im1, im2)  # we want to maximise it, so '-'
     elif metric.lower() == "lc2":
-        s = -lc2(im1, im2, gradient_magnitude(im2), patchsize)
+        s = -lc2_3d(im1, im2, gradient_magnitude(im2), patchsize)
     else:
         raise NotImplementedError("Wrong similarity metric.")
 
@@ -34,15 +36,14 @@ def ssd(x, y):
     :param y: second image
     :return: sum of the squared differences
     """
-
-    n, m = y.shape
-
-    result = (1/(n*m)) * np.sum(np.square(x - y))
+    result = (1/(np.prod(y.shape))) * np.sum(np.square(x - y))
 
     return result
 
 
 def ncc(x, y):
+    # todo adapt for 3D
+
     """
     Computes the normalised cross correlation between the given matrices
     :param x: first image
@@ -62,6 +63,7 @@ def ncc(x, y):
 
 
 def mi(x, y):
+    # todo adapt for 3D
     """
     Computes the mutual information between the given matrices
     :param x: first image
