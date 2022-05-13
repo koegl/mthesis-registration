@@ -70,7 +70,7 @@ for idx, ax in enumerate(axes.ravel()):
 
 #%%
 train_list, valid_list = train_test_split(train_list,
-                                          test_size=0.5,
+                                          test_size=0.2,
                                           stratify=labels,
                                           random_state=seed)
 print(f"Train Data: {len(train_list)}")
@@ -163,14 +163,20 @@ criterion = nn.CrossEntropyLoss()
 # optimizer
 optimizer = optim.Adam(model.parameters(), lr=lr)
 # scheduler
-scheduler = StepLR(optimizer, step_size=1, gamma=gamma)
+# scheduler = StepLR(optimizer, step_size=1, gamma=gamma)
 
 #%%
+
+print(f"{train_list = }")
+print(f"{valid_list = }")
+print(f"{test_list = }")
+
+
 for epoch in range(epochs):
     epoch_loss = 0
     epoch_accuracy = 0
 
-    for data, label in tqdm(train_loader):
+    for data, label in train_loader:
         data = data.to(device)
         label = label.to(device)
 
@@ -200,14 +206,19 @@ for epoch in range(epochs):
             epoch_val_accuracy += acc / len(valid_loader)
             epoch_val_loss += val_loss / len(valid_loader)
 
-    print(
-        f"Epoch : {epoch+1} - loss : {epoch_loss:.4f} - acc: {epoch_accuracy:.4f} - val_loss : {epoch_val_loss:.4f} - val_acc: {epoch_val_accuracy:.4f}\n"
-    )
+    if (epoch + 1) % 20 == 0:
+        print(
+            f"Epoch : {epoch+1} - loss : {epoch_loss:.4f} - acc: {epoch_accuracy:.4f} - val_loss : {epoch_val_loss:.4f} - val_acc: {epoch_val_accuracy:.4f}\n"
+        )
 
 #%% testing
 with torch.no_grad():
 
-    cat = Image.open("/Users/fryderykkogl/Data/ViT_training_data/data_overfit/test/dog.jpg")
+    load_path = "/Users/fryderykkogl/Data/ViT_training_data/data_overfit/train/dog.0.jpg"
+    label = load_path.split("/")[-1].split(".")[0]
+    label = 1 if label == "dog" else 0
+
+    cat = Image.open(load_path)
 
     test_transforms = transforms.Compose(
         [
@@ -221,9 +232,9 @@ with torch.no_grad():
     cat = cat.unsqueeze(0)
 
     prediction = model(cat)
-    print(prediction)
-    test_acc = (prediction.argmax(dim=1) == label).float().mean()
-    print(test_acc)
 
-#%%
-cat = Image.open("/Users/fryderykkogl/Data/ViT_training_data/data_overfit/test/cat.jpg")
+    test_acc = (prediction.argmax(dim=1) == label).float().mean()
+    if prediction.argmax(dim=1) == 1:
+        print("dog")
+    elif prediction.argmax(dim=1) == 0:
+        print("cat")
