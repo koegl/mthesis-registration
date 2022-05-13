@@ -1,52 +1,70 @@
-#%%
-# IMPORTS
-import random
-import os
-import numpy as np
-import glob
-import matplotlib.image as mpimg
-import matplotlib.pyplot as plt
+import argparse
 from PIL import Image
 
+from torchvision import transforms
+import torch.optim as optim
+import torch.nn as nn
 import torch
-from sklearn.model_selection import train_test_split
+
+from utils import seed_everything, get_data_loaders
+from network import get_network
+from train import train
 
 
+def main(params):
+    # define training parameters
+    lr = params.learning_rate
+    seed = params.seed
 
-#%%
-print(f"Torch: {torch.__version__}")
+    # set seed
+    seed_everything(seed)
 
-#%% Training settings
-batch_size = 64
-epochs = 20
-lr = 3e-5
-gamma = 0.7
-seed = 42
+    # get train, val, and test data loaders
+    train_loader, train_list, val_loader, test_loader = get_data_loaders(params)
+
+    # get the model
+    model = get_network(device="cpu")
+
+    # set-up loss-function
+    criterion = nn.CrossEntropyLoss()
+
+    # set up optimizer
+    optimizer = optim.Adam(model.parameters(), lr=lr)
+
+    # train the model
+    train(params.epochs, train_loader, model, criterion, optimizer, val_loader)
+
+    # evaluate
+    with torch.no_grad():
+        for data, label in test_loader:
+
+            data = data.to("cpu")
+            label = label.to("cpu")
+
+            prediction = model(data)
+            prediction = prediction.argmax(dim=1)
+
+            val = "CORRCET." if prediction == label else "WRONG.   "
+            animal = "dog" if label == 1 else "cat"
+            prediction = "dog" if prediction == 1 else "cat"
+
+            print(f"{val}\tThe image should be a {animal}; the model predicted {prediction}")
+
+    torch.save(model, "model.pt")
 
 
-def seed_everything(seed):
-    random.seed(seed)
-    os.environ['PYTHONHASHSEED'] = str(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    torch.backends.cudnn.deterministic = True
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
 
+    parser.add_argument("-bs", "--batch_size", default=1)
+    parser.add_argument("-e", "--epochs", default=50)
+    parser.add_argument("-lr", "--learning_rate", default=3e-5)
+    parser.add_argument("-s", "--seed", default=42, help="For seeding eveyrthing")
+    parser.add_argument("-tvd", "--train_and_val_dir", default="/Users/fryderykkogl/Data/ViT_training_data/data_overfit/train",
+                        help="Directory of the training data (and validation")
+    parser.add_argument("-vd", "--test_dir", default="/Users/fryderykkogl/Data/ViT_training_data/data_overfit/test",
+                        help="Directory of the test data")
 
-seed_everything(seed)
+    args = parser.parse_args()
 
-#%%
-train_dir = 'data_overfit/train'
-test_dir = 'data_overfit/test'
-
-train_list = glob.glob(os.path.join(train_dir, '*.jpg'))
-test_list = glob.glob(os.path.join(test_dir, '*.jpg'))
-
-labels = [path.split('/')[-1].split('.')[0] for path in train_list]
-
-#%%
-train_list, valid_list = train_test_split(train_list,
-                                          test_size=0.5,
-                                          stratify=labels,
-                                          random_state=seed)
+    main(args)
