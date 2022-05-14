@@ -1,7 +1,6 @@
 import torch
 import wandb
 
-import matplotlib.pyplot as plt
 
 from utils import plot_accuracies_and_losses
 
@@ -20,11 +19,6 @@ def train(epochs, train_loader, model, criterion, optimizer, val_loader, device=
     :param save_path:
     :return:
     """
-
-    train_accuracy_array = []
-    train_loss_array = []
-    val_accuracy_array = []
-    val_loss_array = []
 
     # convert params to the correct types
     epochs = int(epochs)
@@ -64,20 +58,9 @@ def train(epochs, train_loader, model, criterion, optimizer, val_loader, device=
                 epoch_val_accuracy += acc / len(val_loader)
                 epoch_val_loss += val_loss / len(val_loader)
 
-        train_accuracy_array.append(float(epoch_accuracy.detach().numpy()))
-        train_loss_array.append(float(epoch_loss.detach().numpy()))
-        val_accuracy_array.append(float(epoch_val_accuracy.detach().numpy()))
-        val_loss_array.append(float(epoch_val_loss.detach().numpy()))
-
-        wandb.log({"Train loss": epoch_loss, "Val loss": epoch_val_loss})
-
-    plot_accuracies_and_losses(
-        [train_accuracy_array, train_loss_array, val_accuracy_array, val_loss_array],
-        ['Training accuracy', 'Training loss', 'Validation accuracy', 'Validation loss'],
-    )
+        wandb.log({"Train loss": epoch_loss,
+                   "Train accuracy": epoch_accuracy,
+                   "Val loss": epoch_val_loss,
+                   "Val accuracy": epoch_val_accuracy})
 
     torch.save(model, "model_full.pt")
-
-    print(
-        f"Epoch : {epoch+1} - loss : {epoch_loss:.4f} - acc: {epoch_accuracy:.4f} - val_loss : {epoch_val_loss:.4f} - val_acc: {epoch_val_accuracy:.4f}\n"
-    )
