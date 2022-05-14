@@ -57,13 +57,18 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-bs", "--batch_size", default=1)
-    parser.add_argument("-e", "--epochs", default=50)
+    parser.add_argument("-e", "--epochs", default=60)
     parser.add_argument("-lr", "--learning_rate", default=3e-5)
     parser.add_argument("-s", "--seed", default=42, help="For seeding eveyrthing")
     parser.add_argument("-tvd", "--train_and_val_dir", default="/Users/fryderykkogl/Data/ViT_training_data/data_overfit/train",
                         help="Directory of the training data (and validation")
     parser.add_argument("-vd", "--test_dir", default="/Users/fryderykkogl/Data/ViT_training_data/data_overfit/test",
                         help="Directory of the test data")
+    parser.add_argument("-m", "--mode", default="both", choices=["train", "test", "both"],
+                        help="train or test the model")
+    parser.add_argument("-mp", "--model_path", default="model.pt",
+                        help="Path to the model to be loaded/saved")
+    # parser.add_argument("-pu", "--print_updated", default="cpu", choices=["cpu", "gpu"],
 
     args = parser.parse_args()
 
