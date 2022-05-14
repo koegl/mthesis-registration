@@ -1,11 +1,38 @@
 import torch
 
+import matplotlib.pyplot as plt
 
-def train(epochs, train_loader, model, criterion, optimizer, val_loader, device="cpu"):
+from utils import plot_accuracies_and_losses
+
+
+def train(epochs, train_loader, model, criterion, optimizer, val_loader, device="cpu", interval=1, save_path="model.pt"):
+    """
+    Train the model for a given number of epochs and save the model at the end of training.
+    :param epochs:
+    :param train_loader:
+    :param model:
+    :param criterion:
+    :param optimizer:
+    :param val_loader:
+    :param device:
+    :param interval:
+    :param save_path:
+    :return:
+    """
+
+    train_accuracy_array = []
+    train_loss_array = []
+    val_accuracy_array = []
+    val_loss_array = []
+
+    # convert params to the correct types
+    epochs = int(epochs)
+
     for epoch in range(epochs):
         epoch_loss = 0
         epoch_accuracy = 0
 
+        # train step
         for data, label in train_loader:
             data = data.to(device)
             label = label.to(device)
@@ -36,7 +63,19 @@ def train(epochs, train_loader, model, criterion, optimizer, val_loader, device=
                 epoch_val_accuracy += acc / len(val_loader)
                 epoch_val_loss += val_loss / len(val_loader)
 
-        if (epoch + 1) % 20 == 0:
+        if (epoch + 1) % interval == 0:
             print(
                 f"Epoch : {epoch+1} - loss : {epoch_loss:.4f} - acc: {epoch_accuracy:.4f} - val_loss : {epoch_val_loss:.4f} - val_acc: {epoch_val_accuracy:.4f}\n"
             )
+
+        train_accuracy_array.append(float(epoch_accuracy.detach().numpy()))
+        train_loss_array.append(float(epoch_loss.detach().numpy()))
+        val_accuracy_array.append(float(epoch_val_accuracy.detach().numpy()))
+        val_loss_array.append(float(epoch_val_loss.detach().numpy()))
+
+    plot_accuracies_and_losses(
+        [train_accuracy_array, train_loss_array, val_accuracy_array, val_loss_array],
+        ['Training accuracy', 'Training loss', 'Validation accuracy', 'Validation loss'],
+    )
+
+    torch.save(model, "model_full.pt")
