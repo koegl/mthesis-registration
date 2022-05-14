@@ -9,18 +9,19 @@ import torch
 from utils import seed_everything, get_data_loaders
 from network import get_network
 from train import train
+from test import test_model
 
 
 def main(params):
     # define training parameters
-    lr = params.learning_rate
-    seed = params.seed
+    lr = float(params.learning_rate)
+    seed = int(params.seed)
 
     # set seed
     seed_everything(seed)
 
     # get train, val, and test data loaders
-    train_loader, train_list, val_loader, test_loader = get_data_loaders(params)
+    train_loader, val_loader, test_loader = get_data_loaders(params)
 
     # get the model
     model = get_network(device="cpu")
