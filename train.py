@@ -1,4 +1,5 @@
 import torch
+import wandb
 
 import matplotlib.pyplot as plt
 
@@ -31,6 +32,8 @@ def train(epochs, train_loader, model, criterion, optimizer, val_loader, device=
     for epoch in range(epochs):
         epoch_loss = 0
         epoch_accuracy = 0
+        epoch_val_accuracy = 0
+        epoch_val_loss = 0
 
         # train step
         for data, label in train_loader:
@@ -50,8 +53,6 @@ def train(epochs, train_loader, model, criterion, optimizer, val_loader, device=
 
         # eval step
         with torch.no_grad():
-            epoch_val_accuracy = 0
-            epoch_val_loss = 0
             for data, label in val_loader:
                 data = data.to(device)
                 label = label.to(device)
@@ -63,15 +64,12 @@ def train(epochs, train_loader, model, criterion, optimizer, val_loader, device=
                 epoch_val_accuracy += acc / len(val_loader)
                 epoch_val_loss += val_loss / len(val_loader)
 
-        if (epoch + 1) % interval == 0:
-            print(
-                f"Epoch : {epoch+1} - loss : {epoch_loss:.4f} - acc: {epoch_accuracy:.4f} - val_loss : {epoch_val_loss:.4f} - val_acc: {epoch_val_accuracy:.4f}\n"
-            )
-
         train_accuracy_array.append(float(epoch_accuracy.detach().numpy()))
         train_loss_array.append(float(epoch_loss.detach().numpy()))
         val_accuracy_array.append(float(epoch_val_accuracy.detach().numpy()))
         val_loss_array.append(float(epoch_val_loss.detach().numpy()))
+
+        wandb.log({"Train loss": epoch_loss, "Val loss": epoch_val_loss})
 
     plot_accuracies_and_losses(
         [train_accuracy_array, train_loss_array, val_accuracy_array, val_loss_array],
@@ -79,3 +77,7 @@ def train(epochs, train_loader, model, criterion, optimizer, val_loader, device=
     )
 
     torch.save(model, "model_full.pt")
+
+    print(
+        f"Epoch : {epoch+1} - loss : {epoch_loss:.4f} - acc: {epoch_accuracy:.4f} - val_loss : {epoch_val_loss:.4f} - val_acc: {epoch_val_accuracy:.4f}\n"
+    )
