@@ -12,6 +12,8 @@ from train import train
 from test import test_model
 
 
+# based on https://github.com/lucidrains/vit-pytorch/blob/main/examples/cats_and_dogs.ipynb
+
 # todo why is DenseNet loss so high?
 # todo implement early stopping
 
@@ -37,8 +39,8 @@ def main(params):
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
     # set up logging with wandb
-    wandb.init(project="ViT", entity="fryderykkogl")
-    os.environ["WANDB_NOTEBOOK_NAME"] = "ViT"
+    wandb.init(project="Classification", entity="fryderykkogl")
+    os.environ["WANDB_NOTEBOOK_NAME"] = "Classification"
 
     wandb.config = {
         "learning_rate": lr,
@@ -70,15 +72,15 @@ if __name__ == "__main__":
     parser.add_argument("-e", "--epochs", default=20)
     parser.add_argument("-lr", "--learning_rate", default=3e-5)
     parser.add_argument("-s", "--seed", default=42, help="For seeding eveyrthing")
-    parser.add_argument("-tvd", "--train_and_val_dir", default="/Users/fryderykkogl/Data/ViT_training_data/data_overfit/train",
+    parser.add_argument("-tvd", "--train_and_val_dir", default="/Users/fryderykkogl/Data/ViT_training_data/data/train",
                         help="Directory of the training data (and validation")
-    parser.add_argument("-vd", "--test_dir", default="/Users/fryderykkogl/Data/ViT_training_data/data_overfit/test",
+    parser.add_argument("-vd", "--test_dir", default="/Users/fryderykkogl/Data/ViT_training_data/data/test",
                         help="Directory of the test data")
-    parser.add_argument("-m", "--mode", default="both", choices=["train", "test", "both"],
+    parser.add_argument("-m", "--mode", default="train", choices=["train", "test", "both"],
                         help="train or test the model")
-    parser.add_argument("-mp", "--model_path", default="model.pt",
+    parser.add_argument("-mp", "--model_path", default="models/model.pt",
                         help="Path to the model to be loaded/saved")
-    parser.add_argument("-nt", "--network_type", default="DenseNet", choices=["ViT", "DenseNet"])
+    parser.add_argument("-nt", "--network_type", default="ViT", choices=["ViT", "DenseNet"])
 
     args = parser.parse_args()
 
