@@ -1,10 +1,9 @@
 import argparse
-from PIL import Image
+import os
+import wandb
 
-from torchvision import transforms
 import torch.optim as optim
 import torch.nn as nn
-import torch
 
 from utils import seed_everything, get_data_loaders
 from network import get_network
@@ -32,6 +31,18 @@ def main(params):
     # set up optimizer
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
+    # set up logging with wandb
+    wandb.init(project="ViT", entity="fryderykkogl")
+    os.environ["WANDB_NOTEBOOK_NAME"] = "ViT"
+
+    wandb.config = {
+        "learning_rate": lr,
+        "epochs": int(params.epochs),
+        "batch_size": int(params.batch_size),
+        "training_data": params.train_and_val_dir,
+        "test_data": params.test_dir
+    }
+
     # train or test the model (or both)
     if params.mode == "train":
         train(params.epochs, train_loader, model, criterion, optimizer, val_loader, save_path=params.model_path)
@@ -50,7 +61,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-bs", "--batch_size", default=1)
-    parser.add_argument("-e", "--epochs", default=60)
+    parser.add_argument("-e", "--epochs", default=20)
     parser.add_argument("-lr", "--learning_rate", default=3e-5)
     parser.add_argument("-s", "--seed", default=42, help="For seeding eveyrthing")
     parser.add_argument("-tvd", "--train_and_val_dir", default="/Users/fryderykkogl/Data/ViT_training_data/data_overfit/train",
@@ -61,7 +72,6 @@ if __name__ == "__main__":
                         help="train or test the model")
     parser.add_argument("-mp", "--model_path", default="model.pt",
                         help="Path to the model to be loaded/saved")
-    # parser.add_argument("-pu", "--print_updated", default="cpu", choices=["cpu", "gpu"],
 
     args = parser.parse_args()
 
