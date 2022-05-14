@@ -63,6 +63,10 @@ def get_labels(params):
 
 def get_data_loaders(params):
 
+    # convert params to correct types
+    batch_size = int(params.batch_size)
+    seed = int(params.seed)
+
     # get directories
     train_and_val_dir = params.train_and_val_dir
     test_dir = params.test_dir
@@ -72,7 +76,7 @@ def get_data_loaders(params):
     test_list = glob.glob(os.path.join(test_dir, '*.jpg'))
 
     # get train and val split -> here 'test' refers to validation
-    train_list, val_list = train_test_split(train_and_val_list, test_size=0.2, random_state=params.seed)
+    train_list, val_list = train_test_split(train_and_val_list, test_size=0.2, random_state=seed)
 
     # get transforms
     train_transforms, val_transforms, test_transforms = get_transforms()
@@ -81,8 +85,8 @@ def get_data_loaders(params):
     val_data = PatchDataset(val_list, transform=test_transforms)
     test_data = PatchDataset(test_list, transform=test_transforms)
 
-    train_loader = DataLoader(dataset=train_data, batch_size=params.batch_size, shuffle=True)
-    val_loader = DataLoader(dataset=val_data, batch_size=params.batch_size, shuffle=True)
-    test_loader = DataLoader(dataset=test_data, batch_size=params.batch_size, shuffle=True)
+    train_loader = DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(dataset=val_data, batch_size=batch_size, shuffle=True)
+    test_loader = DataLoader(dataset=test_data, batch_size=batch_size, shuffle=True)
 
-    return train_loader, train_list, val_loader, test_loader
+    return train_loader, val_loader, test_loader
