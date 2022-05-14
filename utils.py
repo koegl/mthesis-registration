@@ -103,14 +103,19 @@ def plot_accuracies_and_losses(array_of_arrays_to_plot, array_of_sub_titles, tit
 
     sns.set_style("dark")
     sns.set_style("darkgrid")
+    palette = sns.color_palette("dark")
 
     fig, (axes) = plt.subplots(amount, figsize=(12, 2*amount))
 
-    # plt.title(title)
     axes[0].set_title(title)
 
     for i in range(amount):
-        p = sns.lineplot(x=epochs, y=array_of_arrays_to_plot[i], ax=axes[i])
+        p = sns.lineplot(
+            x=epochs,
+            y=array_of_arrays_to_plot[i],
+            ax=axes[i],
+            color=palette[1])
+
         p.set_ylabel(array_of_sub_titles[i])
         p.set(ylim=(-0.05, 1.05))
 
