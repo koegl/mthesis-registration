@@ -2,7 +2,7 @@ import torch
 import wandb
 
 
-def train(epochs, train_loader, model, criterion, optimizer, val_loader, device, interval=1, save_path="model.pt"):
+def train(epochs, train_loader, model, criterion, optimizer, val_loader, device, save_path="model.pt"):
     """
     Train the model for a given number of epochs and save the model at the end of training.
     :param epochs:
@@ -16,6 +16,7 @@ def train(epochs, train_loader, model, criterion, optimizer, val_loader, device,
     :param save_path:
     :return:
     """
+    new_save_path = save_path
 
     # convert params to the correct types
     epochs = int(epochs)
@@ -60,4 +61,7 @@ def train(epochs, train_loader, model, criterion, optimizer, val_loader, device,
                    "Val loss": epoch_val_loss,
                    "Val accuracy": epoch_val_accuracy})
 
-    torch.save(model, "model_full.pt")
+        split_save_path = save_path.split('.')
+        new_save_path = split_save_path[0] + '_' + str(epoch) + '.' + split_save_path[1]
+
+        torch.save(model, new_save_path)
