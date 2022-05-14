@@ -2,10 +2,7 @@ import torch
 import wandb
 
 
-from utils import plot_accuracies_and_losses
-
-
-def train(epochs, train_loader, model, criterion, optimizer, val_loader, device="cpu", interval=1, save_path="model.pt"):
+def train(epochs, train_loader, model, criterion, optimizer, val_loader, device, interval=1, save_path="model.pt"):
     """
     Train the model for a given number of epochs and save the model at the end of training.
     :param epochs:
