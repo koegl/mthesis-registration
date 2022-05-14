@@ -2,6 +2,8 @@ import random
 import os
 import numpy as np
 import glob
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 import torch
 from torchvision import transforms
@@ -90,3 +92,31 @@ def get_data_loaders(params):
     test_loader = DataLoader(dataset=test_data, batch_size=batch_size, shuffle=True)
 
     return train_loader, val_loader, test_loader
+
+
+def plot_accuracies_and_losses(array_of_arrays_to_plot, array_of_sub_titles, title="Training"):
+
+    assert len(array_of_arrays_to_plot) == len(array_of_sub_titles), "Number of arrays to plot and sub titles must be the same"
+
+    amount = len(array_of_arrays_to_plot)
+    epochs = np.arange(1, len(array_of_arrays_to_plot[0]) + 1)
+
+    sns.set_style("dark")
+    sns.set_style("darkgrid")
+
+    fig, (axes) = plt.subplots(amount, figsize=(12, 2*amount))
+
+    # plt.title(title)
+    axes[0].set_title(title)
+
+    for i in range(amount):
+        p = sns.lineplot(x=epochs, y=array_of_arrays_to_plot[i], ax=axes[i])
+        p.set_ylabel(array_of_sub_titles[i])
+        p.set(ylim=(-0.05, 1.05))
+
+    p.set_xlabel("Epochs")
+
+
+
+    plt.show()
+
