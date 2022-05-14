@@ -31,26 +31,18 @@ def main(params):
     # set up optimizer
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
-    # train the model
-    train(params.epochs, train_loader, model, criterion, optimizer, val_loader)
+    # train or test the model (or both)
+    if params.mode == "train":
+        train(params.epochs, train_loader, model, criterion, optimizer, val_loader, save_path=params.model_path)
 
-    # evaluate
-    with torch.no_grad():
-        for data, label in test_loader:
+    elif params.mode == "test":
+        model_test_accuracy = test_model(model_path=params.model_path, test_loader=test_loader)
+        print(f"\n\nTest set accuracy: {model_test_accuracy}")
 
-            data = data.to("cpu")
-            label = label.to("cpu")
-
-            prediction = model(data)
-            prediction = prediction.argmax(dim=1)
-
-            val = "CORRCET." if prediction == label else "WRONG.   "
-            animal = "dog" if label == 1 else "cat"
-            prediction = "dog" if prediction == 1 else "cat"
-
-            print(f"{val}\tThe image should be a {animal}; the model predicted {prediction}")
-
-    torch.save(model, "model.pt")
+    elif params.mode == "both":
+        train(params.epochs, train_loader, model, criterion, optimizer, val_loader, save_path=params.model_path)
+        model_test_accuracy = test_model(model_path=params.model_path, test_loader=test_loader)
+        print(f"\n\nTest set accuracy: {model_test_accuracy}")
 
 
 if __name__ == "__main__":
