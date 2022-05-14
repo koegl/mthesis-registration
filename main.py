@@ -11,6 +11,9 @@ from train import train
 from test import test_model
 
 
+# todo add a dense-net for classification
+# todo implement early stopping
+
 def main(params):
     # define training parameters
     lr = float(params.learning_rate)
