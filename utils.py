@@ -90,7 +90,7 @@ def extract_overlapping_patches(image_fixed, image_offset, centre, size, offset=
     return patch_fixed, patch_offset
 
 
-def generate_offset_list(length, offsets):
+def generate_list_of_patch_offsets(length, offsets):
     """
     Generate a list of offsets. Symmetric in all three (x,y,z) dimensions. The offset is always only in one dimension.
     For small lengths of the output list it's possible that the output list will be empty (smalles length for which it
@@ -100,9 +100,10 @@ def generate_offset_list(length, offsets):
     :return: a list of offsets in random order
     """
 
-    offset_amount_per_dimension = length // len(offsets)
-    offset_amount_per_dimension = offset_amount_per_dimension // 3
     dimensions = 3  # spatial dimensions
+
+    offset_amount_per_dimension = length // len(offsets)
+    offset_amount_per_dimension = offset_amount_per_dimension // dimensions
 
     offset_list = []
 
