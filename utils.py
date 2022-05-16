@@ -1,8 +1,11 @@
 import numpy as np
+import nibabel as nib
 import warnings
 
 
-def create_radial_gradient(width, height):
+# todo generalise everything to 3D
+
+
 def save_np_array_as_nifti(array, path):
     """
     Save an nd array as a nifti file.
@@ -15,14 +18,18 @@ def save_np_array_as_nifti(array, path):
 
     nib.save(img, path)
 
+
+def create_radial_gradient(width, height, depth):
+    """
     Create a radial gradient.
-    :param width: width of the image
-    :param height: height of the image
-    :return: the gradient image as an nd array
+    :param width: width of the volume
+    :param height: height of the volume
+    :param depth: depth of the volume
+    :return: the gradient volume as a nd array
     """
 
-    x, y = np.meshgrid(np.linspace(-1, 1, width), np.linspace(-1, 1, height))
-    r = np.sqrt(x ** 2 + y ** 2)
+    x, y, z = np.meshgrid(np.linspace(-1, 1, width), np.linspace(-1, 1, height), np.linspace(-1, 1, depth))
+    r = np.sqrt(x ** 2 + y ** 2 + z ** 2)
 
     return r
 
