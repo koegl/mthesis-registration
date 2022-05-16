@@ -3,7 +3,18 @@ import warnings
 
 
 def create_radial_gradient(width, height):
+def save_np_array_as_nifti(array, path):
     """
+    Save an nd array as a nifti file.
+    :param array: the nd array to save
+    :param path: the path to save the nifti file
+    :return:
+    """
+
+    img = nib.Nifti1Image(array, np.eye(4))
+
+    nib.save(img, path)
+
     Create a radial gradient.
     :param width: width of the image
     :param height: height of the image
