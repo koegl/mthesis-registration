@@ -4,7 +4,8 @@ import warnings
 import random
 
 
-# todo generalise everything to 3D
+# todo add way of encoding of patches with offset 0
+# todo add way of encoding of patches with offset bigger than pacth (unrelated)
 
 
 def save_np_array_as_nifti(array, path):
@@ -90,35 +91,35 @@ def extract_overlapping_patches(image_fixed, image_offset, centre, size, offset=
     return patch_fixed, patch_offset
 
 
-def generate_list_of_patch_offsets(length, offsets):
+def generate_list_of_patch_offsets(offsets):
     """
     Generate a list of offsets. Symmetric in all three (x,y,z) dimensions. The offset is always only in one dimension.
-    For small lengths of the output list it's possible that the output list will be empty (smalles length for which it
-    works is 12).
-    :param length: the length of the list
     :param offsets: a list of offsets (will be used for all directions)
     :return: a list of offsets in random order
     """
 
     dimensions = 3  # spatial dimensions
 
-    offset_amount_per_dimension = length // len(offsets)
-    offset_amount_per_dimension = offset_amount_per_dimension // dimensions
-
     offset_list = []
+    zero_offset = False  # we want to skip once we added one zero offser
 
-    # loop through the amount of offsets per dimension and then through the offsets
-    for i in range(offset_amount_per_dimension):
+    # loop through the offsets and for each one three times for the three dimensions
+    for offset in offsets:
+        for j in range(dimensions):
 
-        for offset in offsets:
-            for j in range(dimensions):
+            offset_vector = [0, 0, 0]
+            offset_vector[j] = offset
 
-                offset_vector = [0, 0, 0]
-                offset_vector[j] = offset
-                offset_list.append(offset_vector)
+            if offset_vector == [0, 0, 0]:
+                if zero_offset is True:
+                    continue
+
+                zero_offset = True
+
+            offset_list.append(offset_vector)
 
     # randomise the order of the offsets
-    random.shuffle(offset_list)
+    # random.shuffle(offset_list)
 
     return offset_list
 
@@ -167,12 +168,12 @@ def generate_list_of_patch_centres(centres_per_dimension, volume_size, patch_siz
                 centres_list.append(centre)
 
     # randomise the order of the centres
-    random.shuffle(centres_list)
+    # random.shuffle(centres_list)
 
     return centres_list
 
 
-
+# def generate_corresponding_patches_and_offsets
 
 
 
