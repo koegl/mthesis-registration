@@ -123,6 +123,45 @@ def generate_list_of_patch_offsets(length, offsets):
     return offset_list
 
 
+def generate_list_of_patch_centres(centres_per_dimension, volume_size, patch_size):
+    """
+    Returns a list of patch centres that follow a grid based on centres_per_dimension
+    :param centres_per_dimension: Amount of centres per x,y and z dimension (symmetric)
+    :param volume_size: the size of the volume from which the centres will be taken
+    :param patch_size: Size of the patch has to be provided so that there won't be any out of bounds problems (cubical)
+    :return: a list of patch centres in randomised order
+    """
+
+    centres_list = []
+
+    # loop through the amount of centres per dimension with three nesting loops (one for each dimension)
+    for i in range(centres_per_dimension):
+        for j in range(centres_per_dimension):
+            for k in range(centres_per_dimension):
+
+                centre_x = i * (volume_size[0] // centres_per_dimension)
+                centre_y = j * (volume_size[1] // centres_per_dimension)
+                centre_z = k * (volume_size[2] // centres_per_dimension)
+
+                # check for out of bounds
+                if centre_x < patch_size // 2 or centre_x > volume_size[0] - patch_size // 2:
+                    continue
+                if centre_y < patch_size // 2 or centre_y > volume_size[1] - patch_size // 2:
+                    continue
+                if centre_z < patch_size // 2 or centre_z > volume_size[2] - patch_size // 2:
+                    continue
+
+                centre = [centre_y, centre_x, centre_z]
+
+                centres_list.append(centre)
+
+    # randomise the order of the centres
+    random.shuffle(centres_list)
+
+    return centres_list
+
+
+
 
 
 
