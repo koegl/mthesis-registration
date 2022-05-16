@@ -40,3 +40,21 @@ def extract_square_patch_offset(image, center, size, offset=None):
         return np.zeros((1, 1))
 
     return image[x_min:x_max, y_min:y_max]
+
+
+def extract_overlapping_patches(image_fixed, image_moving, centre, size, offset=None):
+    """
+    Extract overlapping patches from the two images. One of the image patches will be offset by 'offset'
+    :param image_fixed: the image with the standard patch
+    :param image_moving: the image with the offset patch
+    :param centre: centre of the patch
+    :param size: size of the patch
+    :param offset: offset of the image_moving patch
+    :return:
+    """
+
+    patch_fixed = extract_square_patch_offset(image_fixed, centre, size, offset=None)
+
+    patch_moving = extract_square_patch_offset(image_moving, centre, size, offset=offset)
+
+    return patch_fixed, patch_moving
