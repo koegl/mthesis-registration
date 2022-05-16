@@ -1,6 +1,7 @@
 import numpy as np
 import nibabel as nib
 import warnings
+import random
 
 
 # todo generalise everything to 3D
@@ -87,3 +88,54 @@ def extract_overlapping_patches(image_fixed, image_offset, centre, size, offset=
     patch_offset = extract_cubical_patch_offset(image_offset, centre, size, offset=offset)
 
     return patch_fixed, patch_offset
+
+
+def generate_offset_list(length, offsets):
+    """
+    Generate a list of offsets. Symmetric in all three (x,y,z) dimensions.
+    :param length: the length of the list
+    :param offsets: a list of offsets (will be used for all directions)
+    :return: a list of offsets in random order
+    """
+
+    offset_amount_per_dimension = length // len(offsets)
+
+    offset_list = []
+
+    # loop through the amount of offsets per dimension and then through the offsets
+    for i in range(offset_amount_per_dimension):
+        for offset in offsets:
+            offset_list.append(offset)
+
+    # randomise the order of the offsets
+    random.shuffle(offset_list)
+
+    return offset_list
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
