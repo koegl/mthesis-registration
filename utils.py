@@ -9,7 +9,7 @@ def create_radial_gradient(width, height):
     :return: the gradient image as an nd array
     """
 
-    x, y = np.meshgrid(np.linspace(0, 1, width), np.linspace(0, 1, height))
+    x, y = np.meshgrid(np.linspace(-1, 1, width), np.linspace(-1, 1, height))
     r = np.sqrt(x ** 2 + y ** 2)
 
     return r
