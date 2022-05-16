@@ -139,9 +139,20 @@ def generate_list_of_patch_centres(centres_per_dimension, volume_size, patch_siz
         for j in range(centres_per_dimension):
             for k in range(centres_per_dimension):
 
-                centre_x = i * (volume_size[0] // centres_per_dimension)
-                centre_y = j * (volume_size[1] // centres_per_dimension)
-                centre_z = k * (volume_size[2] // centres_per_dimension)
+                factor_x = (volume_size[0] // centres_per_dimension)
+                factor_y = (volume_size[1] // centres_per_dimension)
+                factor_z = (volume_size[2] // centres_per_dimension)
+
+                if centres_per_dimension > volume_size[0]:
+                    factor_x = 1
+                if centres_per_dimension > volume_size[1]:
+                    factor_y = 1
+                if centres_per_dimension > volume_size[2]:
+                    factor_z = 1
+
+                centre_x = i * factor_x
+                centre_y = j * factor_y
+                centre_z = k * factor_z
 
                 # check for out of bounds
                 if centre_x < patch_size // 2 or centre_x > volume_size[0] - patch_size // 2:
