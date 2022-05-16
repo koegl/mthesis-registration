@@ -124,6 +124,7 @@ def generate_list_of_patch_offsets(offsets):
     return offset_list
 
 
+# todo make the centres per dimension different for eachd dimension
 def generate_list_of_patch_centres(centres_per_dimension, volume_size, patch_size):
     """
     Returns a list of patch centres that follow a grid based on centres_per_dimension
@@ -135,10 +136,14 @@ def generate_list_of_patch_centres(centres_per_dimension, volume_size, patch_siz
 
     centres_list = []
 
+    # get maximum dimension
+    max_dim = np.max(volume_size)
+    dimension_factor = volume_size / max_dim  # so we have a uniform grid in all dimensions
+
     # loop through the amount of centres per dimension with three nesting loops (one for each dimension)
-    for i in range(centres_per_dimension):
-        for j in range(centres_per_dimension):
-            for k in range(centres_per_dimension):
+    for i in range(int(centres_per_dimension * dimension_factor[0])):
+        for j in range(int(centres_per_dimension * dimension_factor[1])):
+            for k in range(int(centres_per_dimension * dimension_factor[2])):
 
                 factor_x = (volume_size[0] // centres_per_dimension)
                 factor_y = (volume_size[1] // centres_per_dimension)
