@@ -30,6 +30,8 @@ def create_radial_gradient(width, height, depth):
     x, y, z = np.meshgrid(np.linspace(-1, 1, width), np.linspace(-1, 1, height), np.linspace(-1, 1, depth))
     r = np.sqrt(x ** 2 + y ** 2 + z ** 2)
 
+    r = r / np.max(r)
+
     return r
 
 
