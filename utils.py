@@ -5,7 +5,8 @@ import random
 
 
 # todo add way of encoding of patches with offset 0
-# todo add way of encoding of patches with offset bigger than pacth (unrelated)
+# todo add way of encoding of patches with offset bigger than patch (unrelated)
+# todo patches in pixel data actually shouldn't be cube, because they are stretched in world space
 
 
 def save_np_array_as_nifti(array, path):
@@ -124,7 +125,6 @@ def generate_list_of_patch_offsets(offsets):
     return offset_list
 
 
-# todo make the centres per dimension different for eachd dimension
 def generate_list_of_patch_centres(centres_per_dimension, volume_size, patch_size):
     """
     Returns a list of patch centres that follow a grid based on centres_per_dimension
