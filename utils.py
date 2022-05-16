@@ -1,5 +1,5 @@
 import numpy as np
-
+import warnings
 
 def create_radial_gradient(width, height):
     """
@@ -28,5 +28,10 @@ def extract_square_patch(image, center, size):
     x_max = center[0] + size // 2
     y_min = center[1] - size // 2
     y_max = center[1] + size // 2
+
+    # check if the patch is out of bounds
+    if x_min < 0 or x_max >= image.shape[0] or y_min < 0 or y_max >= image.shape[1]:
+        warnings.warn("The patch is out of bounds.")
+        return np.zeros((1, 1))
 
     return image[x_min:x_max, y_min:y_max]
