@@ -92,20 +92,29 @@ def extract_overlapping_patches(image_fixed, image_offset, centre, size, offset=
 
 def generate_offset_list(length, offsets):
     """
-    Generate a list of offsets. Symmetric in all three (x,y,z) dimensions.
+    Generate a list of offsets. Symmetric in all three (x,y,z) dimensions. The offset is always only in one dimension.
+    For small lengths of the output list it's possible that the output list will be empty (smalles length for which it
+    works is 12).
     :param length: the length of the list
     :param offsets: a list of offsets (will be used for all directions)
     :return: a list of offsets in random order
     """
 
     offset_amount_per_dimension = length // len(offsets)
+    offset_amount_per_dimension = offset_amount_per_dimension // 3
+    dimensions = 3  # spatial dimensions
 
     offset_list = []
 
     # loop through the amount of offsets per dimension and then through the offsets
     for i in range(offset_amount_per_dimension):
+
         for offset in offsets:
-            offset_list.append(offset)
+            for j in range(dimensions):
+
+                offset_vector = [0, 0, 0]
+                offset_vector[j] = offset
+                offset_list.append(offset_vector)
 
     # randomise the order of the offsets
     random.shuffle(offset_list)
