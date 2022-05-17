@@ -41,29 +41,39 @@ def create_radial_gradient(width, height, depth):
     return r
 
 
-def extract_cubical_patch_offset(image, center, size, offset=None):
+def extract_cubical_patch_offset(image, center, size, pixel_spacing=None, offset=None):
     """
     Extract a cubical patch from the image.
     :param image: the volume as an nd array
     :param center: the center of the cubical patch
     :param size: the size of the cubical patch
+    :param pixel_spacing: the pixel spacing of the volume
     :param offset: the offset of the cubical patch
     :return: the cubical patch as an nd array
     """
 
     if offset is None:
         offset = [0, 0, 0]
+    if pixel_spacing is None:
+        pixel_spacing = [0.1286821, 0.12868221, 0.498929]
 
     assert len(offset) == 3, "Offset must be a 3D vector"
     assert len(center) == 3, "Center must be a 3D vector"
     assert isinstance(size, int), "Size must be a scalar integer"
 
-    x_min = center[0] - size // 2 + offset[0]
-    x_max = center[0] + size // 2 + offset[0]
-    y_min = center[1] - size // 2 + offset[1]
-    y_max = center[1] + size // 2 + offset[1]
-    z_min = center[2] - size // 2 + offset[2]
-    z_max = center[2] + size // 2 + offset[2]
+    # scale size and offset with pixel spacing (but not centre)
+    min_spacing = np.min(pixel_spacing)
+    pixel_spacing /= min_spacing
+
+    size /= pixel_spacing
+    offset /= pixel_spacing
+
+    x_max = int(center[0] + size[0] / 2 + offset[0])
+    y_min = int(center[1] - size[1] / 2 + offset[1])
+    x_min = int(center[0] - size[0] / 2 + offset[0])
+    y_max = int(center[1] + size[1] / 2 + offset[1])
+    z_min = int(center[2] - size[2] / 2 + offset[2])
+    z_max = int(center[2] + size[2] / 2 + offset[2])
 
     # check if the patch is out of bounds
     if x_min < 0 or x_max >= image.shape[0] or \
@@ -75,22 +85,26 @@ def extract_cubical_patch_offset(image, center, size, offset=None):
     return image[x_min:x_max, y_min:y_max, z_min:z_max]
 
 
-def extract_overlapping_patches(image_fixed, image_offset, centre, size, offset=None):
+def extract_overlapping_patches(image_fixed, image_offset, centre, size, pixel_spacing=None, offset=None):
     """
     Extract overlapping patches from the two volumes. One of the volume patches will be offset by 'offset'
     :param image_fixed: the volume with the standard patch
     :param image_offset: the volume with the offset patch
     :param centre: centre of the patch
     :param size: size of the patch
+    :param pixel_spacing: pixel spacing of the volume
     :param offset: offset of the image_offset patch
-    :return:
+    :return: the fixed and offset patches
     """
+
+    if pixel_spacing is None:
+        pixel_spacing = [0.1286821, 0.12868221, 0.498929]
     
     assert image_fixed.shape == image_offset.shape, "The two volumes must have the same shape"
 
-    patch_fixed = extract_cubical_patch_offset(image_fixed, centre, size, offset=None)
+    patch_fixed = extract_cubical_patch_offset(image_fixed, centre, size, pixel_spacing, offset=None)
 
-    patch_offset = extract_cubical_patch_offset(image_offset, centre, size, offset=offset)
+    patch_offset = extract_cubical_patch_offset(image_offset, centre, size, pixel_spacing, offset=offset)
 
     return patch_fixed, patch_offset
 
@@ -123,7 +137,7 @@ def generate_list_of_patch_offsets(offsets):
             offset_list.append(offset_vector)
 
     # randomise the order of the offsets
-    # random.shuffle(offset_list)
+    random.shuffle(offset_list)
 
     return offset_list
 
@@ -176,7 +190,7 @@ def generate_list_of_patch_centres(centres_per_dimension, volume_size, patch_siz
                 centres_list.append(centre)
 
     # randomise the order of the centres
-    # random.shuffle(centres_list)
+    random.shuffle(centres_list)
 
     return centres_list
 
