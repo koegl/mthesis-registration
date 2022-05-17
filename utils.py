@@ -7,16 +7,19 @@ import random
 # todo add way of encoding of patches with offset 0
 # todo add way of encoding of patches with offset bigger than patch (unrelated)
 # todo patches in pixel data actually shouldn't be cube, because they are stretched in world space
+# todo would just reversing the order of the patches be enough to be treated as 'augmented data'?
 
 
-def save_np_array_as_nifti(array, path):
+def save_np_array_as_nifti(array, path, affine, header=None):
     """
     Save an nd array as a nifti file.
     :param array: the nd array to save
     :param path: the path to save the nifti file
+    :param header: the header of the nifti file
+    :param affine: the affine of the nifti file
     """
 
-    img = nib.Nifti1Image(array, np.eye(4))
+    img = nib.Nifti1Image(array, affine=affine, header=header)
 
     nib.save(img, path)
 
