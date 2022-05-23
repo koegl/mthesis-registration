@@ -7,8 +7,6 @@ def train(epochs, train_loader, model, criterion, optimizer, val_loader, device,
     Train the model for a given number of epochs and save the model at the end of training.
     """
 
-    new_save_path = save_path
-
     # convert params to the correct types
     epochs = int(epochs)
 
