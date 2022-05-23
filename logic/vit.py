@@ -96,8 +96,11 @@ class Transformer(nn.Module):
 
 #todo how does the dimension of a linear layer relate to the input data dimension
 class ViT(nn.Module):
-    def __init__(self, *, image_size, patch_size, num_classes, dim, depth, heads, mlp_dim, pool = 'cls', channels = 3, dim_head = 64, dropout = 0., emb_dropout = 0.):
+    def __init__(self, *, image_size, patch_size, num_classes, dim, depth, heads, mlp_dim, pool='cls', channels=3, dim_head=64, dropout=0., emb_dropout=0., device="cpu"):
         super().__init__()
+
+        self.device = device
+
         image_height, image_width = pair(image_size)
         patch_height, patch_width = pair(patch_size)
 

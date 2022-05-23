@@ -1,4 +1,4 @@
-from logic.vit_original import ViT
+from logic.vit import ViT
 from linformer import Linformer
 import torch
 
@@ -16,7 +16,8 @@ def get_network(network_type, device):
             heads=8,
             mlp_dim=2048,
             dropout=0.1,
-            emb_dropout=0.1
+            emb_dropout=0.1,
+            device=device
         ).to(device)
 
     elif network_type.lower() == 'densenet':
