@@ -4,10 +4,11 @@ import numpy as np
 import glob
 import matplotlib.pyplot as plt
 import seaborn as sns
+import wandb
 
 import torch
 from torchvision import transforms
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
 
 from dataloader import PatchDataset
@@ -125,3 +126,31 @@ def plot_accuracies_and_losses(array_of_arrays_to_plot, array_of_sub_titles, tit
 
     plt.show()
 
+
+def initialise_wandb(params, len_train, len_val, project="Classification", entity="fryderykkogl"):
+    """
+    Initialise everything for wand
+    :param params: the user arguments
+    :param len_train: the length of the training set
+    :param len_val: the length of the validation set
+    :param project: the project name
+    :param entity: the entity name
+    :return:
+    """
+
+    wandb.init(project=project, entity=entity)
+    os.environ["WANDB_NOTEBOOK_NAME"] = "Classification"
+
+    config_dict = {
+        "learning_rate": float(params.lr),
+        "epochs": int(params.epochs),
+        "batch_size": int(params.batch_size),
+        "training_data": params.train_and_val_dir,
+        "test_data": params.test_dir,
+        "network_type": params.network_type,
+        "device": params.device,
+    }
+    wandb.config = config_dict
+    wandb.log(config_dict)
+    wandb.log({"Training size": len_train,
+               "Validation size": len_val})

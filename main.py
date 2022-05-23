@@ -41,21 +41,8 @@ def main(params):
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
     # set up logging with wandb
-    wandb.init(project="Classification", entity="fryderykkogl")
-    os.environ["WANDB_NOTEBOOK_NAME"] = "Classification"
-
-    config_dict = {
-        "learning_rate": lr,
-        "epochs": int(params.epochs),
-        "batch_size": int(params.batch_size),
-        "training_data": params.train_and_val_dir,
-        "test_data": params.test_dir,
-        "network_type": params.network_type,
-    }
-    wandb.config = config_dict
-    wandb.log(config_dict)
-    wandb.log({"Training size": len(train_loader.dataset),
-               "Validation size": len(val_loader.dataset)})
+    initialise_wandb(params, len(train_loader.dataset), len(val_loader.dataset),
+                     project="Classification", entity="fryderykkogl")
 
     # train or test the model (or both)
     if params.mode == "train":
