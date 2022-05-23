@@ -132,6 +132,12 @@ class ViT(nn.Module):
     def forward(self, img):
         x = self.to_patch_embedding(img)
         b, n, _ = x.shape
+        # append it to the beginning of the embedding (cannot use .cat() because of mps errors)
+        temp = torch.zeros((b, n + 1, dim), device=self.device)
+        temp[:, 0:1, :] = cls_tokens
+        temp[:, 1:, :] = x
+        x = temp
+        # x = torch.cat((cls_tokens, x), dim=1) # todo replace this when issue is fixed with too small buffer
 
         cls_tokens = repeat(self.cls_token, '1 n d -> b n d', b = b)
         x = torch.cat((cls_tokens, x), dim=1)
