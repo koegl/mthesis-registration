@@ -1,0 +1,20 @@
+program: main.py
+method: grid
+metric:
+  name: validation_loss
+  goal: minimize
+parameters:
+  batch_size:
+    value: 2
+  epochs:
+    value: 200
+  patch_size:
+    values: [8, 16, 32, 56]
+  learning_rate:
+    values: [0.001, 0.0005, 0.0002, 0.0001]
+  depth:
+    values: [6]
+  heads:
+    values: [8]
+  network_dim:
+    values: [128]
