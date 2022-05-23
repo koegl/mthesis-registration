@@ -94,7 +94,6 @@ class Transformer(nn.Module):
         return x
 
 
-#todo how does the dimension of a linear layer relate to the input data dimension
 class ViT(nn.Module):
     def __init__(self, *, image_size, patch_size, num_classes, dim, depth, heads, mlp_dim, pool='cls', channels=3, dim_head=64, dropout=0., emb_dropout=0., device="cpu"):
         super().__init__()
@@ -130,8 +129,14 @@ class ViT(nn.Module):
         )
 
     def forward(self, img):
+
+        # convert input image into patch embeddings
         x = self.to_patch_embedding(img)
-        b, n, _ = x.shape
+        b, n, dim = x.shape
+
+        # get the cls token and repeat it for the amount of elements in the batch
+        cls_tokens = repeat(self.cls_token, '1 n d -> b n d', b=b)
+
         # append it to the beginning of the embedding (cannot use .cat() because of mps errors)
         temp = torch.zeros((b, n + 1, dim), device=self.device)
         temp[:, 0:1, :] = cls_tokens
@@ -139,14 +144,18 @@ class ViT(nn.Module):
         x = temp
         # x = torch.cat((cls_tokens, x), dim=1) # todo replace this when issue is fixed with too small buffer
 
-        cls_tokens = repeat(self.cls_token, '1 n d -> b n d', b = b)
-        x = torch.cat((cls_tokens, x), dim=1)
+        # add the positional embeddings (it has shape (1, n+1, dim) but it gets added to each element of the batch
         x += self.pos_embedding[:, :(n + 1)]
+
+        # apply dropout
         x = self.dropout(x)
 
+        # feed the embeddings through the transformer
         x = self.transformer(x)
 
-        x = x.mean(dim = 1) if self.pool == 'mean' else x[:, 0]
+        # for classification we extract only the first 'path,' which is the classification token
+        x = x[:, 0]
 
-        x = self.to_latent(x)
-        return self.mlp_head(x)
+        x = self.mlp_head(x)
+
+        return x
