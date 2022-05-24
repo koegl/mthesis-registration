@@ -60,6 +60,10 @@ def get_image_and_label(path):
     image = tf.image.decode_jpeg(image_string, channels=3)
     image = tf.image.resize(image, [224, 224])
 
+    # # todo check if this rescaling works
+    datagen = ImageDataGenerator(rescale=1.0/255.0)
+    image = datagen.standardize(image)
+
     return image, label
 
 
