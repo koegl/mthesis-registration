@@ -51,8 +51,9 @@ def get_image_and_label(path):
 
     temp = tf.strings.split(path, '/')[-1]
     label = tf.strings.split(temp, '.')[0]
+    label = tf.strings.split(label, '_')[1]
 
-    if label == 'dog':
+    if label == "dog":
         label = 1
     else:
         label = 0
