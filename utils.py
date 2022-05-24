@@ -1,6 +1,9 @@
 import os
 import glob
 import wandb
+import pathlib
+
+import tensorflow as tf
 
 
 def get_labels(params):
@@ -41,3 +44,20 @@ def initialise_wandb(params, len_train, len_val, project="Classification", entit
     wandb.log(config_dict)
     wandb.log({"Training size": len_train,
                "Validation size": len_val})
+
+
+def get_image_and_label(path):
+
+    temp = tf.strings.split(path, '/')[-1]
+    label = tf.strings.split(temp, '.')[0]
+
+    if label == 'dog':
+        label = 1
+    else:
+        label = 0
+
+    image_string = tf.io.read_file(path)
+    image = tf.image.decode_jpeg(image_string, channels=3)
+    image = tf.image.resize(image, [224, 224])
+
+    return image, label
