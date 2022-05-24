@@ -142,6 +142,8 @@ def convert_cmd_args_to_correct_type(params):
                    'batch_size': int(params.batch_size),
                    'train_and_val_dir': params.train_and_val_dir,
                    'test_dir': params.test_dir,
+                   'over_fit_images': params.over_fit_images,
+                   'validate': params.validate,
                    }
 
     return params_dict
