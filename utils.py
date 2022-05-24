@@ -95,12 +95,12 @@ def get_datasets(train_data_dir, test_data_dir, batch_size, val_size=0.2):
     test_data_dir = pathlib.Path(test_data_dir)
 
     # list all files in the directories
-    train_image_count = len(list(train_data_dir.glob('*')))  # we need this for the shuffling and train/val split
-    list_ds_train = tf.data.Dataset.list_files(str(train_data_dir / "*"), shuffle=False)
+    train_image_count = len(list(train_data_dir.glob('*.jpg')))  # we need this for the shuffling and train/val split
+    list_ds_train = tf.data.Dataset.list_files(str(train_data_dir / "*.jpg"), shuffle=False)
     list_ds_train = list_ds_train.shuffle(train_image_count, reshuffle_each_iteration=False)
 
-    test_image_count = len(list(test_data_dir.glob('*')))
-    list_ds_test = tf.data.Dataset.list_files(str(test_data_dir / "*"), shuffle=False)
+    test_image_count = len(list(test_data_dir.glob('*.jpg')))
+    list_ds_test = tf.data.Dataset.list_files(str(test_data_dir / "*.jpg"), shuffle=False)
     list_ds_test = list_ds_test.shuffle(test_image_count, reshuffle_each_iteration=False)
 
     # split into train and validation with val_size=0.2
