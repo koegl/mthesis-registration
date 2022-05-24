@@ -109,8 +109,13 @@ def get_datasets(train_data_dir, test_data_dir, batch_size, val_size=0.2):
     val_ds = list_ds_train.take(val_size)
     test_ds = list_ds_test
 
-    # optimise datasets for performance
+    # include the image and label generator
     autotune = tf.data.AUTOTUNE
+    train_ds = train_ds.map(get_image_and_label, num_parallel_calls=autotune)
+    val_ds = val_ds.map(get_image_and_label, num_parallel_calls=autotune)
+    test_ds = test_ds.map(get_image_and_label, num_parallel_calls=autotune)
+
+    # optimise datasets for performance
     train_ds = configure_dataset_for_performance(train_ds, batch_size, autotune)
     val_ds = configure_dataset_for_performance(val_ds, batch_size, autotune)
     test_ds = configure_dataset_for_performance(test_ds, batch_size, autotune)
