@@ -131,6 +131,7 @@ class ViT(nn.Module):
     def forward(self, img):
 
         # convert input image into patch embeddings
+        img = img.to(self.device)
         x = self.to_patch_embedding(img)
         b, n, dim = x.shape
 
