@@ -112,3 +112,20 @@ def get_datasets(train_data_dir, test_data_dir, batch_size, val_size=0.2):
     test_ds = configure_dataset_for_performance(test_ds, batch_size, autotune)
 
     return train_ds, val_ds, test_ds
+
+
+def convert_cmd_args_to_correct_type(params):
+    """
+    All args are stored in string, but some of them need to be converted - will be saved as a dict
+    :param params: the cmd line args
+    :return: a dict with them stored correctly
+    """
+
+    params_dict = {'learning_rate': float(params.learning_rate),
+                   'epochs': int(params.epochs),
+                   'batch_size': int(params.batch_size),
+                   'train_and_val_dir': params.train_and_val_dir,
+                   'test_dir': params.test_dir,
+                   }
+
+    return params_dict
