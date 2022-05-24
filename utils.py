@@ -61,3 +61,17 @@ def get_image_and_label(path):
     image = tf.image.resize(image, [224, 224])
 
     return image, label
+
+
+def configure_dataset_for_performance(ds, batch_size, autotune):
+    # To train a model with this dataset you will want the data:
+    # To be well shuffled.
+    # To be batched.
+    # Batches to be available as soon as possible.
+
+    ds = ds.cache()
+    ds = ds.shuffle(buffer_size=1000)
+    ds = ds.batch(batch_size)
+    ds = ds.prefetch(buffer_size=autotune)
+
+    return ds
