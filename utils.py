@@ -99,13 +99,14 @@ def configure_dataset_for_performance(ds, batch_size, autotune):
     return ds
 
 
-def get_datasets(train_data_dir, test_data_dir, batch_size, val_size=0.2):
+def get_datasets(train_data_dir, test_data_dir, batch_size, overfit_factor=1, val_size=0.2):
     """
     Returns the train, val and test datasets
     :param train_data_dir: path to the training data
     :param test_data_dir: path to the test data
     :param batch_size: the batch size (neede for optimisation)
     :param val_size: the size of the validation set as a percentage
+    :param overfit_factor: if overfit is 1, the full train set will be used, if 0 then none and then everything in between
     :return: train, val and test datasets
     """
 
@@ -113,12 +114,18 @@ def get_datasets(train_data_dir, test_data_dir, batch_size, val_size=0.2):
     test_data_dir = pathlib.Path(test_data_dir)
 
     # list all files in the directories
-    train_image_count = len(list(train_data_dir.glob('*.jpg')))  # we need this for the shuffling and train/val split
-    list_ds_train = tf.data.Dataset.list_files(str(train_data_dir / "*.jpg"), shuffle=False)
+    train_list = list(train_data_dir.glob('*.jpg'))
+    train_list = [str(path) for path in train_list]  # convert to a list of normal (not posix) paths
+    train_list = extract_portion_of_list(train_list, overfit_factor)  # extract between 0 and 1 of the list
+    train_image_count = len(train_list)  # we need this for the shuffling and train/val split
+    list_ds_train = tf.data.Dataset.list_files(train_list, shuffle=False)
     list_ds_train = list_ds_train.shuffle(train_image_count, reshuffle_each_iteration=False)
 
-    test_image_count = len(list(test_data_dir.glob('*.jpg')))
-    list_ds_test = tf.data.Dataset.list_files(str(test_data_dir / "*.jpg"), shuffle=False)
+    test_list = list(test_data_dir.glob('*.jpg'))
+    test_list = [str(path) for path in test_list]  # convert to a list of normal (not posix) paths
+    test_list = extract_portion_of_list(test_list, overfit_factor)
+    test_image_count = len(test_list)
+    list_ds_test = tf.data.Dataset.list_files(test_list, shuffle=False)
     list_ds_test = list_ds_test.shuffle(test_image_count, reshuffle_each_iteration=False)
 
     # split into train and validation with val_size=0.2
