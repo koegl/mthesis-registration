@@ -75,3 +75,40 @@ def configure_dataset_for_performance(ds, batch_size, autotune):
     ds = ds.prefetch(buffer_size=autotune)
 
     return ds
+
+
+def get_datasets(train_data_dir, test_data_dir, batch_size, val_size=0.2):
+    """
+    Returns the train, val and test datasets
+    :param train_data_dir: path to the training data
+    :param test_data_dir: path to the test data
+    :param batch_size: the batch size (neede for optimisation)
+    :param val_size: the size of the validation set as a percentage
+    :return: train, val and test datasets
+    """
+
+    train_data_dir = pathlib.Path(train_data_dir)
+    test_data_dir = pathlib.Path(test_data_dir)
+
+    # list all files in the directories
+    train_image_count = len(list(train_data_dir.glob('*')))  # we need this for the shuffling and train/val split
+    list_ds_train = tf.data.Dataset.list_files(str(train_data_dir / "*"), shuffle=False)
+    list_ds_train = list_ds_train.shuffle(train_image_count, reshuffle_each_iteration=False)
+
+    test_image_count = len(list(test_data_dir.glob('*')))
+    list_ds_test = tf.data.Dataset.list_files(str(test_data_dir / "*"), shuffle=False)
+    list_ds_test = list_ds_test.shuffle(test_image_count, reshuffle_each_iteration=False)
+
+    # split into train and validation with val_size=0.2
+    val_size = int(0.2 * train_image_count)
+    train_ds = list_ds_train.skip(val_size)
+    val_ds = list_ds_train.take(val_size)
+    test_ds = list_ds_test
+
+    # optimise datasets for performance
+    autotune = tf.data.AUTOTUNE
+    train_ds = configure_dataset_for_performance(train_ds, batch_size, autotune)
+    val_ds = configure_dataset_for_performance(val_ds, batch_size, autotune)
+    test_ds = configure_dataset_for_performance(test_ds, batch_size, autotune)
+
+    return train_ds, val_ds, test_ds
