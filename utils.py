@@ -47,6 +47,23 @@ def initialise_wandb(params, len_train, len_val, project="Classification", entit
                "Validation size": len_val})
 
 
+def extract_portion_of_list(path_list, portion):
+
+    assert len(path_list) > 0, "The list is empty"
+
+    if portion == 0:
+        return [path_list[0]]
+    if portion == 1:
+        return path_list
+
+    full_length = len(path_list)
+    portion_length = int(full_length * portion)
+
+    new_list = path_list[0:portion_length]
+
+    return new_list
+
+
 def get_image_and_label(path):
 
     temp = tf.strings.split(path, '/')[-1]
