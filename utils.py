@@ -2,6 +2,8 @@ import os
 import glob
 import wandb
 import pathlib
+import numpy as np
+import matplotlib.pyplot as plt
 
 import tensorflow as tf
 from keras.preprocessing.image import ImageDataGenerator
@@ -151,18 +153,15 @@ def convert_cmd_args_to_correct_type(params):
     return params_dict
 
 
-def restricted_float(value):
-    """
-    Checks if the value is in the range ]0.0, 1.0]
-    :param value: the value to be checked
-    :return: the value if it is in the range, otherwise errors
-    """
+def display_tensor_and_label(tensor, label):
+    image = np.asarray(tensor)
+    image = image.squeeze()
+    label = np.asarray(label)
+    label = label.squeeze()
+    label = str(label)
 
-    # check if value is a float
-    if not isinstance(value, float):
-        raise argparse.ArgumentTypeError("%r not a floating-point literal" % (value,))
+    label = "dog" if label == "1" else "cat"
 
-    if value <= 0 or value > 1:
-        raise argparse.ArgumentTypeError("%r not in range ]0.0, 1.0]" % (value,))
+    plt.imshow(image)
 
-    return value
+    plt.title(label)
