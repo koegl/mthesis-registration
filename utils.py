@@ -98,8 +98,9 @@ def get_datasets(train_data_dir, test_data_dir, batch_size, over_fit_images=1, v
     test_data_dir = pathlib.Path(test_data_dir)
 
     # list all files in the directories
-    train_list = list(train_data_dir.glob('*.jpg'))
-    assert 0 < over_fit_images <= len(train_list)
+    train_list = list(train_data_dir.glob('*.jpg'))  # list all files in the directory
+    train_list.sort()  # sort so that always the same are extracted
+    assert 0 < over_fit_images <= len(train_list)  # assert that the overfit images is in the range of amount of images
     train_list = [str(path) for path in train_list[0:over_fit_images]]  # convert to a list of normal (not posix) paths
     train_image_count = len(train_list)  # we need this for the shuffling and train/val split
     list_ds_train = tf.data.Dataset.list_files(train_list, shuffle=False)
