@@ -28,8 +28,7 @@ def test_step(images, labels, model, loss_function, test_loss, test_accuracy):
     test_accuracy(labels, predictions)
 
 
-@tf.function
-def train(model, optimiser, loss_function, train_ds, test_ds, epochs):
+def train(model, optimiser, loss_function, train_ds, val_ds, epochs, batch_size):
     # metrics for measuring loss and accuracy
     train_loss = tf.keras.metrics.Mean(name='train_loss')
     train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name='train_accuracy')
@@ -44,16 +43,11 @@ def train(model, optimiser, loss_function, train_ds, test_ds, epochs):
         test_loss.reset_states()
         test_accuracy.reset_states()
 
-        for images, labels in train_ds:
+        for images, labels in train_ds.take(-1):
             train_step(images, labels, model, loss_function, optimiser, train_loss, train_accuracy)
-
-        for test_images, test_labels in test_ds:
-            test_step(test_images, test_labels, model, loss_function, test_loss, test_accuracy)
 
         print(
             f'Epoch {epoch + 1}, '
             f'Loss: {train_loss.result()}, '
             f'Accuracy: {train_accuracy.result() * 100}, '
-            f'Test Loss: {test_loss.result()}, '
-            f'Test Accuracy: {test_accuracy.result() * 100}'
         )
