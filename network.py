@@ -3,24 +3,24 @@ from linformer import Linformer
 import torch
 
 
-def get_network(network_type, device):
+def get_network(params, device):
 
-    if network_type.lower() == 'vit':
+    if params.network_type.lower() == 'vit':
         model = ViT(
-            dim=128,
+            dim=int(params.network_dim),
             image_size=224,
-            patch_size=32,
+            patch_size=int(params.patch_size),
             num_classes=2,
             channels=3,
-            depth=6,
-            heads=8,
-            mlp_dim=2048,
+            depth=int(params.depth),
+            heads=int(params.heads),
+            mlp_dim=int(params.mlp_dim),
             dropout=0.1,
             emb_dropout=0.1,
             device=device
         ).to(device)
 
-    elif network_type.lower() == 'densenet':
+    elif params.network_type.lower() == 'densenet':
         model = torch.hub.load('pytorch/vision:v0.10.0', 'densenet121', pretrained=False)
 
     else:

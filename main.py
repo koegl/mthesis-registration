@@ -62,9 +62,9 @@ def main(params):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-bs", "--batch_size", default=512)
-    parser.add_argument("-e", "--epochs", default=20)
-    parser.add_argument("-lr", "--learning_rate", default=0.004)
+    parser.add_argument("-bs", "--batch_size", default=2)
+    parser.add_argument("-e", "--epochs", default=200)
+    parser.add_argument("-lr", "--learning_rate", default=0.001)
     parser.add_argument("-s", "--seed", default=42, help="For seeding eveyrthing")
     parser.add_argument("-tvd", "--train_and_val_dir", default="/Users/fryderykkogl/Data/ViT_training_data/data/train",
                         help="Directory of the training data (and validation")
@@ -76,6 +76,11 @@ if __name__ == "__main__":
                         help="Path to the model to be loaded/saved")
     parser.add_argument("-nt", "--network_type", default="ViT", choices=["ViT", "DenseNet"])
     parser.add_argument("-dv", "--device", default="mps", choices=["cpu", "mps"])
+    parser.add_argument("-ps", "--patch_size", default=32)
+    parser.add_argument("-d", "--depth", default=6)
+    parser.add_argument("-hd", "--heads", default=8)
+    parser.add_argument("-nd", "--network_dim", default=128)
+    parser.add_argument("-md", "--mlp_dim", default=2048)
 
     args = parser.parse_args()
 
