@@ -62,5 +62,14 @@ def train(model, optimiser, loss_function, train_ds, val_ds, epochs, validate):
         if validate is True:
             print(
                 f'Validation Loss: {val_loss.result():.2f},\t'
-                f'Validation Accuracy: {val_accuracy.result() * 100:.2f}'
+                f'Validation Accuracy: {val_accuracy.result() * 100:.2f},'
                 )
+        else:
+            print()
+
+        if validate is False and train_accuracy.result() >= 0.95:
+            print("Training accuracy is above 95%, stopping...")
+            break
+        if validate is True and val_accuracy.result() >= 0.90:
+            print("Validation accuracy is above 95%, stopping...")
+            break
