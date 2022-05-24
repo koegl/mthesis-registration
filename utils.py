@@ -47,23 +47,6 @@ def initialise_wandb(params, len_train, len_val, project="Classification", entit
                "Validation size": len_val})
 
 
-def extract_portion_of_list(path_list, portion):
-
-    assert len(path_list) > 0, "The list is empty"
-
-    if portion == 0:
-        return [path_list[0]]
-    if portion == 1:
-        return path_list
-
-    full_length = len(path_list)
-    portion_length = int(full_length * portion)
-
-    new_list = path_list[0:portion_length]
-
-    return new_list
-
-
 def get_image_and_label(path):
 
     temp = tf.strings.split(path, '/')[-1]
@@ -99,14 +82,14 @@ def configure_dataset_for_performance(ds, batch_size, autotune):
     return ds
 
 
-def get_datasets(train_data_dir, test_data_dir, batch_size, overfit_factor=1, val_size=0.2):
+def get_datasets(train_data_dir, test_data_dir, batch_size, over_fit_images=1, val_size=0.2):
     """
     Returns the train, val and test datasets
     :param train_data_dir: path to the training data
     :param test_data_dir: path to the test data
     :param batch_size: the batch size (neede for optimisation)
     :param val_size: the size of the validation set as a percentage
-    :param overfit_factor: if overfit is 1, the full train set will be used, if 0 then none and then everything in between
+    :param over_fit_images: if overfit is 1, the full train set will be used, if 0 then none and then everything in between
     :return: train, val and test datasets
     """
 
@@ -115,15 +98,14 @@ def get_datasets(train_data_dir, test_data_dir, batch_size, overfit_factor=1, va
 
     # list all files in the directories
     train_list = list(train_data_dir.glob('*.jpg'))
-    train_list = [str(path) for path in train_list]  # convert to a list of normal (not posix) paths
-    train_list = extract_portion_of_list(train_list, overfit_factor)  # extract between 0 and 1 of the list
+    assert 0 < over_fit_images <= len(train_list)
+    train_list = [str(path) for path in train_list[0:over_fit_images]]  # convert to a list of normal (not posix) paths
     train_image_count = len(train_list)  # we need this for the shuffling and train/val split
     list_ds_train = tf.data.Dataset.list_files(train_list, shuffle=False)
     list_ds_train = list_ds_train.shuffle(train_image_count, reshuffle_each_iteration=False)
 
     test_list = list(test_data_dir.glob('*.jpg'))
     test_list = [str(path) for path in test_list]  # convert to a list of normal (not posix) paths
-    test_list = extract_portion_of_list(test_list, overfit_factor)
     test_image_count = len(test_list)
     list_ds_test = tf.data.Dataset.list_files(test_list, shuffle=False)
     list_ds_test = list_ds_test.shuffle(test_image_count, reshuffle_each_iteration=False)
