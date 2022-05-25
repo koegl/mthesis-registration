@@ -18,7 +18,7 @@ from architectures.vit_for_small_datasets import ViTForSmallDatasets
 
 def seed_everything(seed):
     random.seed(seed)
-    os.environ['PYTHONHASHSEED'] = str(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
@@ -57,8 +57,7 @@ def get_transforms():
 
 def get_labels(params):
 
-    train_and_val_dir = params.train_and_val_dir
-    train_and_val_list = glob.glob(os.path.join(train_and_val_dir, '*.jpg'))
+    train_and_val_list = glob.glob(os.path.join(params["train_and_val_dir"], "*.jpg"))
 
     # get the labels which are the first part of each file name
     labels = [path.split('/')[-1].split('.')[0] for path in train_and_val_list]
@@ -68,20 +67,12 @@ def get_labels(params):
 
 def get_data_loaders(params):
 
-    # convert params to correct types
-    batch_size = int(params.batch_size)
-    seed = int(params.seed)
-
-    # get directories
-    train_and_val_dir = params.train_and_val_dir
-    test_dir = params.test_dir
-
     # get a list of all files (.jpegs)
-    train_and_val_list = glob.glob(os.path.join(train_and_val_dir, '*.jpg'))
-    test_list = glob.glob(os.path.join(test_dir, '*.jpg'))
+    train_and_val_list = glob.glob(os.path.join(params["train_and_val_dir"], "*.jpg"))
+    test_list = glob.glob(os.path.join(params["test_dir"], "*.jpg"))
 
-    # get train and val split -> here 'test' refers to validation
-    train_list, val_list = train_test_split(train_and_val_list, test_size=0.2, random_state=seed)
+    # get train and val split -> here "test" refers to validation
+    train_list, val_list = train_test_split(train_and_val_list, test_size=0.2, random_state=params["seed"])
 
     # get transforms
     train_transforms, val_transforms, test_transforms = get_transforms()
@@ -90,9 +81,9 @@ def get_data_loaders(params):
     val_data = PatchDataset(val_list, transform=test_transforms)
     test_data = PatchDataset(test_list, transform=test_transforms)
 
-    train_loader = DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(dataset=val_data, batch_size=batch_size, shuffle=True)
-    test_loader = DataLoader(dataset=test_data, batch_size=batch_size, shuffle=True)
+    train_loader = DataLoader(dataset=train_data, batch_size=params["batch_size"], shuffle=True)
+    val_loader = DataLoader(dataset=val_data, batch_size=params["batch_size"], shuffle=True)
+    test_loader = DataLoader(dataset=test_data, batch_size=params["batch_size"], shuffle=True)
 
     return train_loader, val_loader, test_loader
 
@@ -144,13 +135,13 @@ def initialise_wandb(params, len_train, len_val, project="Classification", entit
     os.environ["WANDB_NOTEBOOK_NAME"] = "Classification"
 
     config_dict = {
-        "learning_rate": float(params.lr),
-        "epochs": int(params.epochs),
-        "batch_size": int(params.batch_size),
-        "training_data": params.train_and_val_dir,
-        "test_data": params.test_dir,
-        "network_type": params.network_type,
-        "device": params.device,
+        "learning_rate": params["learning_rate"],
+        "epochs": params["epochs"],
+        "batch_size": params["batch_size"],
+        "training_data": params["train_and_val_dir"],
+        "test_data": params["test_dir"],
+        "architecture_type": params["architecture_type"],
+        "device": params["device"],
     }
     wandb.config = config_dict
     wandb.log(config_dict)
@@ -160,7 +151,7 @@ def initialise_wandb(params, len_train, len_val, project="Classification", entit
 
 def get_architecture(architecture_type, device):
 
-    if architecture_type.lower() == 'vitstandard':
+    if architecture_type.lower() == "vitstandard":
         model = ViTStandard(
             dim=128,
             image_size=224,
@@ -175,7 +166,7 @@ def get_architecture(architecture_type, device):
             device=device
         ).to(device)
 
-    elif architecture_type.lower() == 'vit_for_small_datasets':
+    elif architecture_type.lower() == "vitforsmalldatasets":
         model = ViTForSmallDatasets(
             image_size=256,
             patch_size=16,
@@ -189,6 +180,28 @@ def get_architecture(architecture_type, device):
         )
 
     else:
-        raise NotImplementedError('Network type not supported. Only ViTStandard and ViTForSmallDatasets are supported.')
+        raise NotImplementedError("Architecture not supported. Only ViTStandard and ViTForSmallDatasets are supported.")
 
     return model
+
+
+def convert_cmd_args_to_correct_type(params):
+    """
+    All args are stored in string, but some of them need to be converted - will be saved as a dict
+    :param params: the cmd line args
+    :return: a dict with them stored correctly
+    """
+
+    params_dict = {"batch_size": int(params.batch_size),
+                   "epochs": int(params.epochs),
+                   "learning_rate": float(params.batch_size),
+                   "seed": int(params.seed),
+                   "train_and_val_dir": params.train_and_val_dir,
+                   "test_dir": params.test_dir,
+                   "mode": params.mode,
+                   "model_path": params.model_path,
+                   "architecture_type": params.architecture_type,
+                   "device": params.device,
+                   }
+
+    return params_dict

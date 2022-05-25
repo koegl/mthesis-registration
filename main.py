@@ -5,47 +5,47 @@ import argparse
 import torch.optim as optim
 import torch.nn as nn
 
-from utils import seed_everything, get_data_loaders, initialise_wandb, get_architecture
+from utils import seed_everything, get_data_loaders, initialise_wandb, get_architecture, convert_cmd_args_to_correct_type
 from logic.train import train
 from logic.test import test_model
 
 
 def main(params):
-    # define training parameters
-    lr = float(params.learning_rate)
-    seed = int(params.seed)
+
+    params = convert_cmd_args_to_correct_type(params)
 
     # set seed
-    seed_everything(seed)
+    seed_everything(params["seed"])
 
     # get train, val, and test data loaders
     train_loader, val_loader, test_loader = get_data_loaders(params)
 
     # get the model
-    device = params.device
-    model = get_architecture(params.architecture_type, device=device)
+    model = get_architecture(params["architecture_type"], device=params["device"])
 
     # set-up loss-function
     criterion = nn.CrossEntropyLoss()
 
     # set up optimizer
-    optimizer = optim.Adam(model.parameters(), lr=lr)
+    optimizer = optim.Adam(model.parameters(), lr=params["learning_rate"])
 
     # set up logging with wandb
     initialise_wandb(params, len(train_loader.dataset), len(val_loader.dataset),
                      project="Classification", entity="fryderykkogl")
 
     # train or test the model (or both)
-    if params.mode == "train":
-        train(params.epochs, train_loader, model, criterion, optimizer, val_loader, device, save_path=params.model_path)
+    if params["mode"] == "train":
+        train(params["epochs"], train_loader, model, criterion, optimizer, val_loader, params["device"],
+              save_path=params["model_path"])
 
-    elif params.mode == "test":
-        model_test_accuracy = test_model(model_path=params.model_path, test_loader=test_loader)
+    elif params["mode"] == "test":
+        model_test_accuracy = test_model(model_path=params["model_path"], test_loader=test_loader)
         print(f"\n\nTest set accuracy: {model_test_accuracy}")
 
-    elif params.mode == "both":
-        train(params.epochs, train_loader, model, criterion, optimizer, val_loader, device, save_path=params.model_path)
-        model_test_accuracy = test_model(model_path=params.model_path, test_loader=test_loader)
+    elif params["mode"] == "both":
+        train(params["epochs"], train_loader, model, criterion, optimizer, val_loader, params["device"],
+              save_path=params["model_path"])
+        model_test_accuracy = test_model(model_path=params["model_path"], test_loader=test_loader)
         print(f"\n\nTest set accuracy: {model_test_accuracy}")
 
 
@@ -64,7 +64,7 @@ if __name__ == "__main__":
                         help="train or test the model")
     parser.add_argument("-mp", "--model_path", default="models/model.pt",
                         help="Path to the model to be loaded/saved")
-    parser.add_argument("-at", "--architecture_type", default="ViT_Standard", choices=["ViTStandard", "ViTForSmallDatasets"])
+    parser.add_argument("-at", "--architecture_type", default="ViTStandard", choices=["ViTStandard", "ViTForSmallDatasets"])
     parser.add_argument("-dv", "--device", default="mps", choices=["cpu", "mps"])
 
     args = parser.parse_args()
