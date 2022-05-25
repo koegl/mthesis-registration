@@ -74,7 +74,7 @@ if __name__ == "__main__":
                         help="train or test the model")
     parser.add_argument("-mp", "--model_path", default="models/model.pt",
                         help="Path to the model to be loaded/saved")
-    parser.add_argument("-nt", "--network_type", default="ViT", choices=["ViT", "DenseNet"])
+    parser.add_argument("-nt", "--network_type", default="ViT_Standard", choices=["ViTStandard", "ViTForSmallDatasets"])
     parser.add_argument("-dv", "--device", default="mps", choices=["cpu", "mps"])
 
     args = parser.parse_args()
