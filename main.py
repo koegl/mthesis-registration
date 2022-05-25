@@ -6,8 +6,8 @@ import torch.optim as optim
 import torch.nn as nn
 
 from utils import seed_everything, get_data_loaders, initialise_wandb, get_architecture
-from train import train
-from test import test_model
+from logic.train import train
+from logic.test import test_model
 
 
 def main(params):
