@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 from keras.preprocessing.image import ImageDataGenerator
 
+from architectures.cnn_classifiers import CNNClassifier_small, CNNClassifier_medium
+from architectures.vit_standard import ViT
+
 
 def get_labels(params):
 
@@ -144,6 +147,7 @@ def convert_cmd_args_to_correct_type(params):
                    'test_dir': params.test_dir,
                    'over_fit_images': params.over_fit_images,
                    'validate': params.validate,
+                   "network_type": params.network_type,
                    }
 
     return params_dict
@@ -161,3 +165,35 @@ def display_tensor_and_label(tensor, label):
     plt.imshow(image)
 
     plt.title(label)
+
+
+def get_model(network_type):
+    """
+    Function that returns a model
+    :param network_type:
+    :return: model
+    """
+
+    if network_type.lower() == "vit":
+        model = ViT(
+            image_size=256,
+            patch_size=32,
+            num_classes=2,
+            dim=1024,
+            depth=6,
+            heads=16,
+            mlp_dim=2048,
+            dropout=0.1,
+            emb_dropout=0.1
+        )
+
+        return model
+
+    elif network_type.lower() == "cnn_small":
+        return CNNClassifier_small()
+
+    elif network_type.lower() == "cnn_medium":
+        return CNNClassifier_medium()
+
+    else:
+        raise NotImplementedError("The network type is not implemented")

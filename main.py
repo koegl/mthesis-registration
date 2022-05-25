@@ -3,8 +3,7 @@ import wandb
 
 import tensorflow as tf
 
-from logic.cnn_classifier import Classifier2
-from utils import get_datasets, convert_cmd_args_to_correct_type, initialise_wandb
+from utils import get_datasets, convert_cmd_args_to_correct_type, initialise_wandb, get_model
 from train import train
 
 
@@ -17,7 +16,7 @@ def main(params):
                                              params['over_fit_images'])
 
     # create an instance of the classifier
-    model = Classifier2()
+    model = get_model(params['network_type'])
 
     # loss function
     loss_function = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
@@ -39,12 +38,13 @@ if __name__ == "__main__":
     parser.add_argument("-td", "--test_dir", default="//Users/fryderykkogl/Data/ViT_training_data/renamed_data/test",
                         help="path to the test data")
 
-    parser.add_argument("-bs", "--batch_size", default=256)
-    parser.add_argument("-e", "--epochs", default=20)
+    parser.add_argument("-nt", "--network_type", default="vit", choices=["vit", "cnn_small", "cnn_medium"])
 
+    parser.add_argument("-bs", "--batch_size", default=2)
+    parser.add_argument("-e", "--epochs", default=20)
     parser.add_argument("-lr", "--learning_rate", default=0.0001)
 
-    parser.add_argument("-off", "--over_fit_images", default=12499, type=int,
+    parser.add_argument("-off", "--over_fit_images", default=8, type=int,
                         help="amount of images to be used for over-fit-training")
 
     parser.add_argument("-v", "--validate", default=True, type=bool,
