@@ -6,14 +6,19 @@ import torch.nn as nn
 import torch
 import wandb
 
-from utils import seed_everything, get_data_loaders
+from utils import seed_everything, get_data_loaders, initialise_wandb
 from network import get_network
 from train import train
 from test import test_model
 
 
+# based on https://github.com/lucidrains/vit-pytorch/blob/main/examples/cats_and_dogs.ipynb
+# https://sebastianraschka.com/blog/2022/pytorch-m1-gpu.html
+
+# todo should the logging happen after each batch?
 # todo why is DenseNet loss so high?
 # todo implement early stopping
+# todo implement sweep of hyper-parameters
 
 def main(params):
     # define training parameters
@@ -27,7 +32,7 @@ def main(params):
     train_loader, val_loader, test_loader = get_data_loaders(params)
 
     # get the model
-    device = "cuda:0" if torch.cuda.is_available() else "cpu"
+    device = params.device
     model = get_network(params.network_type, device=device)
 
     # set-up loss-function
@@ -37,17 +42,8 @@ def main(params):
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
     # set up logging with wandb
-    wandb.init(project="ViT", entity="fryderykkogl")
-    os.environ["WANDB_NOTEBOOK_NAME"] = "ViT"
-
-    wandb.config = {
-        "learning_rate": lr,
-        "epochs": int(params.epochs),
-        "batch_size": int(params.batch_size),
-        "training_data": params.train_and_val_dir,
-        "test_data": params.test_dir,
-        "network_type": params.network_type,
-    }
+    initialise_wandb(params, len(train_loader.dataset), len(val_loader.dataset),
+                     project="Classification", entity="fryderykkogl")
 
     # train or test the model (or both)
     if params.mode == "train":
@@ -66,19 +62,20 @@ def main(params):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-bs", "--batch_size", default=1)
+    parser.add_argument("-bs", "--batch_size", default=512)
     parser.add_argument("-e", "--epochs", default=20)
-    parser.add_argument("-lr", "--learning_rate", default=3e-5)
+    parser.add_argument("-lr", "--learning_rate", default=0.004)
     parser.add_argument("-s", "--seed", default=42, help="For seeding eveyrthing")
-    parser.add_argument("-tvd", "--train_and_val_dir", default="/Users/fryderykkogl/Data/ViT_training_data/data_overfit/train",
+    parser.add_argument("-tvd", "--train_and_val_dir", default="/Users/fryderykkogl/Data/ViT_training_data/data/train",
                         help="Directory of the training data (and validation")
-    parser.add_argument("-vd", "--test_dir", default="/Users/fryderykkogl/Data/ViT_training_data/data_overfit/test",
+    parser.add_argument("-vd", "--test_dir", default="/Users/fryderykkogl/Data/ViT_training_data/data/test",
                         help="Directory of the test data")
-    parser.add_argument("-m", "--mode", default="both", choices=["train", "test", "both"],
+    parser.add_argument("-m", "--mode", default="train", choices=["both", "test", "both"],
                         help="train or test the model")
-    parser.add_argument("-mp", "--model_path", default="model.pt",
+    parser.add_argument("-mp", "--model_path", default="models/model.pt",
                         help="Path to the model to be loaded/saved")
-    parser.add_argument("-nt", "--network_type", default="DenseNet", choices=["ViT", "DenseNet"])
+    parser.add_argument("-nt", "--network_type", default="ViT", choices=["ViT", "DenseNet"])
+    parser.add_argument("-dv", "--device", default="mps", choices=["cpu", "mps"])
 
     args = parser.parse_args()
 
