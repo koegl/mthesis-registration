@@ -5,18 +5,12 @@ metric:
   goal: minimize
 parameters:
   batch_size:
-    values: [256]
+    value: 256
   epochs:
     value: 50
-  patch_size:
-    values: [32]
   learning_rate:
-    values: [0.00001, 0.0001, 0.001]
-  depth:
-    values: [6]
-  heads:
-    values: [8]
-  network_dim:
-    values: [1024]
-  mlp_dim:
-    values: [2048]
+    values: [0.001, 0.0005, 0.0002, 0.0001, 0.00005]
+  over_fit_images:
+    value: 12499
+  validate:
+    value: True
