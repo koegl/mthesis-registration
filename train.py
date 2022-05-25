@@ -1,4 +1,5 @@
 import tensorflow as tf
+from datetime import datetime
 
 
 @tf.function
@@ -29,6 +30,7 @@ def val_step(images, labels, model, loss_function, test_loss, test_accuracy):
 
 
 def train(model, optimiser, loss_function, train_ds, val_ds, epochs, validate):
+    now = datetime.now()
     # metrics for measuring loss and accuracy
     train_loss = tf.keras.metrics.Mean(name='train_loss')
     train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name='train_accuracy')
@@ -73,3 +75,9 @@ def train(model, optimiser, loss_function, train_ds, val_ds, epochs, validate):
         if validate is True and val_accuracy.result() >= 0.90:
             print("Validation accuracy is above 95%, stopping...")
             break
+
+    dt_string = now.strftime("%d-%m-%Y_%H-%M-%S")
+    new_save_path = save_path + '_' + dt_string
+    model.save(new_save_path)
+
+
