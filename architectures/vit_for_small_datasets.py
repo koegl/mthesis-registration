@@ -108,7 +108,7 @@ class SPT(nn.Module):
         return self.to_patch_tokens(x_with_shifts)
 
 
-class ViT_For_Small_Datasets(nn.Module):
+class ViTForSmallDatasets(nn.Module):
     def __init__(self, *, image_size, patch_size, num_classes, dim, depth, heads, mlp_dim, pool='cls', channels=3, dim_head=64, dropout=0., emb_dropout=0.):
         super().__init__()
         image_height, image_width = pair(image_size)
@@ -120,7 +120,7 @@ class ViT_For_Small_Datasets(nn.Module):
         patch_dim = channels * patch_height * patch_width
         assert pool in {'cls', 'mean'}, 'pool type must be either cls (cls token) or mean (mean pooling)'
 
-        self.to_patch_embedding = SPT(dim = dim, patch_size = patch_size, channels = channels)
+        self.to_patch_embedding = SPT(dim=dim, patch_size=patch_size, channels=channels)
 
         self.pos_embedding = nn.Parameter(torch.randn(1, num_patches + 1, dim))
         self.cls_token = nn.Parameter(torch.randn(1, 1, dim))
