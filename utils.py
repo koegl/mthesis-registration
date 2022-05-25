@@ -32,21 +32,17 @@ def initialise_wandb(params, len_train, len_val, project="Classification", entit
     """
 
     wandb.init(project=project, entity=entity)
-    os.environ["WANDB_NOTEBOOK_NAME"] = "Classification"
+    os.environ["WANDB_NOTEBOOK_NAME"] = project
 
     config_dict = {
-        "learning_rate": float(params.learning_rate),
-        "epochs": int(params.epochs),
-        "batch_size": int(params.batch_size),
-        "training_data": params.train_and_val_dir,
-        "test_data": params.test_dir,
-        "network_type": params.network_type,
-        "device": params.device,
+        "learning_rate": params["learning_rate"],
+        "epochs": params["epochs"],
+        "batch_size": params["batch_size"],
+        "Training size": len_train,
+        "Validation size": len_val
     }
     wandb.config = config_dict
     wandb.log(config_dict)
-    wandb.log({"Training size": len_train,
-               "Validation size": len_val})
 
 
 def get_image_and_label(path):
