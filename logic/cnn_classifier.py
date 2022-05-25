@@ -9,7 +9,7 @@ class Classifier(Model):
         self.conv1 = Conv2D(32, 3, activation='relu')
         self.flatten = Flatten()
         self.d1 = Dense(128, activation='relu')
-        self.d2 = Dense(10)  # default activation is none
+        self.d2 = Dense(2, activation='softmax')
 
     def call(self, x):
         x = self.conv1(x)
