@@ -135,3 +135,7 @@ dmypy.json
 *.pt
 
 wandb/
+
+data/cifar-10-batches-py/
+
+data/
