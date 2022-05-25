@@ -1,4 +1,6 @@
 import tensorflow as tf
+from tensorflow import keras
+import wandb
 from datetime import datetime
 
 
@@ -29,8 +31,9 @@ def val_step(images, labels, model, loss_function, test_loss, test_accuracy):
     test_accuracy(labels, predictions)
 
 
-def train(model, optimiser, loss_function, train_ds, val_ds, epochs, validate):
+def train(model, optimiser, loss_function, train_ds, val_ds, epochs, validate, save_path="modesl/model_tf"):
     now = datetime.now()
+
     # metrics for measuring loss and accuracy
     train_loss = tf.keras.metrics.Mean(name='train_loss')
     train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name='train_accuracy')
@@ -54,20 +57,16 @@ def train(model, optimiser, loss_function, train_ds, val_ds, epochs, validate):
             for images, labels in val_ds.take(-1):
                 val_step(images, labels, model, loss_function, val_loss, val_accuracy)
 
-        # print the metrics at the end of each epoch
-        print(
-            f'Epoch {epoch + 1},\t\t'
-            f'Loss: {train_loss.result():.2f},\t'
-            f'Accuracy: {train_accuracy.result() * 100:.2f},',
-            end='\t\t'
-            )
+        wandb.log({
+            "train_loss": train_loss.result(),
+            "train_accuracy": train_accuracy.result(),
+            "Epoch": epoch
+        })
         if validate is True:
-            print(
-                f'Validation Loss: {val_loss.result():.2f},\t'
-                f'Validation Accuracy: {val_accuracy.result() * 100:.2f},'
-                )
-        else:
-            print()
+            wandb.log({
+                "validation_loss": val_loss.result(),
+                "validation_accuracy": val_accuracy.result()
+                })
 
         if validate is False and train_accuracy.result() >= 0.95:
             print("Training accuracy is above 95%, stopping...")
