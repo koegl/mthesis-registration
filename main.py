@@ -1,24 +1,14 @@
+# https://sebastianraschka.com/blog/2022/pytorch-m1-gpu.html
+
 import argparse
-import os
 
 import torch.optim as optim
 import torch.nn as nn
-import torch
-import wandb
 
-from utils import seed_everything, get_data_loaders, initialise_wandb
-from network import get_network
-from train import train
-from test import test_model
+from utils import seed_everything, get_data_loaders, initialise_wandb, get_architecture
+from logic.train import train
+from logic.test import test_model
 
-
-# based on https://github.com/lucidrains/vit-pytorch/blob/main/examples/cats_and_dogs.ipynb
-# https://sebastianraschka.com/blog/2022/pytorch-m1-gpu.html
-
-# todo should the logging happen after each batch?
-# todo why is DenseNet loss so high?
-# todo implement early stopping
-# todo implement sweep of hyper-parameters
 
 def main(params):
     # define training parameters
@@ -33,7 +23,7 @@ def main(params):
 
     # get the model
     device = params.device
-    model = get_network(params.network_type, device=device)
+    model = get_architecture(params.architecture_type, device=device)
 
     # set-up loss-function
     criterion = nn.CrossEntropyLoss()
@@ -74,7 +64,7 @@ if __name__ == "__main__":
                         help="train or test the model")
     parser.add_argument("-mp", "--model_path", default="models/model.pt",
                         help="Path to the model to be loaded/saved")
-    parser.add_argument("-nt", "--network_type", default="ViT", choices=["ViT", "DenseNet"])
+    parser.add_argument("-at", "--architecture_type", default="ViT_Standard", choices=["ViTStandard", "ViTForSmallDatasets"])
     parser.add_argument("-dv", "--device", default="mps", choices=["cpu", "mps"])
 
     args = parser.parse_args()
