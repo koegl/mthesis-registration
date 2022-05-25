@@ -11,7 +11,9 @@ from torchvision import transforms
 from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
 
-from dataloader import PatchDataset
+from logic.dataloader import PatchDataset
+from architectures.vit_standard import ViTStandard
+from architectures.vit_for_small_datasets import ViTForSmallDatasets
 
 
 def seed_everything(seed):
@@ -154,3 +156,39 @@ def initialise_wandb(params, len_train, len_val, project="Classification", entit
     wandb.log(config_dict)
     wandb.log({"Training size": len_train,
                "Validation size": len_val})
+
+
+def get_architecture(architecture_type, device):
+
+    if architecture_type.lower() == 'vitstandard':
+        model = ViTStandard(
+            dim=128,
+            image_size=224,
+            patch_size=32,
+            num_classes=2,
+            channels=3,
+            depth=6,
+            heads=8,
+            mlp_dim=2048,
+            dropout=0.1,
+            emb_dropout=0.1,
+            device=device
+        ).to(device)
+
+    elif architecture_type.lower() == 'vit_for_small_datasets':
+        model = ViTForSmallDatasets(
+            image_size=256,
+            patch_size=16,
+            num_classes=2,
+            dim=1024,
+            depth=6,
+            heads=16,
+            mlp_dim=2048,
+            dropout=0.1,
+            emb_dropout=0.1
+        )
+
+    else:
+        raise NotImplementedError('Network type not supported. Only ViTStandard and ViTForSmallDatasets are supported.')
+
+    return model
