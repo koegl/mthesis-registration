@@ -1,4 +1,5 @@
-from math import sqrt
+# from https://github.com/lucidrains/vit-pytorch
+
 import torch
 import torch.nn.functional as F
 from torch import nn
