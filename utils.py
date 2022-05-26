@@ -85,7 +85,7 @@ def get_data_loaders(params):
     train_transforms, val_transforms, test_transforms = get_transforms()
 
     train_data = PatchDataset(train_list, transform=train_transforms)
-    val_data = PatchDataset(val_list, transform=test_transforms)
+    val_data = PatchDataset(val_list, transform=val_transforms)
     test_data = PatchDataset(test_list, transform=test_transforms)
 
     train_loader = DataLoader(dataset=train_data, batch_size=params["batch_size"], shuffle=True)
