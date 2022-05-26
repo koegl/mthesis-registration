@@ -41,7 +41,6 @@ class FeedForward(nn.Module):
         return self.net(x)
 
 
-# todo what is dim_head?
 class Attention(nn.Module):
     def __init__(self, dim, heads=8, dim_head=64, dropout=0.):
         super().__init__()
@@ -130,6 +129,8 @@ class ViTStandard(nn.Module):
             nn.Linear(dim, num_classes)
         )
 
+        self.output_activation = nn.Softmax(dim=1)
+
     def forward(self, img):
 
         # convert input image into patch embeddings
@@ -160,5 +161,7 @@ class ViTStandard(nn.Module):
         x = x[:, 0]
 
         x = self.mlp_head(x)
+
+        x = self.output_activation(x)
 
         return x

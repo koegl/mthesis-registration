@@ -130,12 +130,13 @@ class ViTForSmallDatasets(nn.Module):
         self.transformer = Transformer(dim, depth, heads, dim_head, mlp_dim, dropout)
 
         self.pool = pool
-        self.to_latent = nn.Identity()
 
         self.mlp_head = nn.Sequential(
             nn.LayerNorm(dim),
             nn.Linear(dim, num_classes)
         )
+
+        self.output_activation = nn.Sigmoid()
 
     def forward(self, img):
         x = self.to_patch_embedding(img)
@@ -150,5 +151,8 @@ class ViTForSmallDatasets(nn.Module):
 
         x = x.mean(dim=1) if self.pool == 'mean' else x[:, 0]
 
-        x = self.to_latent(x)
-        return self.mlp_head(x)
+        x = self.mlp_head(x)
+
+        # x = self.output_activation(x)
+
+        return x
