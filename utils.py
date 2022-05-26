@@ -185,7 +185,7 @@ def get_architecture(architecture_type, device):
         )
 
     elif architecture_type.lower() == "cnnsmall":
-        model = CNNSmall2()
+        model = CNNSmall()
 
     else:
         raise NotImplementedError("Architecture not supported. Only ViTStandard and ViTForSmallDatasets are supported.")
