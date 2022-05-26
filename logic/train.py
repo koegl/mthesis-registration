@@ -14,7 +14,7 @@ def train_step(train_loader, device, model, criterion, optimizer, epoch):
 
     for data, label in train_loader:
         data = data.to(device)
-        label = label.to(device).to(torch.float32)
+        label = label.to(device)
 
         output = model(data)
         loss = criterion(output, label)
