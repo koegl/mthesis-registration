@@ -2,12 +2,14 @@ import torch
 import wandb
 from utils import display_tensor_and_label
 import torch.nn
+from time import perf_counter
 
 
 def train_step(train_loader, device, model, criterion, optimizer, epoch):
 
     epoch_accuracy = 0
     epoch_loss = 0
+    now = perf_counter()
 
     for data, label in train_loader:
         data = data.to(device)
@@ -27,7 +29,7 @@ def train_step(train_loader, device, model, criterion, optimizer, epoch):
     wandb.log({"Train loss": epoch_loss,
                "Train accuracy": epoch_accuracy,
                "Epoch": epoch})
-    # print(f"{epoch}: Train loss: {epoch_loss};\tTrain accuracy: {epoch_accuracy}")
+    # print(f"{epoch}: Time: {perf_counter() - now:.2f}s;\t Train loss: {epoch_loss};\tTrain accuracy: {epoch_accuracy}")
 
 
 def val_step(val_loader, device, model, criterion, epoch):
