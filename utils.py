@@ -14,7 +14,8 @@ from sklearn.model_selection import train_test_split
 from logic.dataloader import PatchDataset
 from architectures.vit_standard import ViTStandard
 from architectures.vit_for_small_datasets import ViTForSmallDatasets
-from architectures.cnn_small import CNNSmall, CNNSmall2
+from architectures.cnn_small import CNNSmall
+
 
 def seed_everything(seed):
     random.seed(seed)
