@@ -18,6 +18,5 @@ class PatchDataset(Dataset):
         img_transformed = self.transform(img)
 
         label = img_path.split("/")[-1].split(".")[0]
-        label = torch.tensor([1, 0]) if "dog" in label else torch.tensor([0, 1])
-
+        label = torch.tensor([1.0, 0.0]) if "dog" in label else torch.tensor([0.0, 1.0])
         return img_transformed, label
