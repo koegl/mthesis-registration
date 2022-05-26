@@ -14,7 +14,7 @@ from sklearn.model_selection import train_test_split
 from logic.dataloader import PatchDataset
 from architectures.vit_standard import ViTStandard
 from architectures.vit_for_small_datasets import ViTForSmallDatasets
-
+from architectures.cnn_small import CNNSmall, CNNSmall2
 
 def seed_everything(seed):
     random.seed(seed)
@@ -30,7 +30,6 @@ def get_transforms():
     train_transforms = transforms.Compose(
         [
             transforms.Resize((224, 224)),
-            transforms.RandomResizedCrop(224),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
         ]
@@ -119,8 +118,6 @@ def plot_accuracies_and_losses(array_of_arrays_to_plot, array_of_sub_titles, tit
 
     p.set_xlabel("Epochs")
 
-
-
     plt.show()
 
 
@@ -174,7 +171,7 @@ def get_architecture(architecture_type, device):
         model = ViTForSmallDatasets(
             image_size=256,
             patch_size=16,
-            num_classes=2,
+            num_classes=1,
             dim=1024,
             depth=6,
             heads=16,
@@ -182,6 +179,9 @@ def get_architecture(architecture_type, device):
             dropout=0.1,
             emb_dropout=0.1
         )
+
+    elif architecture_type.lower() == "cnnsmall":
+        model = CNNSmall2()
 
     else:
         raise NotImplementedError("Architecture not supported. Only ViTStandard and ViTForSmallDatasets are supported.")
@@ -206,6 +206,8 @@ def convert_cmd_args_to_correct_type(params):
                    "model_path": params.model_path,
                    "architecture_type": params.architecture_type,
                    "device": params.device,
+                   "dataset_size": int(params.dataset_size),
+                   "validate": params.validate,
                    }
 
     return params_dict
