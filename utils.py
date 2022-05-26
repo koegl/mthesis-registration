@@ -14,6 +14,7 @@ from sklearn.model_selection import train_test_split
 from logic.dataloader import PatchDataset
 from architectures.vit_standard import ViTStandard
 from architectures.vit_for_small_datasets import ViTForSmallDatasets
+from architectures.cnn_small import CNNSmall
 
 
 def seed_everything(seed):
@@ -30,7 +31,6 @@ def get_transforms():
     train_transforms = transforms.Compose(
         [
             transforms.Resize((224, 224)),
-            transforms.RandomResizedCrop(224),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
         ]
@@ -38,16 +38,14 @@ def get_transforms():
 
     val_transforms = transforms.Compose(
         [
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
+            transforms.Resize((224, 224)),
             transforms.ToTensor(),
         ]
     )
 
     test_transforms = transforms.Compose(
         [
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
+            transforms.Resize((224, 224)),
             transforms.ToTensor(),
         ]
     )
@@ -67,18 +65,28 @@ def get_labels(params):
 
 def get_data_loaders(params):
 
-    # get a list of all files (.jpegs)
+    # get a list of all files (.jpgs)
     train_and_val_list = glob.glob(os.path.join(params["train_and_val_dir"], "*.jpg"))
+    train_and_val_list.sort()
+
+    if params["dataset_size"] >= len(train_and_val_list):
+        params["dataset_size"] = len(train_and_val_list)
+
+    train_and_val_list = train_and_val_list[0:params["dataset_size"]]
     test_list = glob.glob(os.path.join(params["test_dir"], "*.jpg"))
 
     # get train and val split -> here "test" refers to validation
-    train_list, val_list = train_test_split(train_and_val_list, test_size=0.2, random_state=params["seed"])
+    if params["validate"] is True:
+        train_list, val_list = train_test_split(train_and_val_list, test_size=0.2, random_state=params["seed"])
+    else:
+        train_list = train_and_val_list
+        val_list = train_and_val_list
 
     # get transforms
     train_transforms, val_transforms, test_transforms = get_transforms()
 
     train_data = PatchDataset(train_list, transform=train_transforms)
-    val_data = PatchDataset(val_list, transform=test_transforms)
+    val_data = PatchDataset(val_list, transform=val_transforms)
     test_data = PatchDataset(test_list, transform=test_transforms)
 
     train_loader = DataLoader(dataset=train_data, batch_size=params["batch_size"], shuffle=True)
@@ -114,8 +122,6 @@ def plot_accuracies_and_losses(array_of_arrays_to_plot, array_of_sub_titles, tit
         p.set(ylim=(-0.05, 1.05))
 
     p.set_xlabel("Epochs")
-
-
 
     plt.show()
 
@@ -179,6 +185,9 @@ def get_architecture(architecture_type, device):
             emb_dropout=0.1
         )
 
+    elif architecture_type.lower() == "cnnsmall":
+        model = CNNSmall()
+
     else:
         raise NotImplementedError("Architecture not supported. Only ViTStandard and ViTForSmallDatasets are supported.")
 
@@ -194,7 +203,7 @@ def convert_cmd_args_to_correct_type(params):
 
     params_dict = {"batch_size": int(params.batch_size),
                    "epochs": int(params.epochs),
-                   "learning_rate": float(params.batch_size),
+                   "learning_rate": float(params.learning_rate),
                    "seed": int(params.seed),
                    "train_and_val_dir": params.train_and_val_dir,
                    "test_dir": params.test_dir,
@@ -202,6 +211,27 @@ def convert_cmd_args_to_correct_type(params):
                    "model_path": params.model_path,
                    "architecture_type": params.architecture_type,
                    "device": params.device,
+                   "dataset_size": int(params.dataset_size),
+                   "validate": params.validate,
                    }
 
     return params_dict
+
+
+def display_tensor_and_label(tensor, label):
+    """
+    Display a tensor and its label
+    :param tensor: the tensor
+    :param label: the label
+    :return:
+    """
+    tensor = tensor.squeeze()
+    tensor = tensor.detach().cpu().numpy()
+    tensor = np.transpose(tensor, (1, 2, 0))
+
+    label = int(label)
+    label = "dog" if label == 1 else "cat"
+
+    plt.imshow(tensor)
+    plt.title(label)
+    plt.show()

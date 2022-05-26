@@ -35,7 +35,7 @@ def main(params):
 
     # train or test the model (or both)
     if params["mode"] == "train":
-        train(params["epochs"], train_loader, model, criterion, optimizer, val_loader, params["device"],
+        train(params, train_loader, model, criterion, optimizer, val_loader, params["device"],
               save_path=params["model_path"])
 
     elif params["mode"] == "test":
@@ -43,7 +43,7 @@ def main(params):
         print(f"\n\nTest set accuracy: {model_test_accuracy}")
 
     elif params["mode"] == "both":
-        train(params["epochs"], train_loader, model, criterion, optimizer, val_loader, params["device"],
+        train(params, train_loader, model, criterion, optimizer, val_loader, params["device"],
               save_path=params["model_path"])
         model_test_accuracy = test_model(model_path=params["model_path"], test_loader=test_loader)
         print(f"\n\nTest set accuracy: {model_test_accuracy}")
@@ -52,20 +52,23 @@ def main(params):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-bs", "--batch_size", default=512)
-    parser.add_argument("-e", "--epochs", default=20)
-    parser.add_argument("-lr", "--learning_rate", default=0.004)
+    parser.add_argument("-bs", "--batch_size", default=2)
+    parser.add_argument("-e", "--epochs", default=75)
+    parser.add_argument("-lr", "--learning_rate", default=0.0003)
     parser.add_argument("-s", "--seed", default=42, help="For seeding eveyrthing")
-    parser.add_argument("-tvd", "--train_and_val_dir", default="/Users/fryderykkogl/Data/ViT_training_data/data/train",
+    parser.add_argument("-tvd", "--train_and_val_dir", default="/Users/fryderykkogl/Data/ViT_training_data/renamed_data/train",
                         help="Directory of the training data (and validation")
-    parser.add_argument("-vd", "--test_dir", default="/Users/fryderykkogl/Data/ViT_training_data/data/test",
+    parser.add_argument("-vd", "--test_dir", default="/Users/fryderykkogl/Data/ViT_training_data/renamed_data/test",
                         help="Directory of the test data")
     parser.add_argument("-m", "--mode", default="train", choices=["both", "test", "both"],
                         help="train or test the model")
     parser.add_argument("-mp", "--model_path", default="models/model.pt",
                         help="Path to the model to be loaded/saved")
-    parser.add_argument("-at", "--architecture_type", default="ViTStandard", choices=["ViTStandard", "ViTForSmallDatasets"])
-    parser.add_argument("-dv", "--device", default="mps", choices=["cpu", "mps"])
+    parser.add_argument("-at", "--architecture_type", default="ViTStandard", choices=["CNNSmall", "ViTStandard", "ViTForSmallDatasets"])
+    parser.add_argument("-dv", "--device", default="cpu", choices=["cpu", "mps"])
+
+    parser.add_argument("-ds", "--dataset_size", default=10, type=int, help="Amount of images used for training")
+    parser.add_argument("-of", "--validate", default=False, type=bool, help="Choose whether to validate or not")
 
     args = parser.parse_args()
 
