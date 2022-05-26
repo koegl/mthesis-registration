@@ -67,6 +67,10 @@ def get_data_loaders(params):
     # get a list of all files (.jpgs)
     train_and_val_list = glob.glob(os.path.join(params["train_and_val_dir"], "*.jpg"))
     train_and_val_list.sort()
+
+    if params["dataset_size"] >= len(train_and_val_list):
+        params["dataset_size"] = len(train_and_val_list)
+
     train_and_val_list = train_and_val_list[0:params["dataset_size"]]
     test_list = glob.glob(os.path.join(params["test_dir"], "*.jpg"))
 
