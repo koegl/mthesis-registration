@@ -202,7 +202,7 @@ def convert_cmd_args_to_correct_type(params):
 
     params_dict = {"batch_size": int(params.batch_size),
                    "epochs": int(params.epochs),
-                   "learning_rate": float(params.batch_size),
+                   "learning_rate": float(params.learning_rate),
                    "seed": int(params.seed),
                    "train_and_val_dir": params.train_and_val_dir,
                    "test_dir": params.test_dir,
