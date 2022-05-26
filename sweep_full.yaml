@@ -7,16 +7,12 @@ parameters:
   batch_size:
     values: [256]
   epochs:
-    value: 50
-  patch_size:
-    values: [32]
+    value: 200
   learning_rate:
-    values: [0.00001, 0.0001, 0.001]
-  depth:
-    values: [6]
-  heads:
-    values: [8]
-  network_dim:
-    values: [1024]
-  mlp_dim:
-    values: [2048]
+    values: [0.00001, 0.00003, 0.00006, 0.0001, 0.0003, 0.0006, 0.001]
+  architecture_type:
+    value: ViTForSmallDatasets
+  dataset_size:
+    value: 2500
+  validate:
+    value: True
