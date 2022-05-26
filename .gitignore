@@ -139,3 +139,13 @@ wandb/
 data/cifar-10-batches-py/
 
 data/
+
+CIFAR10/test/cifar-10-batches-py/
+
+CIFAR10/train/cifar-10-batches-py/
+
+Dataset_spine.csv
+
+CIFAR10/test/cifar-10-python.tar.gz
+
+CIFAR10/train/cifar-10-python.tar.gz
