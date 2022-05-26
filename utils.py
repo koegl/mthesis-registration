@@ -175,7 +175,7 @@ def get_architecture(architecture_type, device):
         model = ViTForSmallDatasets(
             image_size=256,
             patch_size=16,
-            num_classes=1,
+            num_classes=2,
             dim=1024,
             depth=6,
             heads=16,
