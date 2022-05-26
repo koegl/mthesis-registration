@@ -149,3 +149,5 @@ Dataset_spine.csv
 CIFAR10/test/cifar-10-python.tar.gz
 
 CIFAR10/train/cifar-10-python.tar.gz
+
+t2.py
