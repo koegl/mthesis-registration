@@ -45,13 +45,14 @@ def val_step(val_loader, device, model, criterion, epoch):
             val_output = model(data)
             val_loss = criterion(val_output, label)
 
-            acc = (val_output.argmax(dim=1) == label).float().mean()
+            acc = (val_output.argmax(dim=1) == label.argmax(dim=1)).float().mean()
             epoch_val_accuracy += acc / len(val_loader)
             epoch_val_loss += val_loss / len(val_loader)
 
-        wandb.log({"Val loss": epoch_val_loss,
-                   "Val accuracy": epoch_val_accuracy,
-                   "Epoch": epoch})
+    wandb.log({"Val loss": epoch_val_loss,
+               "Val accuracy": epoch_val_accuracy,
+               "Epoch": epoch})
+    # print(f"{epoch}: Train loss: {epoch_val_loss};\tTrain accuracy: {epoch_val_accuracy}")
 
 
 def train(params, train_loader, model, criterion, optimizer, val_loader, device, save_path="model.pt"):
