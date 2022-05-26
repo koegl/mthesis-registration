@@ -24,7 +24,7 @@ def main(params):
     model = get_architecture(params["architecture_type"], device=params["device"])
 
     # set-up loss-function
-    criterion = nn.BCELoss()
+    criterion = nn.CrossEntropyLoss()
 
     # set up optimizer
     optimizer = optim.Adam(model.parameters(), lr=params["learning_rate"])
