@@ -1,10 +1,7 @@
 import torch
 import wandb
 from utils import display_tensor_and_label
-from architectures.cnn_small import
 import torch.nn
-
-softmax = torch.nn.Softmax(dim=1)
 
 
 def train_step(train_loader, device, model, criterion, optimizer, epoch):
