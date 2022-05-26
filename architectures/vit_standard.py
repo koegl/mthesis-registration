@@ -129,7 +129,8 @@ class ViTStandard(nn.Module):
             nn.Linear(dim, num_classes)
         )
 
-        self.output_activation = nn.Softmax(dim=1)
+        self.softmax = nn.Softmax(dim=1)
+        self.sigmoid = nn.Sigmoid()
 
     def forward(self, img):
 
@@ -162,6 +163,7 @@ class ViTStandard(nn.Module):
 
         x = self.mlp_head(x)
 
-        x = self.output_activation(x)
+        # x = self.softmax(x)
+        # x = self.sigmoid(x)
 
         return x
