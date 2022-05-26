@@ -27,9 +27,10 @@ def train_step(train_loader, device, model, criterion, optimizer, epoch):
         epoch_accuracy += acc / len(train_loader)
         epoch_loss += loss / len(train_loader)
 
-        wandb.log({"Train loss": epoch_loss,
-                   "Train accuracy": epoch_accuracy,
-                   "Epoch": epoch})
+    wandb.log({"Train loss": epoch_loss,
+               "Train accuracy": epoch_accuracy,
+               "Epoch": epoch})
+    # print(f"{epoch}: Train loss: {epoch_loss};\tTrain accuracy: {epoch_accuracy}")
 
 
 def val_step(val_loader, device, model, criterion, epoch):
