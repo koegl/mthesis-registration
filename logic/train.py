@@ -1,6 +1,7 @@
 import torch
 import wandb
 from utils import display_tensor_and_label
+from utils import calculate_accuracy
 import torch.nn
 from time import perf_counter
 
@@ -22,7 +23,8 @@ def train_step(train_loader, device, model, criterion, optimizer, epoch):
         loss.backward()
         optimizer.step()
 
-        acc = (output.argmax(dim=1) == label.argmax(dim=1)).float().mean()
+        acc = calculate_accuracy(output, label)
+
         epoch_accuracy += acc / len(train_loader)
         epoch_loss += loss / len(train_loader)
 
