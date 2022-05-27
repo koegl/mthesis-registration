@@ -26,10 +26,11 @@ def train_step(train_loader, device, model, criterion, optimizer, epoch):
         epoch_accuracy += acc / len(train_loader)
         epoch_loss += loss / len(train_loader)
 
-    wandb.log({"Train loss": epoch_loss,
-               "Train accuracy": epoch_accuracy,
-               "Epoch": epoch})
-    # print(f"{epoch}: Time: {perf_counter() - now:.2f}s;\t Train loss: {epoch_loss};\tTrain accuracy: {epoch_accuracy}")
+    # wandb.log({"Train loss": epoch_loss,
+    #            "Train accuracy": epoch_accuracy,
+    #            "Epoch": epoch})
+    print(f"\n{epoch}:\tTime: {perf_counter() - now:.2f}s;\t Train loss: {epoch_loss:.2f};\tTrain accuracy: {epoch_accuracy:.2f}",
+          end='\t')
 
 
 def val_step(val_loader, device, model, criterion, epoch):
@@ -49,10 +50,10 @@ def val_step(val_loader, device, model, criterion, epoch):
             epoch_val_accuracy += acc / len(val_loader)
             epoch_val_loss += val_loss / len(val_loader)
 
-    wandb.log({"Val loss": epoch_val_loss,
-               "Val accuracy": epoch_val_accuracy,
-               "Epoch": epoch})
-    # print(f"{epoch}: Train loss: {epoch_val_loss};\tTrain accuracy: {epoch_val_accuracy}")
+    # wandb.log({"Val loss": epoch_val_loss,
+    #            "Val accuracy": epoch_val_accuracy,
+    #            "Epoch": epoch})
+    print(f"Val loss: {epoch_val_loss:.2f};\tVal accuracy: {epoch_val_accuracy:.2f}")
 
 
 def train(params, train_loader, model, criterion, optimizer, val_loader, device, save_path="model.pt"):
