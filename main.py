@@ -21,7 +21,7 @@ def main(params):
     train_loader, val_loader, test_loader = get_data_loaders(params)
 
     # get the model
-    model = get_architecture(params["architecture_type"], device=params["device"])
+    model = get_architecture(params["architecture_type"], device=params["device"]).to(params["device"])
 
     # set-up loss-function
     criterion = nn.CrossEntropyLoss()
