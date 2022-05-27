@@ -30,8 +30,8 @@ def main(params):
     optimizer = optim.Adam(model.parameters(), lr=params["learning_rate"])
 
     # set up logging with wandb
-    initialise_wandb(params, len(train_loader.dataset), len(val_loader.dataset),
-                     project="Classification", entity="fryderykkogl")
+    # initialise_wandb(params, len(train_loader.dataset), len(val_loader.dataset),
+    #                  project="Classification", entity="fryderykkogl")
 
     # train or test the model (or both)
     if params["mode"] == "train":
@@ -53,8 +53,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-bs", "--batch_size", default=256)
-    parser.add_argument("-e", "--epochs", default=200)
-    parser.add_argument("-lr", "--learning_rate", default=0.00001)
+    parser.add_argument("-e", "--epochs", default=30)
+    parser.add_argument("-lr", "--learning_rate", default=0.0001)
     parser.add_argument("-s", "--seed", default=42, help="For seeding eveyrthing")
     parser.add_argument("-tvd", "--train_and_val_dir", default="/Users/fryderykkogl/Data/ViT_training_data/renamed_data/train",
                         help="Directory of the training data (and validation")
@@ -64,11 +64,11 @@ if __name__ == "__main__":
                         help="train or test the model")
     parser.add_argument("-mp", "--model_path", default="models/model.pt",
                         help="Path to the model to be loaded/saved")
-    parser.add_argument("-at", "--architecture_type", default="ViTStandard", choices=["CNNSmall", "ViTStandard", "ViTForSmallDatasets"])
-    parser.add_argument("-dv", "--device", default="mps", choices=["cpu", "mps"])
+    parser.add_argument("-at", "--architecture_type", default="ViTForSmallDatasets", choices=["CNNSmall", "ViTStandard", "ViTForSmallDatasets"])
+    parser.add_argument("-dv", "--device", default="cpu", choices=["cpu", "mps"])
 
-    parser.add_argument("-ds", "--dataset_size", default=2500, type=int, help="Amount of images used for training")
-    parser.add_argument("-of", "--validate", default=True, type=bool, help="Choose whether to validate or not")
+    parser.add_argument("-ds", "--dataset_size", default=2560, type=int, help="Amount of images used for training")
+    parser.add_argument("-v", "--validate", default=True, type=bool, help="Choose whether to validate or not")
 
     args = parser.parse_args()
 
