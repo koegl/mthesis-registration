@@ -178,3 +178,13 @@ def initialise_wandb(params, len_train, len_val, project="Classification", entit
     wandb.log(config_dict)
     wandb.log({"Training size": len_train,
                "Validation size": len_val})
+
+
+def get_architecture():
+
+    if True:
+        model = None
+    else:
+        raise NotImplementedError("Architecture not supported. Only ViTStandard and ViTForSmallDatasets are supported.")
+
+    return model
