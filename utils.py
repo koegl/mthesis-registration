@@ -129,7 +129,64 @@ def generate_list_of_patch_offsets(offsets):
     return offset_list
 
 
-def generate_list_of_patch_centres(centres_per_dimension, volume_size, patch_size):
+def crop_volume_borders(volume):
+    """
+    Removes as much surrounding black pixels from a volume as possible
+    :param volume: The entire volume
+    :return: volume_cropped
+    """
+
+    shape = volume.shape
+
+    assert len(shape) == 3, "Volume must be 3D"
+
+    # set maximum and minimum boundaries in case the volume touches the sides of the image
+    min_x = 0
+    min_y = 0
+    min_z = 0
+    max_x = shape[0] - 1
+    max_y = shape[1] - 1
+    max_z = shape[2] - 1
+
+    # find first plane in the x-direction that contains a non-black pixel - from the 'left'
+    for i in range(shape[0]):
+        if np.count_nonzero(volume[i, :, :]) > 0:
+            min_x = i
+            break
+    # find first plane in the x-direction that contains a non-black pixel - from the 'right'
+    for i in range(shape[0] - 1, -1, -1):
+        if np.count_nonzero(volume[i, :, :]) > 0:
+            max_x = i
+            break
+
+    # find first plane in the y-direction that contains a non-black pixel - from the 'left'
+    for i in range(shape[1]):
+        if np.count_nonzero(volume[:, i, :]) > 0:
+            min_y = i
+            break
+    # find first plane in the y-direction that contains a non-black pixel - from the 'right'
+    for i in range(shape[1] - 1, -1, -1):
+        if np.count_nonzero(volume[:, i, :]) > 0:
+            max_y = i
+            break
+
+    # find first plane in the z-direction that contains a non-black pixel - from the 'left'
+    for i in range(shape[2]):
+        if np.count_nonzero(volume[:, :, i]) > 0:
+            min_z = i
+            break
+    # find first plane in the z-direction that contains a non-black pixel - from the 'right'
+    for i in range(shape[2] - 1, -1, -1):
+        if np.count_nonzero(volume[:, :, i]) > 0:
+            max_z = i
+            break
+
+    # crop the volume
+    volume_cropped = volume[min_x:max_x + 1, min_y:max_y + 1, min_z:max_z + 1]
+
+    return volume_cropped
+
+
     """
     Returns a list of patch centres that follow a grid based on centres_per_dimension
     :param centres_per_dimension: Amount of centres per x,y and z dimension (symmetric)
