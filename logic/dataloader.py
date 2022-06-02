@@ -20,8 +20,16 @@ class PatchDataset(Dataset):
         return len(self.patch_file_path_list)
 
     def __getitem__(self, idx):
-        patch = np.load(self.patch_file_path_list[idx])
-        label = self.labels[idx]
+        """
+        Label ID can be different if we have a train and val split, because all labels are stored in one file
+        """
+
+        path = self.patch_file_path_list[idx]
+        label_id = path.split('/')[-1]
+        label_id = int(label_id.split('_')[0])
+
+        patch = np.load(path)
+        label = self.labels[label_id]
 
         return patch, label
 
