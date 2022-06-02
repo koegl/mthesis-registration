@@ -41,61 +41,6 @@ def create_radial_gradient(width, height, depth):
     return r
 
 
-def extract_cubical_patch_offset(image, center, size, offset=None):
-    """
-    Extract a cubical patch from the image.
-    :param image: the volume as an nd array
-    :param center: the center of the cubical patch
-    :param size: the size of the cubical patch
-    :param offset: the offset of the cubical patch
-    :return: the cubical patch as an nd array
-    """
-
-    if offset is None:
-        offset = [0, 0, 0]
-
-    assert len(offset) == 3, "Offset must be a 3D vector"
-    assert len(center) == 3, "Center must be a 3D vector"
-    assert isinstance(size, int), "Size must be a scalar integer"
-
-    x_max = int(center[0] + size / 2 + offset[0])
-    y_min = int(center[1] - size / 2 + offset[1])
-    x_min = int(center[0] - size / 2 + offset[0])
-    y_max = int(center[1] + size / 2 + offset[1])
-    z_min = int(center[2] - size / 2 + offset[2])
-    z_max = int(center[2] + size / 2 + offset[2])
-
-    # check if the patch is out of bounds
-    if x_min < 0 or x_max >= image.shape[0] or \
-       y_min < 0 or y_max >= image.shape[1] or \
-       z_min < 0 or z_max >= image.shape[2]:
-        warnings.warn("The patch is out of bounds.")
-        return np.zeros((1, 1))
-
-    return image[x_min:x_max, y_min:y_max, z_min:z_max]
-
-
-def extract_overlapping_patches(image_fixed, image_offset, centre, size, offset=None):
-    """
-    Extract overlapping patches from the two volumes. One of the volume patches will be offset by 'offset'
-    :param image_fixed: the volume with the standard patch
-    :param image_offset: the volume with the offset patch
-    :param centre: centre of the patch
-    :param size: size of the patch
-    :param pixel_spacing: pixel spacing of the volume
-    :param offset: offset of the image_offset patch
-    :return: the fixed and offset patches
-    """
-    
-    assert image_fixed.shape == image_offset.shape, "The two volumes must have the same shape"
-
-    patch_fixed = extract_cubical_patch_offset(image_fixed, centre, size, offset=None)
-
-    patch_offset = extract_cubical_patch_offset(image_offset, centre, size, offset=offset)
-
-    return patch_fixed, patch_offset
-
-
 def generate_list_of_patch_offsets(offsets):
     """
     Generate a list of offsets. Symmetric in all three (x,y,z) dimensions. The offset is always only in one dimension.
@@ -187,59 +132,9 @@ def crop_volume_borders(volume):
     return volume_cropped
 
 
-    """
-    Returns a list of patch centres that follow a grid based on centres_per_dimension
-    :param centres_per_dimension: Amount of centres per x,y and z dimension (symmetric)
-    :param volume_size: the size of the volume from which the centres will be taken
-    :param patch_size: Size of the patch has to be provided so that there won't be any out of bounds problems (cubical)
-    :return: a list of patch centres in randomised order
-    """
-
-    centres_list = []
-
-    # get maximum dimension
-    max_dim = np.max(volume_size)
-    dimension_factor = volume_size / max_dim  # so we have a uniform grid in all dimensions
-
-    # loop through the amount of centres per dimension with three nesting loops (one for each dimension)
-    for i in range(int(centres_per_dimension * dimension_factor[0])):
-        for j in range(int(centres_per_dimension * dimension_factor[1])):
-            for k in range(int(centres_per_dimension * dimension_factor[2])):
-
-                factor_x = (volume_size[0] // centres_per_dimension)
-                factor_y = (volume_size[1] // centres_per_dimension)
-                factor_z = (volume_size[2] // centres_per_dimension)
-
-                if centres_per_dimension > volume_size[0]:
-                    factor_x = 1
-                if centres_per_dimension > volume_size[1]:
-                    factor_y = 1
-                if centres_per_dimension > volume_size[2]:
-                    factor_z = 1
-
-                centre_x = i * factor_x
-                centre_y = j * factor_y
-                centre_z = k * factor_z
-
-                # check for out of bounds
-                if centre_x < patch_size // 2 or centre_x > volume_size[0] - patch_size // 2:
-                    continue
-                if centre_y < patch_size // 2 or centre_y > volume_size[1] - patch_size // 2:
-                    continue
-                if centre_z < patch_size // 2 or centre_z > volume_size[2] - patch_size // 2:
-                    continue
-
-                centre = [centre_y, centre_x, centre_z]
-
-                centres_list.append(centre)
-
-    # randomise the order of the centres
-    random.shuffle(centres_list)
-
-    return centres_list
 
 
-# def generate_corresponding_patches_and_offsets
+
 def display_volume_slice(volume):
     """
     Displays a slice of a 3D volume in a matplotlib figure
@@ -286,25 +181,5 @@ def display_volume_slice(volume):
 
 
 
-offset_label_dict = {
-    str([-16, 0, 0]):  [1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
-    str([0, -16, 0]):  [0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
-    str([0, 0, -16]):  [0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
-    str([-8, 0, 0]):   [0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
-    str([0, -8, 0]):   [0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
-    str([0, 0, -8]):   [0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
-    str([-4, 0, 0]):   [0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
-    str([0, -4, 0]):   [0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
-    str([0, 0, -4]):   [0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
-    str([0, 0, 0]):    [0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
-    str([4, 0, 0]):    [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
-    str([0, 4, 0]):    [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0.],
-    str([0, 0, 4]):    [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0.],
-    str([8, 0, 0]):    [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0.],
-    str([0, 8, 0]):    [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0.],
-    str([0, 0, 8]):    [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0.],
-    str([16, 0, 0]):   [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0.],
-    str([0, 16, 0]):   [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0.],
-    str([0, 0, 16]):   [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0.],
-    str([-7, -7, -7]): [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1.],
-}
+
+
