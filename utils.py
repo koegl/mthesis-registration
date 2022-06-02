@@ -229,8 +229,9 @@ def display_tensor_and_label(tensor, label):
     tensor = tensor.detach().cpu().numpy()
     tensor = np.transpose(tensor, (1, 2, 0))
 
-    label = int(label)
-    label = "dog" if label == 1 else "cat"
+    label = label.numpy()
+
+    label = "dog" if all(label == [1.0, 0.0]) else "cat"
 
     plt.imshow(tensor)
     plt.title(label)
