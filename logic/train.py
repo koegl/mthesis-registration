@@ -1,6 +1,6 @@
 import torch
 import wandb
-from utils import display_tensor_and_label
+from utils import display_tensor_and_label, display_volume_slice
 from utils import calculate_accuracy
 import torch.nn
 from time import perf_counter
@@ -23,7 +23,6 @@ def train_step(train_loader, device, model, criterion, optimizer, epoch, logging
         loss.backward()
         optimizer.step()
 
-        # todo check if accuracy is calculated correctly for 20 classes
         acc = calculate_accuracy(output, label)
 
         epoch_accuracy += acc / len(train_loader)
@@ -51,7 +50,6 @@ def val_step(val_loader, device, model, criterion, epoch, logging):
             val_output = model(data)
             val_loss = criterion(val_output, label)
 
-            # todo check if accuracy is calculated correctly for 20 classes
             acc = calculate_accuracy(val_output, label)
             epoch_val_accuracy += acc / len(val_loader)
             epoch_val_loss += val_loss / len(val_loader)
