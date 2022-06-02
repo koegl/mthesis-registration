@@ -1,15 +1,22 @@
 import numpy as np
 import nibabel as nib
-import warnings
 import random
+import os
+import glob
+import seaborn as sns
+import wandb
 import matplotlib.pyplot as plt
-from matplotlib.widgets import Slider, Button
+from matplotlib.widgets import Slider
 
-# todo add way of encoding of patches with offset 0
+import torch
+from torchvision import transforms
+from torch.utils.data import DataLoader
+from sklearn.model_selection import train_test_split
+
+from logic.dataloader import PatchDataset
+
 # todo add way of encoding of patches with offset bigger than patch (unrelated)
-# todo patches in pixel data actually shouldn't be cube, because they are stretched in world space
 # todo would just reversing the order of the patches be enough to be treated as 'augmented data'?
-# to each patch add the label containing the offset
 
 
 def save_np_array_as_nifti(array, path, affine, header=None):
@@ -101,9 +108,6 @@ def crop_volume_borders(volume):
     return volume_cropped
 
 
-
-
-
 def display_volume_slice(volume):
     """
     Displays a slice of a 3D volume in a matplotlib figure
@@ -127,28 +131,91 @@ def display_volume_slice(volume):
     plt.show()
 
 
+def get_transforms():
+    train_transforms = transforms.Compose(
+        [
+            transforms.Resize((224, 224)),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+        ]
+    )
+
+    val_transforms = transforms.Compose(
+        [
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+        ]
+    )
+
+    test_transforms = transforms.Compose(
+        [
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+        ]
+    )
+
+    return train_transforms, val_transforms, test_transforms
 
 
+def get_labels(params):
+
+    train_and_val_list = glob.glob(os.path.join(params["train_and_val_dir"], "*.jpg"))
+
+    # get the labels which are the first part of each file name
+    labels = [path.split('/')[-1].split('.')[0] for path in train_and_val_list]
+
+    return labels
 
 
+def get_data_loaders(params):
+
+    # get a list of all files (.jpgs)
+    train_and_val_list = glob.glob(os.path.join(params["train_and_val_dir"], "*.jpg"))
+    train_and_val_list.sort()
+
+    if params["dataset_size"] >= len(train_and_val_list):
+        params["dataset_size"] = len(train_and_val_list)
+
+    train_and_val_list = train_and_val_list[0:params["dataset_size"]]
+    test_list = glob.glob(os.path.join(params["test_dir"], "*.jpg"))
+
+    # get train and val split -> here "test" refers to validation
+    if params["validate"] is True:
+        train_list, val_list = train_test_split(train_and_val_list, test_size=0.2, random_state=params["seed"])
+    else:
+        train_list = train_and_val_list
+        val_list = train_and_val_list
+
+    # get transforms
+    train_transforms, val_transforms, test_transforms = get_transforms()
+
+    train_data = PatchDataset(train_list, transform=train_transforms)
+    val_data = PatchDataset(val_list, transform=val_transforms)
+    test_data = PatchDataset(test_list, transform=test_transforms)
+
+    train_loader = DataLoader(dataset=train_data, batch_size=params["batch_size"], shuffle=True)
+    val_loader = DataLoader(dataset=val_data, batch_size=params["batch_size"], shuffle=True)
+    test_loader = DataLoader(dataset=test_data, batch_size=params["batch_size"], shuffle=True)
+
+    return train_loader, val_loader, test_loader
 
 
+def display_tensor_and_label(tensor, label):
+    """
+    Display a tensor and its label
+    :param tensor: the tensor
+    :param label: the label
+    :return:
+    """
+    tensor = tensor.squeeze()
+    tensor = tensor.detach().cpu().numpy()
+    tensor = np.transpose(tensor, (1, 2, 0))
 
+    label = label.numpy()
 
+    label = "dog" if all(label == [1.0, 0.0]) else "cat"
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    plt.imshow(tensor)
+    plt.title(label)
+    plt.show()
 
