@@ -188,3 +188,28 @@ def get_architecture():
         raise NotImplementedError("Architecture not supported. Only ViTStandard and ViTForSmallDatasets are supported.")
 
     return model
+
+
+def calculate_accuracy(output, label):
+    """
+    Calculate the accuracy between the output and the label
+    :param output: output of the network
+    :param label: label/target/ground truth
+    :return: accuracy
+    """
+
+    # get the index of the maximal value in the output and the label
+    output_argmax = output.argmax(dim=1)
+    label_argmax = label.argmax(dim=1)
+
+    # compare the maximal indices - a list of booleans
+    correct_bool = (output_argmax == label_argmax)
+
+    # transform the list of bools to a list of floats
+    correct_float = correct_bool.float()
+
+    # calculate the mean of the list of floats (the accuracy)
+    accuracy = correct_float.mean()
+
+    return accuracy
+
