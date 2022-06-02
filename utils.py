@@ -2,12 +2,14 @@ import numpy as np
 import nibabel as nib
 import warnings
 import random
-
+import matplotlib.pyplot as plt
+from matplotlib.widgets import Slider, Button
 
 # todo add way of encoding of patches with offset 0
 # todo add way of encoding of patches with offset bigger than patch (unrelated)
 # todo patches in pixel data actually shouldn't be cube, because they are stretched in world space
 # todo would just reversing the order of the patches be enough to be treated as 'augmented data'?
+# to each patch add the label containing the offset
 
 
 def save_np_array_as_nifti(array, path, affine, header=None):
@@ -51,7 +53,7 @@ def generate_list_of_patch_offsets(offsets):
     dimensions = 3  # spatial dimensions
 
     offset_list = []
-    zero_offset = False  # we want to skip once we added one zero offser
+    zero_offset = False  # we want to skip once we added one zero offset
 
     # loop through the offsets and for each one three times for the three dimensions
     for offset in offsets:
@@ -68,8 +70,11 @@ def generate_list_of_patch_offsets(offsets):
 
             offset_list.append(offset_vector)
 
+    # append unrelated patch - encoded with negative 7
+    offset_list.append([-7, -7, -7])
+
     # randomise the order of the offsets
-    random.shuffle(offset_list)
+    # random.shuffle(offset_list)
 
     return offset_list
 
