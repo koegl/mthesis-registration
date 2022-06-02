@@ -74,6 +74,6 @@ def train(params, train_loader, model, criterion, optimizer, val_loader, device,
 
         # save model
         split_save_path = save_path.split('.')
-        new_save_path = split_save_path[0] + '_' + str(epoch) + '.' + split_save_path[1]
+        # new_save_path = split_save_path[0] + '_' + str(epoch) + '.' + split_save_path[1]
 
-        # torch.save(model, new_save_path)
+    torch.save(model, "models/model.pt")
