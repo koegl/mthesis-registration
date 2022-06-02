@@ -75,7 +75,7 @@ def extract_cubical_patch_offset(image, center, size, offset=None):
     return image[x_min:x_max, y_min:y_max, z_min:z_max]
 
 
-def extract_overlapping_patches(image_fixed, image_offset, centre, size, pixel_spacing=None, offset=None):
+def extract_overlapping_patches(image_fixed, image_offset, centre, size, offset=None):
     """
     Extract overlapping patches from the two volumes. One of the volume patches will be offset by 'offset'
     :param image_fixed: the volume with the standard patch
@@ -86,15 +86,12 @@ def extract_overlapping_patches(image_fixed, image_offset, centre, size, pixel_s
     :param offset: offset of the image_offset patch
     :return: the fixed and offset patches
     """
-
-    if pixel_spacing is None:
-        pixel_spacing = [0.1286821, 0.12868221, 0.498929]
     
     assert image_fixed.shape == image_offset.shape, "The two volumes must have the same shape"
 
-    patch_fixed = extract_cubical_patch_offset(image_fixed, centre, size, pixel_spacing, offset=None)
+    patch_fixed = extract_cubical_patch_offset(image_fixed, centre, size, offset=None)
 
-    patch_offset = extract_cubical_patch_offset(image_offset, centre, size, pixel_spacing, offset=offset)
+    patch_offset = extract_cubical_patch_offset(image_offset, centre, size, offset=offset)
 
     return patch_fixed, patch_offset
 
