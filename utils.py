@@ -240,8 +240,27 @@ def crop_volume_borders(volume):
 
 
 # def generate_corresponding_patches_and_offsets
+def display_volume_slice(volume):
+    """
+    Displays a slice of a 3D volume in a matplotlib figure
+    :param volume: the volume
+    """
 
+    fig, ax = plt.subplots()
+    plt.subplots_adjust(bottom=0.35)
+    ax.imshow(volume[volume.shape[0] // 2, :, :], cmap='gray')
 
+    ax_slider = plt.axes([0.25, 0.2, 0.65, 0.03])
+    slice = Slider(ax_slider, 'Slice', 0, volume.shape[0] - 1, valinit=volume.shape[0] // 2)
+
+    def update(val):
+        ax.clear()
+        ax.imshow(volume[int(slice.val), :, :], cmap='gray')
+        fig.canvas.draw_idle()
+
+    slice.on_changed(update)
+
+    plt.show()
 
 
 
