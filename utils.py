@@ -43,42 +43,6 @@ def create_radial_gradient(width, height, depth):
     return r
 
 
-def generate_list_of_patch_offsets(offsets):
-    """
-    Generate a list of offsets. Symmetric in all three (x,y,z) dimensions. The offset is always only in one dimension.
-    :param offsets: a list of offsets (will be used for all directions)
-    :return: a list of offsets in random order
-    """
-
-    dimensions = 3  # spatial dimensions
-
-    offset_list = []
-    zero_offset = False  # we want to skip once we added one zero offset
-
-    # loop through the offsets and for each one three times for the three dimensions
-    for offset in offsets:
-        for j in range(dimensions):
-
-            offset_vector = [0, 0, 0]
-            offset_vector[j] = offset
-
-            if offset_vector == [0, 0, 0]:
-                if zero_offset is True:
-                    continue
-
-                zero_offset = True
-
-            offset_list.append(offset_vector)
-
-    # append unrelated patch - encoded with negative 7
-    offset_list.append([-7, -7, -7])
-
-    # randomise the order of the offsets
-    # random.shuffle(offset_list)
-
-    return offset_list
-
-
 def crop_volume_borders(volume):
     """
     Removes as much surrounding black pixels from a volume as possible
