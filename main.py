@@ -27,7 +27,7 @@ def main(params):
     train_loader, val_loader, test_loader = get_data_loaders(params)
 
     # get the model
-    model = get_architecture()
+    model = get_architecture(params.architecture_type).to(params.device)
 
     # set-up loss-function
     criterion = nn.CrossEntropyLoss()
@@ -52,12 +52,13 @@ if __name__ == "__main__":
     parser.add_argument("-e", "--epochs", default=7)
     parser.add_argument("-lr", "--learning_rate", default=0.0001)
     parser.add_argument("-s", "--seed", default=42, help="For seeding eveyrthing")
-    parser.add_argument("-tvd", "--train_and_val_dir", default="/Users/fryderykkogl/Data/ViT_training_data/data_overfit/train",
+    parser.add_argument("-tvd", "--train_and_val_dir", default="/Users/fryderykkogl/Data/temp/data_npy",
                         help="Directory of the training data (and validation")
     parser.add_argument("-dv", "--device", default="cpu", choices=["cpu", "mps"])
     parser.add_argument("-ds", "--dataset_size", default=4, type=int, help="Amount of images used for training")
     parser.add_argument("-v", "--validate", default=False, type=bool, help="Choose whether to validate or not")
     parser.add_argument("-lg", "--logging", default="print", choices=["print", "wandb"])
+    parser.add_argument("-at", "--architecture_type", default="densenet", choices=["densenet"])
 
     args = parser.parse_args()
 
