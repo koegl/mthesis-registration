@@ -201,3 +201,44 @@ class Patcher:
                   'label': label}
 
         return packet
+
+    def create_and_save_all_patches_and_labels(self, load_directory_path, save_directory_path):
+
+        # get a list of all files
+        file_list = glob.glob(os.path.join(load_directory_path, "*.nii.gz"))
+        file_list.sort()
+
+        # generate patches and labels
+        patcher = Patcher()
+        all_labels = []
+        idx = 0
+
+        for file in file_list:
+            ds = nib.load(file)
+            volume = ds.get_fdata()
+            patch_centres = patcher.generate_list_of_patch_centres(10, volume, patch_size=32)
+
+            for centre in patch_centres:
+                for offset in self.offsets:
+                    patch_and_label = self.get_patch_and_label(volume, centre, offset, patch_size=32)
+                    patch = patch_and_label['patch']
+                    all_labels.append(np.asarray(patch_and_label['label']))
+
+                    # save the patch and label
+                    np.save(os.path.join(save_directory_path, str(idx).zfill(9) + "_fixed_and_moving" + ".npy"), patch)
+
+                    idx += 1
+
+        all_labels = np.asarray(all_labels)
+        np.save(os.path.join(save_directory_path, "labels.npy"), all_labels)
+
+
+
+
+
+
+
+
+
+
+
