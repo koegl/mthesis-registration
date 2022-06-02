@@ -135,3 +135,13 @@ models/
 .DS_Store
 
 wandb/
+
+CIFAR10/test/cifar-10-batches-py/
+
+CIFAR10/train/cifar-10-batches-py/
+
+Dataset_spine.csv
+
+CIFAR10/train/cifar-10-python.tar.gz
+
+CIFAR10/test/cifar-10-python.tar.gz
