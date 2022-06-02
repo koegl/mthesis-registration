@@ -1,7 +1,6 @@
 import numpy as np
 import warnings
 import random
-import ast
 import glob
 import os
 import nibabel as nib
@@ -194,12 +193,12 @@ class Patcher:
         patch_fixed, patch_offset = self.extract_overlapping_patches(volume, volume, patch_centre, patch_size, offset)
 
         # join patches along new 4th dimension
-        combined_patch = np.zeros((patch_size, patch_size, patch_size, 2))
-        combined_patch[:, :, :, 0] = patch_fixed
-        combined_patch[:, :, :, 1] = patch_offset
+        combined_patch = np.zeros((2, patch_size, patch_size, patch_size))
+        combined_patch[0, :, :, :] = patch_fixed
+        combined_patch[1, :, :, :] = patch_offset
 
         # get the label from the dict
-        label = ast.literal_eval(self.offset_to_label_dict[str(offset)])
+        label = self.offset_to_label_dict[str(np.asarray(offset))]
 
         # combine everything into a dict
         packet = {'patch': combined_patch,
