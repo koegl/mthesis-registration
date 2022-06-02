@@ -2,6 +2,7 @@ import numpy as np
 import nibabel as nib
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
+import wandb
 
 # todo add way of encoding of patches with offset bigger than patch (unrelated) - then just try to give a patch where
 #  the offset is bigger than the patch - this should be tried in all 6 spatial directions until one is found that is not
@@ -149,3 +150,31 @@ def seed_everything(seed):
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
 
+
+def initialise_wandb(params, len_train, len_val, project="Classification", entity="fryderykkogl"):
+    """
+    Initialise everything for wand
+    :param params: the user arguments
+    :param len_train: the length of the training set
+    :param len_val: the length of the validation set
+    :param project: the project name
+    :param entity: the entity name
+    :return:
+    """
+
+    wandb.init(project=project, entity=entity)
+    os.environ["WANDB_NOTEBOOK_NAME"] = "Classification"
+
+    config_dict = {
+        "learning_rate": params["learning_rate"],
+        "epochs": params["epochs"],
+        "batch_size": params["batch_size"],
+        "training_data": params["train_and_val_dir"],
+        "test_data": params["test_dir"],
+        "architecture_type": params["architecture_type"],
+        "device": params["device"],
+    }
+    wandb.config = config_dict
+    wandb.log(config_dict)
+    wandb.log({"Training size": len_train,
+               "Validation size": len_val})
