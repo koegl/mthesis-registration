@@ -1,6 +1,7 @@
 import glob
 import os
 import numpy as np
+import ast
 
 import torch
 from torchvision import transforms
@@ -27,7 +28,7 @@ class PatchDataset(Dataset):
         label_id = int(label_id.split('_')[0])
 
         patch = np.load(path)
-        label = self.labels[label_id]
+        label = torch.tensor(self.labels[label_id])
 
         return patch, label
 
