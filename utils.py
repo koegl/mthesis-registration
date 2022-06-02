@@ -41,32 +41,22 @@ def create_radial_gradient(width, height, depth):
     return r
 
 
-def extract_cubical_patch_offset(image, center, size, pixel_spacing=None, offset=None):
+def extract_cubical_patch_offset(image, center, size, offset=None):
     """
     Extract a cubical patch from the image.
     :param image: the volume as an nd array
     :param center: the center of the cubical patch
     :param size: the size of the cubical patch
-    :param pixel_spacing: the pixel spacing of the volume
     :param offset: the offset of the cubical patch
     :return: the cubical patch as an nd array
     """
 
     if offset is None:
         offset = [0, 0, 0]
-    if pixel_spacing is None:
-        pixel_spacing = [0.1286821, 0.12868221, 0.498929]
 
     assert len(offset) == 3, "Offset must be a 3D vector"
     assert len(center) == 3, "Center must be a 3D vector"
     assert isinstance(size, int), "Size must be a scalar integer"
-
-    # scale size and offset with pixel spacing (but not centre)
-    min_spacing = np.min(pixel_spacing)
-    pixel_spacing /= min_spacing
-
-    size /= pixel_spacing
-    offset /= pixel_spacing
 
     x_max = int(center[0] + size / 2 + offset[0])
     y_min = int(center[1] - size / 2 + offset[1])
