@@ -68,12 +68,12 @@ def extract_cubical_patch_offset(image, center, size, pixel_spacing=None, offset
     size /= pixel_spacing
     offset /= pixel_spacing
 
-    x_max = int(center[0] + size[0] / 2 + offset[0])
-    y_min = int(center[1] - size[1] / 2 + offset[1])
-    x_min = int(center[0] - size[0] / 2 + offset[0])
-    y_max = int(center[1] + size[1] / 2 + offset[1])
-    z_min = int(center[2] - size[2] / 2 + offset[2])
-    z_max = int(center[2] + size[2] / 2 + offset[2])
+    x_max = int(center[0] + size / 2 + offset[0])
+    y_min = int(center[1] - size / 2 + offset[1])
+    x_min = int(center[0] - size / 2 + offset[0])
+    y_max = int(center[1] + size / 2 + offset[1])
+    z_min = int(center[2] - size / 2 + offset[2])
+    z_max = int(center[2] + size / 2 + offset[2])
 
     # check if the patch is out of bounds
     if x_min < 0 or x_max >= image.shape[0] or \
