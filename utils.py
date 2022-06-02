@@ -1,22 +1,11 @@
 import numpy as np
 import nibabel as nib
-import random
-import os
-import glob
-import seaborn as sns
-import wandb
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 
-import torch
-from torchvision import transforms
-from torch.utils.data import DataLoader
-from sklearn.model_selection import train_test_split
-
-from logic.dataloader import PatchDataset
-
-# todo add way of encoding of patches with offset bigger than patch (unrelated)
-# todo would just reversing the order of the patches be enough to be treated as 'augmented data'?
+# todo add way of encoding of patches with offset bigger than patch (unrelated) - then just try to give a patch where
+#  the offset is bigger than the patch - this should be tried in all 6 spatial directions until one is found that is not
+#  out of bounds
 
 
 def save_np_array_as_nifti(array, path, affine, header=None):
@@ -129,75 +118,6 @@ def display_volume_slice(volume):
     slice.on_changed(update)
 
     plt.show()
-
-
-def get_transforms():
-    train_transforms = transforms.Compose(
-        [
-            transforms.Resize((224, 224)),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-        ]
-    )
-
-    val_transforms = transforms.Compose(
-        [
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-        ]
-    )
-
-    test_transforms = transforms.Compose(
-        [
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-        ]
-    )
-
-    return train_transforms, val_transforms, test_transforms
-
-
-def get_labels(params):
-
-    train_and_val_list = glob.glob(os.path.join(params["train_and_val_dir"], "*.jpg"))
-
-    # get the labels which are the first part of each file name
-    labels = [path.split('/')[-1].split('.')[0] for path in train_and_val_list]
-
-    return labels
-
-
-def get_data_loaders(params):
-
-    # get a list of all files (.jpgs)
-    train_and_val_list = glob.glob(os.path.join(params["train_and_val_dir"], "*.jpg"))
-    train_and_val_list.sort()
-
-    if params["dataset_size"] >= len(train_and_val_list):
-        params["dataset_size"] = len(train_and_val_list)
-
-    train_and_val_list = train_and_val_list[0:params["dataset_size"]]
-    test_list = glob.glob(os.path.join(params["test_dir"], "*.jpg"))
-
-    # get train and val split -> here "test" refers to validation
-    if params["validate"] is True:
-        train_list, val_list = train_test_split(train_and_val_list, test_size=0.2, random_state=params["seed"])
-    else:
-        train_list = train_and_val_list
-        val_list = train_and_val_list
-
-    # get transforms
-    train_transforms, val_transforms, test_transforms = get_transforms()
-
-    train_data = PatchDataset(train_list, transform=train_transforms)
-    val_data = PatchDataset(val_list, transform=val_transforms)
-    test_data = PatchDataset(test_list, transform=test_transforms)
-
-    train_loader = DataLoader(dataset=train_data, batch_size=params["batch_size"], shuffle=True)
-    val_loader = DataLoader(dataset=val_data, batch_size=params["batch_size"], shuffle=True)
-    test_loader = DataLoader(dataset=test_data, batch_size=params["batch_size"], shuffle=True)
-
-    return train_loader, val_loader, test_loader
 
 
 def display_tensor_and_label(tensor, label):

@@ -1,22 +1,67 @@
-from PIL import Image
-from torch.utils.data import Dataset
+import nibabel as nib
+import glob
+import os
+import numpy as np
+
 import torch
+from torchvision import transforms
+from torch.utils.data import Dataset, DataLoader
+
+from logic.patcher import Patcher
 
 
 class PatchDataset(Dataset):
-    def __init__(self, file_list, transform=None):
-        self.file_list = file_list
+    def __init__(self, data_path, transform=None):
+        self.data_path = data_path
         self.transform = transform
 
+        self.patch_file_path_list = glob.glob(os.path.join(self.data_path, "*_fixed_and_moving.npy"))
+        self.patch_file_path_list.sort()
+
+        label_path = os.path.join(data_path, "labels.npy")
+        self.labels = np.load(label_path)
+
     def __len__(self):
-        self.filelength = len(self.file_list)
-        return self.filelength
+        return len(self.patch_file_path_list)
 
     def __getitem__(self, idx):
-        img_path = self.file_list[idx]
-        img = Image.open(img_path)
-        img_transformed = self.transform(img)
+        patch = np.load(self.patch_file_path_list[idx])
+        label = self.labels[idx]
 
-        label = img_path.split("/")[-1].split(".")[0]
-        label = torch.tensor([1.0, 0.0]) if "dog" in label else torch.tensor([0.0, 1.0])
-        return img_transformed, label
+        return patch, label
+
+
+def get_transforms():
+    train_transforms = transforms.Compose(
+        [
+            transforms.ToTensor(),
+        ]
+    )
+
+    val_transforms = transforms.Compose(
+        [
+            transforms.ToTensor(),
+        ]
+    )
+
+    test_transforms = transforms.Compose(
+        [
+            transforms.ToTensor(),
+        ]
+    )
+
+    return train_transforms, val_transforms, test_transforms
+
+
+def get_data_loader(data_path="/Users/fryderykkogl/Data/temp/data_npy", batch_size=1):
+
+    # get transforms
+    train_transforms, _, _ = get_transforms()
+
+    # create the dataset
+    train_dataset = PatchDataset(data_path, train_transforms)
+
+    # pass the dataset to the dataloader
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+
+    return train_loader
