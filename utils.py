@@ -4,18 +4,16 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 import random
 import os
-import glob
 import wandb
 
 import torch
-from torch.utils.data import DataLoader
-from sklearn.model_selection import train_test_split
 
-from logic.dataloader import PatchDataset
+import architectures.densenet3d as densenet3d
+
 
 # todo add way of encoding of patches with offset bigger than patch (unrelated) - then just try to give a patch where
 #  the offset is bigger than the patch - this should be tried in all 6 spatial directions until one is found that is not
-#  out of bounds
+#  out of bounds - it currently gives a -7, -7, -7 offset patch
 
 
 def save_np_array_as_nifti(array, path, affine, header=None):
@@ -189,10 +187,10 @@ def initialise_wandb(params, len_train, len_val, project="Classification", entit
                "Validation size": len_val})
 
 
-def get_architecture():
+def get_architecture(architecture_type):
 
-    if True:
-        model = None
+    if architecture_type.lower() == "densenet":
+        model = densenet3d.DenseNet()
     else:
         raise NotImplementedError("Architecture not supported. Only ViTStandard and ViTForSmallDatasets are supported.")
 
