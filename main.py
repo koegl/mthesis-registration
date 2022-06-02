@@ -52,11 +52,11 @@ def main(params):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-bs", "--batch_size", default=256)
-    parser.add_argument("-e", "--epochs", default=30)
+    parser.add_argument("-bs", "--batch_size", default=2)
+    parser.add_argument("-e", "--epochs", default=7)
     parser.add_argument("-lr", "--learning_rate", default=0.0001)
     parser.add_argument("-s", "--seed", default=42, help="For seeding eveyrthing")
-    parser.add_argument("-tvd", "--train_and_val_dir", default="/Users/fryderykkogl/Data/ViT_training_data/renamed_data/train",
+    parser.add_argument("-tvd", "--train_and_val_dir", default="/Users/fryderykkogl/Data/ViT_training_data/data_overfit/train",
                         help="Directory of the training data (and validation")
     parser.add_argument("-vd", "--test_dir", default="/Users/fryderykkogl/Data/ViT_training_data/renamed_data/test",
                         help="Directory of the test data")
@@ -67,8 +67,8 @@ if __name__ == "__main__":
     parser.add_argument("-at", "--architecture_type", default="ViTForSmallDatasets", choices=["CNNSmall", "ViTStandard", "ViTForSmallDatasets"])
     parser.add_argument("-dv", "--device", default="cpu", choices=["cpu", "mps"])
 
-    parser.add_argument("-ds", "--dataset_size", default=2560, type=int, help="Amount of images used for training")
-    parser.add_argument("-v", "--validate", default=True, type=bool, help="Choose whether to validate or not")
+    parser.add_argument("-ds", "--dataset_size", default=4, type=int, help="Amount of images used for training")
+    parser.add_argument("-v", "--validate", default=False, type=bool, help="Choose whether to validate or not")
 
     args = parser.parse_args()
 
