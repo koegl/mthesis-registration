@@ -11,15 +11,10 @@ from logic.patcher import Patcher
 
 
 class PatchDataset(Dataset):
-    def __init__(self, data_path, transform=None):
-        self.data_path = data_path
-        self.transform = transform
-
-        self.patch_file_path_list = glob.glob(os.path.join(self.data_path, "*_fixed_and_moving.npy"))
-        self.patch_file_path_list.sort()
-
-        label_path = os.path.join(data_path, "labels.npy")
+    def __init__(self, patch_file_path_list, label_path, transform=None):
+        self.patch_file_path_list = patch_file_path_list
         self.labels = np.load(label_path)
+        self.transform = transform
 
     def __len__(self):
         return len(self.patch_file_path_list)
