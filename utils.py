@@ -205,6 +205,9 @@ def calculate_accuracy(output, label):
     :return: accuracy
     """
 
+    softmax = torch.nn.Softmax(dim=1)
+    output = softmax(output)
+
     # get the index of the maximal value in the output and the label
     output_argmax = output.argmax(dim=1)
     label_argmax = label.argmax(dim=1)
