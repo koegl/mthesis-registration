@@ -1,7 +1,10 @@
 import numpy as np
-import nibabel as nib
 import warnings
 import random
+import ast
+import glob
+import os
+import nibabel as nib
 
 from utils import crop_volume_borders
 
@@ -95,7 +98,6 @@ class Patcher:
         :param image_offset: the volume with the offset patch
         :param centre: centre of the patch
         :param size: size of the patch
-        :param pixel_spacing: pixel spacing of the volume
         :param offset: offset of the image_offset patch
         :return: the fixed and offset patches
         """
@@ -108,7 +110,8 @@ class Patcher:
 
         return patch_fixed, patch_offset
 
-    def generate_list_of_patch_centres(self, centres_per_dimension, volume, patch_size):
+    @staticmethod
+    def generate_list_of_patch_centres(centres_per_dimension, volume, patch_size=32):
         """
         Returns a list of patch centres that follow a grid based on centres_per_dimension. The grid is scaled in each
         direction by the volume size, so that the centres are uniformly distributed. The patch has to contain at least 25%
@@ -177,7 +180,7 @@ class Patcher:
 
         return centres_list
 
-    def get_patch_and_label(self, volume, patch_centre, patch_size, offset):
+    def get_patch_and_label(self, volume, patch_centre, offset, patch_size=32):
         """
         This function creates a patch and the corresponding label from a volume, a patch centre, patch size and offset
         :param volume: The full volume
@@ -196,7 +199,7 @@ class Patcher:
         combined_patch[:, :, :, 1] = patch_offset
 
         # get the label from the dict
-        label = self.offset_label_dict[str(offset)]
+        label = ast.literal_eval(self.offset_to_label_dict[str(offset)])
 
         # combine everything into a dict
         packet = {'patch': combined_patch,
