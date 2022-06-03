@@ -278,8 +278,8 @@ class Patcher:
             for centre in patch_centres:
                 for offset in self.offsets:
                     patch_and_label = self.get_patch_and_label(volume, centre, offset, patch_size=32)
-                    patch = patch_and_label['patch']
-                    all_labels.append(np.asarray(patch_and_label['label']))
+                    patch = patch_and_label['patch'].astype(np.uint8)
+                    all_labels.append(np.asarray(patch_and_label['label']).astype(np.uint8))
 
                     # save the patch and label
                     np.save(os.path.join(save_directory_path, str(idx).zfill(9) + "_fixed_and_moving" + ".npy"), patch)
