@@ -60,7 +60,52 @@ class Patcher:
         self.label_to_offset_dict = {v: k for k, v in self.offset_to_label_dict.items()}
 
     @staticmethod
-    def extract_cubical_patch_with_offset(image, center, size, offset=None):
+    def create_unrelated_offset(volume_shape, center, patch_size, side_dist=1.5):
+        """
+        Function that creates an offset that is bigger than the patch size in any of the six directions - this is the
+        unrelated class. The offset will be only in one spatial direction
+        :param volume_shape: shape of the volume
+        :param center: coordinates of the centre of the fixed patch
+        :param patch_size: size of the cubical patch
+        :param side_dist: factor which determines how far the unrelated patch will be from the patch - if it's one, the
+        patches will be touching each other. shouldn't be less than one, because then there is overlap
+        :return: An array of length 3 with the offset
+        """
+        assert side_dist > 1, "side_dist should be greater than 1"
+        dist = patch_size*side_dist
+
+        # create a list of all possible unrelated offsets (positive offset e.g. has to be three times in the options,
+        # because during permutations we want each to be treated as a separate value so that we can get offset at more
+        # than one position)
+        displacements = [dist, dist, dist, -dist, -dist, -dist, 0, 0]
+
+        # get all possible permutations of length 3 of the displacements
+        all_permutations = permutations(displacements, 3)
+
+        # many duplicates, so remove them with set() and then change to list()
+        all_permutations = list(set(all_permutations))
+
+        # shuffle list order
+        random.shuffle(all_permutations)
+
+        # loop through all offsets and choose first one which is in the bounds
+        for offset in all_permutations:
+            x_max = int(center[0] + patch_size / 2 + offset[0])
+            x_min = int(center[0] - patch_size / 2 + offset[0])
+            y_min = int(center[1] - patch_size / 2 + offset[1])
+            y_max = int(center[1] + patch_size / 2 + offset[1])
+            z_min = int(center[2] - patch_size / 2 + offset[2])
+            z_max = int(center[2] + patch_size / 2 + offset[2])
+
+            # check if the patch is out of bounds
+            if x_min < 0 or x_max >= volume_shape[0] or \
+               y_min < 0 or y_max >= volume_shape[1] or \
+               z_min < 0 or z_max >= volume_shape[2]:
+                continue
+
+            return offset
+
+    def extract_cubical_patch_with_offset(self, image, center, size, offset=None):
         """
         Extract a cubical patch from the image.
         :param image: the volume as an nd array
@@ -77,17 +122,21 @@ class Patcher:
         assert len(center) == 3, "Center must be a 3D vector"
         assert isinstance(size, int), "Size must be a scalar integer"
 
+        # check if we want the unrelated offset - if yes, then create it
+        if offset == ast.literal_eval(self.unrelated_offset):
+            offset = self.create_unrelated_offset(image.shape, center, size, side_dist=1.5)
+
         x_max = int(center[0] + size / 2 + offset[0])
-        y_min = int(center[1] - size / 2 + offset[1])
         x_min = int(center[0] - size / 2 + offset[0])
+        y_min = int(center[1] - size / 2 + offset[1])
         y_max = int(center[1] + size / 2 + offset[1])
         z_min = int(center[2] - size / 2 + offset[2])
         z_max = int(center[2] + size / 2 + offset[2])
 
         # check if the patch is out of bounds
         if x_min < 0 or x_max >= image.shape[0] or \
-                y_min < 0 or y_max >= image.shape[1] or \
-                z_min < 0 or z_max >= image.shape[2]:
+           y_min < 0 or y_max >= image.shape[1] or \
+           z_min < 0 or z_max >= image.shape[2]:
             warnings.warn("The patch is out of bounds.")
             return np.zeros((1, 1))
 
