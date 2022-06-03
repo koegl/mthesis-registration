@@ -173,13 +173,12 @@ def initialise_wandb(params, len_train, len_val, project="Classification", entit
     os.environ["WANDB_NOTEBOOK_NAME"] = "Classification"
 
     config_dict = {
-        "learning_rate": params["learning_rate"],
-        "epochs": params["epochs"],
-        "batch_size": params["batch_size"],
-        "training_data": params["train_and_val_dir"],
-        "test_data": params["test_dir"],
-        "architecture_type": params["architecture_type"],
-        "device": params["device"],
+        "learning_rate": params.learning_rate,
+        "epochs": params.epochs,
+        "batch_size": params.batch_size,
+        "training_data": params.train_and_val_dir,
+        "architecture_type": params.architecture_type,
+        "device": params.device,
     }
     wandb.config = config_dict
     wandb.log(config_dict)
