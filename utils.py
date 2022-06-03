@@ -11,11 +11,6 @@ import torch
 import architectures.densenet3d as densenet3d
 
 
-# todo add way of encoding of patches with offset bigger than patch (unrelated) - then just try to give a patch where
-#  the offset is bigger than the patch - this should be tried in all 6 spatial directions until one is found that is not
-#  out of bounds - it currently gives a -7, -7, -7 offset patch
-
-
 def save_np_array_as_nifti(array, path, affine, header=None):
     """
     Save an nd array as a nifti file.
