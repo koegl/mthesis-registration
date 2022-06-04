@@ -122,7 +122,12 @@ def display_volume_slice(volumes, label=None):
 
         slice.on_changed(update)
 
+        if label is not None:
+            plt.title(label)
+
         plt.show()
+
+        return slice
 
     elif len(volumes.shape) == 4:
         volume_0 = volumes[0, :, :, :]
