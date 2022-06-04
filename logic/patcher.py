@@ -310,7 +310,7 @@ class Patcher:
                 path_correspondence_dict[split[0]] = (split[1], path)
 
         # loop through the correspondences and create pairs of paths
-        for idx, correspondence in path_correspondence_dict.items():
+        for _, correspondence in path_correspondence_dict.items():
             if self.perfect_truth is True:
                 path_pairs.append((correspondence[1], correspondence[1]))
             else:
