@@ -10,6 +10,7 @@
 
 import argparse
 
+import torch
 import torch.optim as optim
 import torch.nn as nn
 
@@ -19,6 +20,9 @@ from logic.dataloader import get_data_loaders
 
 
 def main(params):
+
+    if params.device == "cpu":
+        params.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # set seed
     seed_everything(params.seed)
@@ -57,7 +61,7 @@ if __name__ == "__main__":
     parser.add_argument("-dv", "--device", default="cpu", choices=["cpu", "mps"])
     parser.add_argument("-ds", "--dataset_size", default=1000, type=int, help="Amount of images used for training")
     parser.add_argument("-v", "--validate", default=True, type=bool, help="Choose whether to validate or not")
-    parser.add_argument("-lg", "--logging", default="print", choices=["print", "wandb"])
+    parser.add_argument("-lg", "--logging", default="wandb", choices=["print", "wandb"])
     parser.add_argument("-at", "--architecture_type", default="densenet", choices=["densenet"])
 
     args = parser.parse_args()
