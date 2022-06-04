@@ -288,38 +288,17 @@ class Patcher:
 
     def create_and_save_all_patches_and_labels(self):
 
-        assert self.file_type == 'nii' or self.file_type, "Only nii files are supported"
+        assert self.file_type == 'nii' or self.file_type == "nii.gz", "Only nii files are supported"
 
         # get a list of all files
-        file_list = glob.glob(os.path.join(self.load_directory, f"*.{self.file_type}"))
+        file_list = glob.glob(os.path.join(self.load_directory, f"*.nii*"))
         file_list.sort()
 
         # generate patches and labels
-        all_labels = []
         idx = 0
 
         for file in tqdm.tqdm(file_list, "Processing files"):
             ds = nib.load(file)
             volume = ds.get_fdata()
-            patch_centres = self.generate_list_of_patch_centres(volume)
 
-            for centre in patch_centres:
-                random.shuffle(self.offsets)
-                for offset in self.offsets:
-
-                    # check if patch is in bounds
-                    bounds = self.get_bounds(centre, ast.literal_eval(offset))
-                    if self.in_bounds(volume.shape, bounds) is False:
-                        continue
-
-                    patch_and_label = self.get_patch_and_label(volume, centre, offset)
-                    patch = patch_and_label['patch'].astype(np.uint8)
-                    all_labels.append(np.asarray(patch_and_label['label']).astype(np.uint8))
-
-                    # save the patch and label
-                    np.save(os.path.join(self.save_directory, str(idx).zfill(9) + "_fixed_and_moving" + ".npy"), patch)
-
-                    idx += 1
-
-        all_labels = np.asarray(all_labels)
-        np.save(os.path.join(self.save_directory, "labels.npy"), all_labels)
+            idx = self.create_and_save_all_patches_and_labels_for_a_pair(volume, volume, idx)
