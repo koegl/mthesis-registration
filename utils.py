@@ -212,7 +212,7 @@ def initialise_wandb(params, len_train, len_val, project="Classification", entit
         "batch_size": params.batch_size,
         "training_data": params.train_and_val_dir,
         "architecture_type": params.architecture_type,
-        "device": params.device,
+        "device": str(params.device),
     }
     wandb.config = config_dict
     wandb.log(config_dict)
