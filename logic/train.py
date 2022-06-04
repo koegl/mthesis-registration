@@ -44,8 +44,8 @@ def val_step(val_loader, device, model, criterion, epoch, logging):
 
     with torch.no_grad():
         for data, label in val_loader:
-            data = data.to(device)
-            label = label.to(device)
+            data = data.to(device).to(torch.float32)
+            label = label.to(device).to(torch.float32)
 
             val_output = model(data)
             val_loss = criterion(val_output, label)
