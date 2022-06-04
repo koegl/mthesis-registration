@@ -7,6 +7,7 @@ import wandb
 import torch
 
 import architectures.densenet3d as densenet3d
+from architectures.vit_standard_3d import ViTStandard3D
 
 
 def save_np_array_as_nifti(array, path, affine, header=None):
@@ -140,8 +141,22 @@ def get_architecture(architecture_type):
 
     if architecture_type.lower() == "densenet":
         model = densenet3d.DenseNet()
+    elif architecture_type.lower() == "vit":
+        model = ViTStandard3D(
+            dim=128,
+            volume_size=32,
+            patch_size=4,
+            num_classes=20,
+            channels=2,
+            depth=6,
+            heads=8,
+            mlp_dim=2048,
+            dropout=0.1,
+            emb_dropout=0.1,
+            device="cpu"
+        )
     else:
-        raise NotImplementedError("Architecture not supported. Only ViTStandard and ViTForSmallDatasets are supported.")
+        raise NotImplementedError("Architecture not supported. Only DenseNet and ViTStandard are supported.")
 
     return model
 
