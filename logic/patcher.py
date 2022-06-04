@@ -123,10 +123,10 @@ class Patcher:
             else:
                 continue
 
-    def extract_cubical_patch_with_offset(self, image, center, offset=None):
+    def extract_cubical_patch_with_offset(self, volume, center, offset=None):
         """
         Extract a cubical patch from the image. It is assumed that the center and offset are correct
-        :param image: the volume as an nd array
+        :param volume: the volume as an nd array
         :param center: the center of the cubical patch
         :param offset: the offset of the cubical patch
         :return: the cubical patch as an nd array
@@ -141,31 +141,32 @@ class Patcher:
 
         # check if we want the unrelated offset - if yes, then create it
         if offset == ast.literal_eval(self.unrelated_offset):
-            offset = self.create_unrelated_offset(image.shape, center)
+            offset = self.create_unrelated_offset(volume.shape, center)
 
         bounds = self.get_bounds(center, offset)
 
-        return image[bounds[0]:bounds[1], bounds[2]:bounds[3], bounds[4]:bounds[5]]
+        return volume[bounds[0]:bounds[1], bounds[2]:bounds[3], bounds[4]:bounds[5]]
 
-    def extract_overlapping_patches(self, image_fixed, image_offset, centre, offset=None):
+    def extract_overlapping_patches(self, volume_fixed, volume_offset, centre, offset=None):
         """
         Extract overlapping patches from the two volumes. One of the volume patches will be offset by 'offset'
-        :param image_fixed: the volume with the standard patch
-        :param image_offset: the volume with the offset patch
+        :param volume_fixed: the volume with the standard patch
+        :param volume_offset: the volume with the offset patch
         :param centre: centre of the patch
-        :param size: size of the patch
         :param offset: offset of the image_offset patch
         :return: the fixed and offset patches
         """
 
-        assert image_fixed.shape == image_offset.shape, "The two volumes must have the same shape"
+        assert volume_fixed.shape == volume_offset.shape, "The two volumes must have the same shape"
 
-        patch_fixed = self.extract_cubical_patch_with_offset(image_fixed, centre, offset=None)
+        patch_fixed = self.extract_cubical_patch_with_offset(volume_fixed, centre, offset=None)
 
-        patch_offset = self.extract_cubical_patch_with_offset(image_offset, centre, offset=offset)
+        patch_offset = self.extract_cubical_patch_with_offset(volume_offset, centre, offset=offset)
 
         return patch_fixed, patch_offset
 
+    # todo this function should get both volumes and make sure that the patch in both volumes doesn't have less than
+    #  for example 10% black pixels
     def generate_list_of_patch_centres(self, volume):
         """
         Returns a list of patch centres that follow a grid based on centres_per_dimension. The grid is scaled in each
