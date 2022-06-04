@@ -11,12 +11,14 @@ from utils import crop_volume_borders
 
 
 class Patcher:
-    def __init__(self, load_directory, save_directory, file_type, centres_per_dimension, patch_size=32, scale_dist=1.5):
+    def __init__(self, load_directory, save_directory, file_type, centres_per_dimension, perfect_truth,
+                 patch_size=32, scale_dist=1.5):
         """
         :param load_directory: Directory with the niftis
         :param save_directory: Directory where al the patches will be saved
         :param file_type: ".nii" or ".nii.gz"
         :param centres_per_dimension:
+        :param perfect_truth: If true, then patch pairs are extracted fom the same volume, else from volume pairs
         :param patch_size: size of the cubical patch (side of the cube - an int)
         :param scale_dist: factor which determines how far the unrelated patch will be from the patch - if it's one, the
         patches will be touching each other. shouldn't be less than one, because then there is overlap
@@ -26,6 +28,7 @@ class Patcher:
         self.save_directory = save_directory
         self.file_type = file_type
         self.centres_per_dimension = int(centres_per_dimension)
+        self.perfect_truth = perfect_truth
         self.patch_size = int(patch_size)
         self.scale_dist = float(scale_dist)
 
@@ -284,6 +287,39 @@ class Patcher:
 
         return idx
 
+    def get_volume_path_pairs(self, all_paths):
+        """
+        Function that returns a list of tuple with pairs of paths to pair volumes - if self.perfect_truth is True, each
+        pair contains the same volume, otherwise it contains two different volumes.
+        :param all_paths: a list of paths to all volumes
+        :return: list of tuples
+        """
+        # 1_0.nii.gz
+        path_pairs = []
+
+        # get dict with correspondences
+        path_correspondence_dict = {}
+
+        for path in all_paths:
+            file_name = os.path.basename(path).split(".")[0]
+
+            split = file_name.split("_")
+            if len(split) == 1:
+                path_correspondence_dict[split[0]] = ('-7', path)
+            elif len(split) == 2:
+                path_correspondence_dict[split[0]] = (split[1], path)
+
+        # loop through the correspondences and create pairs of paths
+        for idx, correspondence in path_correspondence_dict.items():
+            if self.perfect_truth is True:
+                path_pairs.append((correspondence[1], correspondence[1]))
+            else:
+                if correspondence[0] == '-7':
+                    continue
+                path_pairs.append((path_correspondence_dict[correspondence[0]][1], correspondence[1]))
+
+        return path_pairs
+
     def create_and_save_all_patches_and_labels(self):
 
         assert self.file_type == 'nii' or self.file_type == "nii.gz", "Only nii files are supported"
@@ -292,11 +328,21 @@ class Patcher:
         file_list = glob.glob(os.path.join(self.load_directory, f"*.nii*"))
         file_list.sort()
 
+        # generate volume path pairs
+        all_path_pairs = self.get_volume_path_pairs(file_list)
+
         # generate patches and labels
         idx = 0
 
-        for file in tqdm.tqdm(file_list, "Processing files"):
-            ds = nib.load(file)
-            volume = ds.get_fdata()
+        for pair in tqdm.tqdm(all_path_pairs, "Processing files"):
+            if self.perfect_truth is True:
+                ds = nib.load(pair[0])
+                volume_fixed = ds.get_fdata()
+                volume_offset = volume_fixed.copy()
+            else:
+                ds_fixed = nib.load(pair[0])
+                ds_offset = nib.load(pair[1])
+                volume_fixed = ds_fixed.get_fdata()
+                volume_offset = ds_offset.get_fdata()
 
-            idx = self.create_and_save_all_patches_and_labels_for_a_pair(volume, volume, idx)
+            idx = self.create_and_save_all_patches_and_labels_for_a_pair(volume_fixed, volume_offset, idx)
