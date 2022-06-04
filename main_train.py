@@ -67,7 +67,7 @@ if __name__ == "__main__":
     parser.add_argument("-ds", "--dataset_size", default=400, type=int, help="Amount of images used for training")
     parser.add_argument("-v", "--validate", default=True, type=bool, help="Choose whether to validate or not")
     parser.add_argument("-lg", "--logging", default="wandb", choices=["print", "wandb"])
-    parser.add_argument("-at", "--architecture_type", default="densenet", choices=["densenet"])
+    parser.add_argument("-at", "--architecture_type", default="vit", choices=["densenet", "vit"])
 
     args = parser.parse_args()
 
