@@ -25,9 +25,9 @@ class Patcher:
         self.load_directory = load_directory
         self.save_directory = save_directory
         self.file_type = file_type
-        self.centres_per_dimension = centres_per_dimension
-        self.patch_size = patch_size
-        self.scale_dist = scale_dist
+        self.centres_per_dimension = int(centres_per_dimension)
+        self.patch_size = int(patch_size)
+        self.scale_dist = float(scale_dist)
 
         self.unrelated_offset = "[7, 7, 7]"
         self.offsets = [
