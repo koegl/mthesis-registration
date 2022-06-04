@@ -20,13 +20,13 @@ def main(params):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-ld", "--load_directory", default="/Users/fryderykkogl/Data/temp/temp",
+    parser.add_argument("-ld", "--load_directory", default="/Users/fryderykkogl/Data/temp/data_nii",
                         help="Directory containing all niftis")
-    parser.add_argument("-sd", "--save_directory", default="/Users/fryderykkogl/Data/temp/temp",
+    parser.add_argument("-sd", "--save_directory", default="/Users/fryderykkogl/Data/temp/data_npy",
                         help="Directory to save the numpy patches")
-    parser.add_argument("-ft", "--file_type", default="nii", choices=["nii", "nii.gz"],
+    parser.add_argument("-ft", "--file_type", default="nii.gz", choices=["nii", "nii.gz"],
                         help="File type of the niftis")
-    parser.add_argument("-cpd", "--centres_per_dimension", default=30,
+    parser.add_argument("-cpd", "--centres_per_dimension", default=20,
                         help="Amount of centres per dimension")
     parser.add_argument("-ps", "--patch_size", default=32,
                         help="Size of the patches")
