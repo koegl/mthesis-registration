@@ -172,3 +172,30 @@ def calculate_accuracy(output, label):
 
     return accuracy
 
+
+def get_label_from_label_id(label_id):
+    """
+    Get a dictionary that maps the label id to the label
+    :return:
+    """
+    empty = np.zeros(20)
+    empty_list = []
+    for i in range(20):
+        empty[i] = 1
+        empty_list.append(empty.copy())
+        empty[i] = 0
+
+    label_id_to_label_dict = {'{0:05b}'.format(i): empty_list[i] for i in range(20)}
+
+    return label_id_to_label_dict[label_id]
+
+
+def get_label_id_from_label(label):
+    """
+    Get the label id from the label
+    :param label: the label
+    :return: the label id
+    """
+    label_id = '{0:05b}'.format(label.argmax())
+
+    return label_id
