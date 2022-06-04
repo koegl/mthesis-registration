@@ -22,7 +22,6 @@ def save_model(model, optimizer, epoch, train_array, val_array, start_datetime, 
     :param start_datetime:
     :param save_path:
     """
-    # todo for debugging we'll use train as the metric
 
     if epoch == 0:
         return
