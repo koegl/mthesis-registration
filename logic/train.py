@@ -1,13 +1,14 @@
 import os
-
-import numpy as np
-import torch
-import wandb
-from utils import display_tensor_and_label, display_volume_slice
-from utils import calculate_accuracy
-import torch.nn
 from time import perf_counter
 from datetime import datetime
+import numpy as np
+import wandb
+
+import torch
+import torch.nn
+
+from utils import display_tensor_and_label, display_volume_slice
+from utils import calculate_accuracy
 
 
 def save_model(model, optimizer, epoch, train_array, val_array, start_datetime, save_path="models/model.pt"):
@@ -117,7 +118,11 @@ def train(params, train_loader, model, criterion, optimizer, val_loader, device,
     start_datetime = datetime.now().strftime("%d/%m/%Y %H:%M:%S").replace(" ", "_").replace("/", "").replace(":", "")
     os.mkdir(f"./models/{start_datetime}")
 
+    time_idx = False
+
     for epoch in range(params.epochs):
+
+        now = perf_counter()
 
         # train step
         train_array[epoch] = train_step(train_loader, device, model, criterion, optimizer, epoch, params.logging)
@@ -129,3 +134,9 @@ def train(params, train_loader, model, criterion, optimizer, val_loader, device,
         # save model
         save_model(model, optimizer, epoch, train_array, val_array, start_datetime, save_path)
 
+        if time_idx is False:
+            time = perf_counter() - now
+
+            wandb.log({"Time per epoch": time,
+                       "Expected total time": time * params.epochs})
+            time_idx = True
