@@ -22,6 +22,9 @@ from logic.dataloader import get_data_loaders
 def main(params):
 
     params.batch_size = int(params.batch_size)
+    params.epochs = int(params.epochs)
+    params.seed = int(params.seed)
+    params.dataset_size = int(params.dataset_size)
 
     if params.device == "cpu":
         params.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -54,7 +57,7 @@ def main(params):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-bs", "--batch_size", default=100)
+    parser.add_argument("-bs", "--batch_size", default=10)
     parser.add_argument("-e", "--epochs", default=100)
     parser.add_argument("-lr", "--learning_rate", default=0.001)
     parser.add_argument("-s", "--seed", default=42, help="For seeding eveyrthing")
