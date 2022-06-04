@@ -236,17 +236,18 @@ class Patcher:
 
         return centres_list
 
-    def get_patch_and_label(self, volume, patch_centre, offset):
+    def get_patch_and_label(self, volume_fixed, volume_offset, patch_centre, offset):
         """
         This function creates a patch and the corresponding label from a volume, a patch centre, patch size and offset
-        :param volume: The full volume
+        :param volume_fixed: The full fixed volume
+        :param volume_offset: The full offset volume
         :param patch_centre: the centre of the patch
         :param offset: the offset (list len 3)
         :return: a dict containing the patch and the label
         """
 
         # extract both patches (we give the same volume twice, because we want to extract the patches from the same one)
-        patch_fixed, patch_offset = self.extract_overlapping_patches(volume, volume, patch_centre,
+        patch_fixed, patch_offset = self.extract_overlapping_patches(volume_fixed, volume_offset, patch_centre,
                                                                      ast.literal_eval(offset))
 
         # join patches along new 4th dimension
