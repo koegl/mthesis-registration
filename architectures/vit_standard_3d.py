@@ -154,12 +154,9 @@ class ViTStandard3D(nn.Module):
         # feed the embeddings through the transformer
         x = self.transformer(x)
 
-        # for classification we extract only the first 'path,' which is the classification token
+        # for classification, we extract only the first 'path,' which is the classification token
         x = x[:, 0]
 
         x = self.mlp_head(x)
-
-        # x = self.softmax(x)
-        # x = self.sigmoid(x)
 
         return x
