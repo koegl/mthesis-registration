@@ -1,9 +1,51 @@
+import os
+
+import numpy as np
 import torch
 import wandb
 from utils import display_tensor_and_label, display_volume_slice
 from utils import calculate_accuracy
 import torch.nn
 from time import perf_counter
+from datetime import datetime
+
+
+def save_model(model, optimizer, epoch, train_array, val_array, start_datetime, save_path="models/model.pt"):
+    """
+    Function to save models only if the validation accuracy is higher than in all the previous ones
+    :param model:
+    :param optimizer:
+    :param epoch:
+    :param train_array:
+    :param val_array:
+    :param start_datetime:
+    :param save_path:
+    """
+    # todo for debugging we'll use train as the metric
+
+    if epoch == 0:
+        return
+
+    # save only when validation accuracy of current epoch is higher than the previous ones
+    previous_validation_accuracies = val_array[:epoch, 1]  # this doesn't include the current epoch
+    current_validation_accuracy = val_array[epoch, 1]
+
+    # check if we currently have the best validation accuracy
+    if current_validation_accuracy > np.max(previous_validation_accuracies):
+        try:
+            # we have a better val accuracy, so first delete all previous models
+            old_models = [file for file in os.listdir(f"./models/{start_datetime}") if file.endswith(".pt")]
+            for old_model in old_models:
+                os.remove(f"./models/{start_datetime}/{old_model}")
+
+            torch.save({"epoch": epoch,
+                        "model_state_dict": model.state_dict(),
+                        "optimizer_state_dict": optimizer.state_dict(),
+                        "loss": train_array[epoch, 0]},
+                       f"./models/{start_datetime}/model_epoch{epoch}_valacc{val_array[epoch, 1]:.3f}.pt"
+                       )
+        except Exception as e:
+            print(f"Error while saving model at epoch {epoch}: {e}")
 
 
 def train_step(train_loader, device, model, criterion, optimizer, epoch, logging):
