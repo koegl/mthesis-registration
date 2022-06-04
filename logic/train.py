@@ -7,7 +7,7 @@ import wandb
 import torch
 import torch.nn
 
-from utils import display_tensor_and_label, display_volume_slice
+from visualisations import display_tensor_and_label, display_volume_slice
 from utils import calculate_accuracy
 
 
@@ -111,7 +111,7 @@ def val_step(val_loader, device, model, criterion, epoch, logging):
 
 def train(params, train_loader, model, criterion, optimizer, val_loader, device, save_path="models/model.pt"):
     """
-    Train the model for a given number of epochs and save the model at the end of training.
+    Train the model for a given number of epochs and save the model at each epoch.
     """
     val_array = np.zeros((params.epochs, 2))
     train_array = np.zeros((params.epochs, 2))
