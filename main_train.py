@@ -22,6 +22,9 @@ from logic.dataloader import get_data_loaders
 def main(params):
 
     params.batch_size = int(params.batch_size)
+    params.epochs = int(params.epochs)
+    params.seed = int(params.seed)
+    params.dataset_size = int(params.dataset_size)
 
     if params.device == "cpu":
         params.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -54,16 +57,16 @@ def main(params):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-bs", "--batch_size", default=100)
+    parser.add_argument("-bs", "--batch_size", default=10)
     parser.add_argument("-e", "--epochs", default=100)
     parser.add_argument("-lr", "--learning_rate", default=0.001)
     parser.add_argument("-s", "--seed", default=42, help="For seeding eveyrthing")
     parser.add_argument("-tvd", "--train_and_val_dir", default="/Users/fryderykkogl/Data/temp/data_npy",
                         help="Directory of the training data (and validation")
     parser.add_argument("-dv", "--device", default="cpu", choices=["cpu", "mps"])
-    parser.add_argument("-ds", "--dataset_size", default=100, type=int, help="Amount of images used for training")
+    parser.add_argument("-ds", "--dataset_size", default=400, type=int, help="Amount of images used for training")
     parser.add_argument("-v", "--validate", default=True, type=bool, help="Choose whether to validate or not")
-    parser.add_argument("-lg", "--logging", default="print", choices=["print", "wandb"])
+    parser.add_argument("-lg", "--logging", default="wandb", choices=["print", "wandb"])
     parser.add_argument("-at", "--architecture_type", default="densenet", choices=["densenet"])
 
     args = parser.parse_args()
