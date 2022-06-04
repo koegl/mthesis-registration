@@ -79,7 +79,7 @@ def train_step(train_loader, device, model, criterion, optimizer, epoch, logging
         print(f"\n{epoch}:\tTime: {perf_counter() - now:.2f}s;\t Train loss: {epoch_loss:.2f};\tTrain accuracy: {epoch_accuracy:.2f}",
               end='\t')
 
-    return epoch_loss.detach().numpy(), epoch_accuracy.detach().numpy()
+    return epoch_loss.detach().cpu().numpy(), epoch_accuracy.detach().cpu().numpy()
 
 
 def val_step(val_loader, device, model, criterion, epoch, logging):
@@ -106,7 +106,7 @@ def val_step(val_loader, device, model, criterion, epoch, logging):
     else:
         print(f"Val loss: {epoch_val_loss:.2f};\tVal accuracy: {epoch_val_accuracy:.2f}")
 
-    return epoch_val_loss.detach().numpy(), epoch_val_accuracy.detach().numpy()
+    return epoch_val_loss.detach().cpu().numpy(), epoch_val_accuracy.detach().cpu().numpy()
 
 
 def train(params, train_loader, model, criterion, optimizer, val_loader, device, save_path="models/model.pt"):
