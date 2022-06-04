@@ -8,11 +8,12 @@ from torchvision import transforms
 from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
 
+from utils import get_label_from_label_id
+
 
 class PatchDataset(Dataset):
-    def __init__(self, patch_file_path_list, label_path, transform=None):
+    def __init__(self, patch_file_path_list, transform=None):
         self.patch_file_path_list = patch_file_path_list
-        self.labels = np.load(label_path)
         self.transform = transform
 
     def __len__(self):
@@ -20,15 +21,16 @@ class PatchDataset(Dataset):
 
     def __getitem__(self, idx):
         """
-        Label ID can be different if we have a train and val split, because all labels are stored in one file
+        The label id is stored in the file name, from which the label can be extracted
+        :param idx:
+        :return:
         """
 
         path = self.patch_file_path_list[idx]
-        label_id = path.split('/')[-1]
-        label_id = int(label_id.split('_')[0])
+        label_id = os.path.basename(path).split('_')[1]  # second part of the name is the id as a binary number
 
         patch = np.load(path)
-        label = torch.tensor(self.labels[label_id])
+        label = get_label_from_label_id(label_id)
 
         return patch, label
 
@@ -60,8 +62,8 @@ def get_train_and_val_loaders(params):
     data_path = params.train_and_val_dir
     batch_size = params.batch_size
 
-    # get paths to the patches and labels
-    patch_file_path_list = glob.glob(os.path.join(data_path, "*_fixed_and_moving.npy"))
+    # get paths to the patches
+    patch_file_path_list = glob.glob(os.path.join(data_path, "*_patch.npy"))
     patch_file_path_list.sort()
 
     # reduce the dataset size if necessary
@@ -69,7 +71,6 @@ def get_train_and_val_loaders(params):
         params.dataset_size = len(patch_file_path_list)
 
     patch_file_path_list = patch_file_path_list[0:params.dataset_size]
-    label_path = os.path.join(data_path, "labels.npy")
 
     # train and val split
     if params.validate is True:
@@ -81,8 +82,8 @@ def get_train_and_val_loaders(params):
     train_transforms, val_transforms, _ = get_transforms()
 
     # create the datasets
-    train_dataset = PatchDataset(train_list, label_path, train_transforms)
-    val_dataset = PatchDataset(val_list, label_path, val_transforms)
+    train_dataset = PatchDataset(train_list, train_transforms)
+    val_dataset = PatchDataset(val_list, val_transforms)
 
     # pass the dataset to the dataloader
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
@@ -92,12 +93,11 @@ def get_train_and_val_loaders(params):
 
 
 def get_test_loader(data_path):
-    test_list = glob.glob(os.path.join(data_path, "*_fixed_and_moving.npy"))
-    label_path = os.path.join(data_path, "labels.npy")
+    test_list = glob.glob(os.path.join(data_path, "*_patch.npy"))
 
     _, _, transform = get_transforms()
 
-    test_dataset = PatchDataset(test_list, label_path, transform=transform)
+    test_dataset = PatchDataset(test_list, transform=transform)
 
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 

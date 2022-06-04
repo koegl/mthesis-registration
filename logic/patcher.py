@@ -11,12 +11,14 @@ from utils import crop_volume_borders
 
 
 class Patcher:
-    def __init__(self, load_directory, save_directory, file_type, centres_per_dimension, patch_size=32, scale_dist=1.5):
+    def __init__(self, load_directory, save_directory, file_type, centres_per_dimension, perfect_truth,
+                 patch_size=32, scale_dist=1.5):
         """
         :param load_directory: Directory with the niftis
         :param save_directory: Directory where al the patches will be saved
         :param file_type: ".nii" or ".nii.gz"
         :param centres_per_dimension:
+        :param perfect_truth: If true, then patch pairs are extracted fom the same volume, else from volume pairs
         :param patch_size: size of the cubical patch (side of the cube - an int)
         :param scale_dist: factor which determines how far the unrelated patch will be from the patch - if it's one, the
         patches will be touching each other. shouldn't be less than one, because then there is overlap
@@ -26,6 +28,7 @@ class Patcher:
         self.save_directory = save_directory
         self.file_type = file_type
         self.centres_per_dimension = int(centres_per_dimension)
+        self.perfect_truth = perfect_truth
         self.patch_size = int(patch_size)
         self.scale_dist = float(scale_dist)
 
@@ -52,28 +55,9 @@ class Patcher:
             "[0, 16, 0]",
             "[0, 0, 16]",
         ]
-        self.offset_to_label_dict = {
-            self.unrelated_offset:  "[1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]",
-            "[0, 0, 0]":    "[0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]",
-            "[-16, 0, 0]":  "[0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]",
-            "[0, -16, 0]":  "[0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]",
-            "[0, 0, -16]":  "[0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]",
-            "[-8, 0, 0]":   "[0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]",
-            "[0, -8, 0]":   "[0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]",
-            "[0, 0, -8]":   "[0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]",
-            "[-4, 0, 0]":   "[0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]",
-            "[0, -4, 0]":   "[0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]",
-            "[0, 0, -4]":   "[0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.]",
-            "[4, 0, 0]":    "[0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0.]",
-            "[0, 4, 0]":    "[0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0.]",
-            "[0, 0, 4]":    "[0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0.]",
-            "[8, 0, 0]":    "[0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0.]",
-            "[0, 8, 0]":    "[0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0.]",
-            "[0, 0, 8]":    "[0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0.]",
-            "[16, 0, 0]":   "[0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0.]",
-            "[0, 16, 0]":   "[0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0.]",
-            "[0, 0, 16]":   "[0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1.]",
-        }
+        # each offset is mapped to a binary label (which can be transformed to a one-hot vector)
+        self.offset_to_label_dict = {self.offsets[i]: '{0:05b}'.format(i) for i in range(20)}
+        # create a reversed dict
         self.label_to_offset_dict = {v: k for k, v in self.offset_to_label_dict.items()}
 
     def get_bounds(self, centre, offset):
@@ -142,10 +126,10 @@ class Patcher:
             else:
                 continue
 
-    def extract_cubical_patch_with_offset(self, image, center, offset=None):
+    def extract_cubical_patch_with_offset(self, volume, center, offset=None):
         """
         Extract a cubical patch from the image. It is assumed that the center and offset are correct
-        :param image: the volume as an nd array
+        :param volume: the volume as an nd array
         :param center: the center of the cubical patch
         :param offset: the offset of the cubical patch
         :return: the cubical patch as an nd array
@@ -160,31 +144,32 @@ class Patcher:
 
         # check if we want the unrelated offset - if yes, then create it
         if offset == ast.literal_eval(self.unrelated_offset):
-            offset = self.create_unrelated_offset(image.shape, center)
+            offset = self.create_unrelated_offset(volume.shape, center)
 
         bounds = self.get_bounds(center, offset)
 
-        return image[bounds[0]:bounds[1], bounds[2]:bounds[3], bounds[4]:bounds[5]]
+        return volume[bounds[0]:bounds[1], bounds[2]:bounds[3], bounds[4]:bounds[5]]
 
-    def extract_overlapping_patches(self, image_fixed, image_offset, centre, offset=None):
+    def extract_overlapping_patches(self, volume_fixed, volume_offset, centre, offset=None):
         """
         Extract overlapping patches from the two volumes. One of the volume patches will be offset by 'offset'
-        :param image_fixed: the volume with the standard patch
-        :param image_offset: the volume with the offset patch
+        :param volume_fixed: the volume with the standard patch
+        :param volume_offset: the volume with the offset patch
         :param centre: centre of the patch
-        :param size: size of the patch
         :param offset: offset of the image_offset patch
         :return: the fixed and offset patches
         """
 
-        assert image_fixed.shape == image_offset.shape, "The two volumes must have the same shape"
+        assert volume_fixed.shape == volume_offset.shape, "The two volumes must have the same shape"
 
-        patch_fixed = self.extract_cubical_patch_with_offset(image_fixed, centre, offset=None)
+        patch_fixed = self.extract_cubical_patch_with_offset(volume_fixed, centre, offset=None)
 
-        patch_offset = self.extract_cubical_patch_with_offset(image_offset, centre, offset=offset)
+        patch_offset = self.extract_cubical_patch_with_offset(volume_offset, centre, offset=offset)
 
         return patch_fixed, patch_offset
 
+    # todo this function should get both volumes and make sure that the patch in both volumes doesn't have less than
+    #  for example 10% black pixels
     def generate_list_of_patch_centres(self, volume):
         """
         Returns a list of patch centres that follow a grid based on centres_per_dimension. The grid is scaled in each
@@ -254,17 +239,18 @@ class Patcher:
 
         return centres_list
 
-    def get_patch_and_label(self, volume, patch_centre, offset):
+    def get_patch_and_label(self, volume_fixed, volume_offset, patch_centre, offset):
         """
         This function creates a patch and the corresponding label from a volume, a patch centre, patch size and offset
-        :param volume: The full volume
+        :param volume_fixed: The full fixed volume
+        :param volume_offset: The full offset volume
         :param patch_centre: the centre of the patch
         :param offset: the offset (list len 3)
         :return: a dict containing the patch and the label
         """
 
         # extract both patches (we give the same volume twice, because we want to extract the patches from the same one)
-        patch_fixed, patch_offset = self.extract_overlapping_patches(volume, volume, patch_centre,
+        patch_fixed, patch_offset = self.extract_overlapping_patches(volume_fixed, volume_offset, patch_centre,
                                                                      ast.literal_eval(offset))
 
         # join patches along new 4th dimension
@@ -273,48 +259,90 @@ class Patcher:
         combined_patch[1, :, :, :] = patch_offset
 
         # get the label from the dict
-        label = ast.literal_eval(self.offset_to_label_dict[offset])
+        label = self.offset_to_label_dict[offset]
 
-        # combine everything into a dict
-        packet = {'patch': combined_patch,
-                  'label': label}
+        return combined_patch, label
 
-        return packet
+    def create_and_save_all_patches_and_labels_for_a_pair(self, volume_fixed, volume_offset, idx):
+
+        patch_centres = self.generate_list_of_patch_centres(volume_fixed)
+
+        for centre in patch_centres:
+            offsets = self.offsets.copy()
+            random.shuffle(offsets)
+            for offset in offsets:
+
+                # check if patch is in bounds
+                bounds = self.get_bounds(centre, ast.literal_eval(offset))
+                if self.in_bounds(volume_fixed.shape, bounds) is False:
+                    continue
+
+                patch, label = self.get_patch_and_label(volume_fixed, volume_offset, centre, offset)
+                patch = patch.astype(np.uint8)
+
+                # save the patch and label
+                np.save(os.path.join(self.save_directory, f"{str(idx).zfill(9)}_{label}_patch.npy"), patch)
+
+                idx += 1
+
+        return idx
+
+    def get_volume_path_pairs(self, all_paths):
+        """
+        Function that returns a list of tuple with pairs of paths to pair volumes - if self.perfect_truth is True, each
+        pair contains the same volume, otherwise it contains two different volumes.
+        :param all_paths: a list of paths to all volumes
+        :return: list of tuples
+        """
+        # 1_0.nii.gz
+        path_pairs = []
+
+        # get dict with correspondences
+        path_correspondence_dict = {}
+
+        for path in all_paths:
+            file_name = os.path.basename(path).split(".")[0]
+
+            split = file_name.split("_")
+            if len(split) == 1:
+                path_correspondence_dict[split[0]] = ('-7', path)
+            elif len(split) == 2:
+                path_correspondence_dict[split[0]] = (split[1], path)
+
+        # loop through the correspondences and create pairs of paths
+        for _, correspondence in path_correspondence_dict.items():
+            if self.perfect_truth is True:
+                path_pairs.append((correspondence[1], correspondence[1]))
+            else:
+                if correspondence[0] == '-7':
+                    continue
+                path_pairs.append((path_correspondence_dict[correspondence[0]][1], correspondence[1]))
+
+        return path_pairs
 
     def create_and_save_all_patches_and_labels(self):
 
-        assert self.file_type == 'nii' or self.file_type, "Only nii files are supported"
+        assert self.file_type == 'nii' or self.file_type == "nii.gz", "Only nii files are supported"
 
         # get a list of all files
-        file_list = glob.glob(os.path.join(self.load_directory, f"*.{self.file_type}"))
+        file_list = glob.glob(os.path.join(self.load_directory, f"*.nii*"))
         file_list.sort()
 
+        # generate volume path pairs
+        all_path_pairs = self.get_volume_path_pairs(file_list)
+
         # generate patches and labels
-        all_labels = []
         idx = 0
 
-        for file in tqdm.tqdm(file_list, "Processing files"):
-            ds = nib.load(file)
-            volume = ds.get_fdata()
-            patch_centres = self.generate_list_of_patch_centres(volume)
+        for pair in tqdm.tqdm(all_path_pairs, "Processing files"):
+            if self.perfect_truth is True:
+                ds = nib.load(pair[0])
+                volume_fixed = ds.get_fdata()
+                volume_offset = volume_fixed.copy()
+            else:
+                ds_fixed = nib.load(pair[0])
+                ds_offset = nib.load(pair[1])
+                volume_fixed = ds_fixed.get_fdata()
+                volume_offset = ds_offset.get_fdata()
 
-            for centre in patch_centres:
-                random.shuffle(self.offsets)
-                for offset in self.offsets:
-
-                    # check if patch is in bounds
-                    bounds = self.get_bounds(centre, ast.literal_eval(offset))
-                    if self.in_bounds(volume.shape, bounds) is False:
-                        continue
-
-                    patch_and_label = self.get_patch_and_label(volume, centre, offset)
-                    patch = patch_and_label['patch'].astype(np.uint8)
-                    all_labels.append(np.asarray(patch_and_label['label']).astype(np.uint8))
-
-                    # save the patch and label
-                    np.save(os.path.join(self.save_directory, str(idx).zfill(9) + "_fixed_and_moving" + ".npy"), patch)
-
-                    idx += 1
-
-        all_labels = np.asarray(all_labels)
-        np.save(os.path.join(self.save_directory, "labels.npy"), all_labels)
+            idx = self.create_and_save_all_patches_and_labels_for_a_pair(volume_fixed, volume_offset, idx)
