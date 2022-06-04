@@ -1,6 +1,6 @@
 import os
 from time import perf_counter
-from datetime import datetime
+from datetime import datetime, timedelta
 import numpy as np
 import wandb
 
@@ -134,9 +134,9 @@ def train(params, train_loader, model, criterion, optimizer, val_loader, device,
         # save model
         save_model(model, optimizer, epoch, train_array, val_array, start_datetime, save_path)
 
-        if time_idx is False:
+        if time_idx is False and params.logging == "wandb":
             time = perf_counter() - now
 
-            wandb.log({"Time per epoch": time,
-                       "Expected total time": time * params.epochs})
+            wandb.log({"Time per epoch": f'{"{:0>8}".format(str(timedelta(seconds=time)))}',
+                       "Expected total time": f'{"{:0>8}".format(str(timedelta(seconds=time * params.epochs)))}'})
             time_idx = True
