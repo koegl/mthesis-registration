@@ -112,24 +112,20 @@ def train(params, train_loader, model, criterion, optimizer, val_loader, device,
     """
     Train the model for a given number of epochs and save the model at the end of training.
     """
-    val_loss = 0
+    val_array = np.zeros((params.epochs, 2))
+    train_array = np.zeros((params.epochs, 2))
+    start_datetime = datetime.now().strftime("%d/%m/%Y %H:%M:%S").replace(" ", "_").replace("/", "").replace(":", "")
+    os.mkdir(f"./models/{start_datetime}")
 
     for epoch in range(params.epochs):
 
         # train step
-        train_loss = train_step(train_loader, device, model, criterion, optimizer, epoch, params.logging)
+        train_array[epoch] = train_step(train_loader, device, model, criterion, optimizer, epoch, params.logging)
 
         # eval step
         if params.validate is True:
-            val_loss = val_step(val_loader, device, model, criterion, epoch, params.logging)
+            val_array[epoch] = val_step(val_loader, device, model, criterion, epoch, params.logging)
 
         # save model
-        torch.save({"epoch": epoch,
-                    "model_state_dict": model.state_dict(),
-                    "optimizer_state_dict": optimizer.state_dict(),
-                    "loss": train_loss},
-                   f"/Users/fryderykkogl/Documents/university/master/thesis/code.nosync/mthesis-registration/models/model_epoch{epoch}_loss{train_loss}.pt"
-                   )
-
-    torch.save(model, save_path)
+        save_model(model, optimizer, epoch, train_array, val_array, start_datetime, save_path)
 
