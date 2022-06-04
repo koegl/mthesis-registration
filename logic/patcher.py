@@ -256,11 +256,9 @@ class Patcher:
         combined_patch[1, :, :, :] = patch_offset
 
         # get the label from the dict
-        label = ast.literal_eval(self.offset_to_label_dict[offset])
+        label = self.offset_to_label_dict[offset]
 
-        # combine everything into a dict
-        packet = {'patch': combined_patch,
-                  'label': label}
+        return combined_patch, label
 
     def create_and_save_all_patches_and_labels_for_a_pair(self, volume_fixed, volume_offset, idx):
 
