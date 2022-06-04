@@ -262,7 +262,29 @@ class Patcher:
         packet = {'patch': combined_patch,
                   'label': label}
 
-        return packet
+    def create_and_save_all_patches_and_labels_for_a_pair(self, volume_fixed, volume_offset, idx):
+
+        patch_centres = self.generate_list_of_patch_centres(volume_fixed)
+
+        for centre in patch_centres:
+            offsets = self.offsets.copy()
+            random.shuffle(offsets)
+            for offset in offsets:
+
+                # check if patch is in bounds
+                bounds = self.get_bounds(centre, ast.literal_eval(offset))
+                if self.in_bounds(volume_fixed.shape, bounds) is False:
+                    continue
+
+                patch, label = self.get_patch_and_label(volume_fixed, volume_offset, centre, offset)
+                patch = patch.astype(np.uint8)
+
+                # save the patch and label
+                np.save(os.path.join(self.save_directory, f"{str(idx).zfill(9)}_{label}_patch.npy"), patch)
+
+                idx += 1
+
+        return idx
 
     def create_and_save_all_patches_and_labels(self):
 
