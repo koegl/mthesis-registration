@@ -63,7 +63,7 @@ if __name__ == "__main__":
     parser.add_argument("-dv", "--device", default="cpu", choices=["cpu", "mps"])
     parser.add_argument("-ds", "--dataset_size", default=100, type=int, help="Amount of images used for training")
     parser.add_argument("-v", "--validate", default=True, type=bool, help="Choose whether to validate or not")
-    parser.add_argument("-lg", "--logging", default="wandb", choices=["print", "wandb"])
+    parser.add_argument("-lg", "--logging", default="print", choices=["print", "wandb"])
     parser.add_argument("-at", "--architecture_type", default="densenet", choices=["densenet"])
 
     args = parser.parse_args()
