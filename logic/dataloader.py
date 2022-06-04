@@ -55,7 +55,7 @@ def get_transforms():
     return train_transforms, val_transforms, test_transforms
 
 
-def get_data_loaders(params):
+def get_train_and_val_loaders(params):
 
     data_path = params.train_and_val_dir
     batch_size = params.batch_size
@@ -88,4 +88,17 @@ def get_data_loaders(params):
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
 
-    return train_loader, val_loader, None
+    return train_loader, val_loader
+
+
+def get_test_loader(data_path):
+    test_list = glob.glob(os.path.join(data_path, "*_fixed_and_moving.npy"))
+    label_path = os.path.join(data_path, "labels.npy")
+
+    _, _, transform = get_transforms()
+
+    test_dataset = PatchDataset(test_list, label_path, transform=transform)
+
+    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
+
+    return test_loader

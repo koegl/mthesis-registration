@@ -16,7 +16,7 @@ import torch.nn as nn
 
 from utils import seed_everything, initialise_wandb, get_architecture
 from logic.train import train
-from logic.dataloader import get_data_loaders
+from logic.dataloader import get_train_and_val_loaders
 
 
 def main(params):
@@ -33,7 +33,7 @@ def main(params):
     seed_everything(params.seed)
 
     # get train, val, and test data loaders
-    train_loader, val_loader, test_loader = get_data_loaders(params)
+    train_loader, val_loader = get_train_and_val_loaders(params)
 
     # get the model
     model = get_architecture(params.architecture_type).to(params.device)
