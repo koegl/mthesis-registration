@@ -1,5 +1,5 @@
 import numpy as np
-import warnings
+import tqdm
 import random
 import glob
 import os
@@ -293,7 +293,7 @@ class Patcher:
         all_labels = []
         idx = 0
 
-        for file in file_list:
+        for file in tqdm.tqdm(file_list, "Processing files"):
             ds = nib.load(file)
             volume = ds.get_fdata()
             patch_centres = self.generate_list_of_patch_centres(volume)
