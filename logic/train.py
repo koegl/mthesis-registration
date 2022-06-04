@@ -13,8 +13,8 @@ def train_step(train_loader, device, model, criterion, optimizer, epoch, logging
     now = perf_counter()
 
     for data, label in train_loader:
-        data = data.to(device)
-        label = label.to(device)
+        data = data.to(device).to(torch.float32)
+        label = label.to(device).to(torch.float32)
 
         output = model(data)
         loss = criterion(output, label)
