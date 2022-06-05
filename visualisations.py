@@ -11,6 +11,8 @@ def display_volume_slice(volumes, label=None):
     :param label: the displacement label
     """
 
+    volumes /= 255
+
     if len(volumes.shape) == 3:
         fig, ax = plt.subplots()
         plt.subplots_adjust(bottom=0.35)
@@ -27,7 +29,7 @@ def display_volume_slice(volumes, label=None):
         slice.on_changed(update)
 
         if label is not None:
-            plt.title(label)
+            plt.title(label, fontweight="bold")
 
         plt.show()
 
@@ -37,38 +39,48 @@ def display_volume_slice(volumes, label=None):
         volume_0 = volumes[0, :, :, :]
         volume_1 = volumes[1, :, :, :]
 
-        fig, ax = plt.subplots(1, 2)
-        plt.subplots_adjust(left=0.25, bottom=0.25)
-        ax[0].imshow(volume_0[volume_0.shape[0] // 2, :, :], cmap='gray')
-        ax[1].imshow(volume_1[volume_1.shape[0] // 2, :, :], cmap='gray')
+        fig, ax = plt.subplots(1, 3, figsize=(8, 4), gridspec_kw={'width_ratios': [1, 1, 1.1]})
+        #plt.subplots_adjust(top=0.2)
+        ax[0].imshow(volume_0[volume_0.shape[0] // 2, :, :], cmap='gray', vmin=0, vmax=0.5)
+        ax[0].set_title("Fixed patch")
+        ax[1].imshow(volume_1[volume_1.shape[0] // 2, :, :], cmap='gray', vmin=0, vmax=0.5)
+        ax[1].set_title("Moving patch")
+        im = ax[2].imshow(np.abs(volume_0[volume_0.shape[0] // 2, :, :] - volume_1[volume_0.shape[0] // 2, :, :]), cmap='inferno')
+        ax[2].set_title("Difference")
 
-        ax_slider_left = plt.axes([0.32, 0.2, 0.15, 0.03])
-        ax_slider_right = plt.axes([0.7, 0.2, 0.15, 0.03])
+        # [left, bottom, width, height]
+        ax_slider = plt.axes([0.3, 0.1, 0.4, 0.03])
 
-        # add two sliders
-
-        slice_left = Slider(ax_slider_left, 'Slice', 0, volume_0.shape[0] - 1, valinit=volume_0.shape[0] // 2)
-        slice_right = Slider(ax_slider_right, 'Slice', 0, volume_1.shape[0] - 1, valinit=volume_1.shape[0] // 2)
+        # add sliders
+        slice = Slider(ax_slider, 'Slice', 0, volume_0.shape[0] - 1, valinit=volume_0.shape[0] // 2)
 
         def update_left(val):
             ax[0].clear()
-            ax[0].imshow(volume_0[int(slice_left.val), :, :], cmap='gray')
-            fig.canvas.draw_idle()
+            ax[0].imshow(volume_0[int(slice.val), :, :], cmap='gray', vmin=0, vmax=1)
 
-        def update_right(val):
             ax[1].clear()
-            ax[1].imshow(volume_1[int(slice_right.val), :, :], cmap='gray')
+            ax[1].imshow(volume_1[int(slice.val), :, :], cmap='gray', vmin=0, vmax=1)
+
+            ax[2].clear()
+            im = ax[2].imshow(np.abs(volume_0[int(slice.val), :, :] - volume_1[int(slice.val), :, :]), cmap='inferno')
+
             fig.canvas.draw_idle()
 
-        slice_left.on_changed(update_left)
-        slice_right.on_changed(update_right)
+            ax[0].set_title("Fixed patch")
+            ax[1].set_title("Moving patch")
+            ax[2].set_title("Difference")
+
+        slice.on_changed(update_left)
 
         if label is not None:
-            plt.suptitle(label)
+            plt.suptitle(label, fontweight="bold")
 
+        fig.colorbar(im, ax=ax[2], fraction=0.046, pad=0.04)
+
+        # plt.tight_layout()
         plt.show()
 
-        return slice_left, slice_right
+        return slice
 
 
 def display_tensor_and_label(tensor, label):
