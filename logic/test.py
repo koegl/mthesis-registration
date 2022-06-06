@@ -66,7 +66,7 @@ def test(model, test_loader):
                 else:
                     title = "Comparison of two patches that have [0, 0, 0] displacement.\n\nPrediction: WRONG"
 
-                _ = display_volume_slice(data.squeeze().detach().cpu().numpy(), title)
+                # _ = display_volume_slice(data.squeeze().detach().cpu().numpy(), title)
                 # print(5)
 
             t.set_description(f"Testing patches ({test_accuracy:.2f})")
@@ -81,13 +81,13 @@ def test(model, test_loader):
 
 # load model
 model = DenseNet()
-model_params = torch.load("/Users/fryderykkogl/Dropbox (Partners HealthCare)/Experiments/dense net classification robust-oath-133 1/model_epoch23_valacc0.954.pt",
+model_params = torch.load("/Users/fryderykkogl/Dropbox (Partners HealthCare)/Experiments/dense net 100k classification robust-oath-133/model_epoch23_valacc0.954.pt",
                           map_location=torch.device('cpu'))
 model.load_state_dict(model_params['model_state_dict'])
 model.eval()
 
 # load test data
-loader = get_test_loader("/Users/fryderykkogl/Dropbox (Partners HealthCare)/Experiments/dense net classification robust-oath-133 1/data - 20211129_craini_golby/resliced_perfect_false")
+loader = get_test_loader("/Users/fryderykkogl/Dropbox (Partners HealthCare)/Experiments/dense net 100k classification robust-oath-133/data - 20211129_craini_golby/resliced_perfect_false")
 
 test_accuracy, acc_list, class_amount = test(model, loader)
 
@@ -96,3 +96,6 @@ patcher = Patcher("", "", "", 10, False)
 x = patcher.offsets
 visualise_per_class_accuracies(acc_list/class_amount, x, f"Test per-class accuracies for {len(loader)} 'perfect' patches")
 plt.savefig("/Users/fryderykkogl/Dropbox (Partners HealthCare)/Experiments" + "/test_per_class_accuracies_true.png", dpi=250)
+
+# 165 classes
+# test accuracy = 0.9679
