@@ -1,7 +1,7 @@
 import glob
 import os
 import numpy as np
-import ast
+from ast import literal_eval
 
 import torch
 from torchvision import transforms
@@ -9,6 +9,7 @@ from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
 
 from utils import get_label_from_label_id
+from logic.patcher import Patcher
 
 
 class PatchDataset(Dataset):
@@ -16,8 +17,38 @@ class PatchDataset(Dataset):
         self.patch_file_path_list = patch_file_path_list
         self.transform = transform
 
+        self.patcher = Patcher("", "", "", 32, False)
+        self.labels_per_d_dict = {"-16": 0, "-8": 1, "-4": 2, "4": 3, "8": 4, "16": 5, "0": 6, "7": 7}
+
     def __len__(self):
         return len(self.patch_file_path_list)
+
+    def get_triple_label(self, label_id):
+        offset = literal_eval(self.patcher.label_to_offset_dict[label_id])
+
+        if offset == [7, 7, 7] or offset == [0, 0, 0]:
+            temp = 0
+            pass
+
+        # get displacement in each dimension
+        x_disp = offset[0]
+        y_disp = offset[1]
+        z_disp = offset[2]
+
+        # create a label for each dimension
+        x_label = np.zeros(8)
+        y_label = np.zeros(8)
+        z_label = np.zeros(8)
+
+        # get the id of each spatial translation, and assign the label at this id to 1
+        x_label[self.labels_per_d_dict[str(x_disp)]] = 1
+        y_label[self.labels_per_d_dict[str(y_disp)]] = 1
+        z_label[self.labels_per_d_dict[str(z_disp)]] = 1
+
+        # concatenate the labels
+        label = np.concatenate((x_label, y_label, z_label), axis=0)
+
+        return label
 
     def __getitem__(self, idx):
         """
@@ -27,10 +58,12 @@ class PatchDataset(Dataset):
         """
 
         path = self.patch_file_path_list[idx]
+
         label_id = os.path.basename(path).split('_')[1]  # second part of the name is the id as a binary number
 
         patch = np.load(path)
-        label = get_label_from_label_id(label_id)
+
+        label = self.get_triple_label(label_id)
 
         return patch, label
 

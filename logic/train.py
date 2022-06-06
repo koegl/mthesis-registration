@@ -3,12 +3,13 @@ from time import perf_counter
 from datetime import datetime, timedelta
 import numpy as np
 import wandb
-
+from ast import literal_eval
 import torch
 import torch.nn
 
 from visualisations import display_tensor_and_label, display_volume_slice
-from utils import calculate_accuracy
+from utils import calculate_accuracy, get_label_id_from_label
+from logic.patcher import Patcher
 
 
 def save_model(model, optimizer, epoch, train_array, val_array, start_datetime, save_path="models/model.pt"):
@@ -55,17 +56,33 @@ def train_step(train_loader, device, model, criterion, optimizer, epoch, logging
     now = perf_counter()
 
     for data, label in train_loader:
+
         data = data.to(device).to(torch.float32)
+
         label = label.to(device).to(torch.float32)
+        label_x = label[:, 0:8]
+        label_y = label[:, 8:16]
+        label_z = label[:, 16:24]
 
         output = model(data)
-        loss = criterion(output, label)
+        output_x = output[:, 0:8]
+        output_y = output[:, 8:16]
+        output_z = output[:, 16:24]
+
+        loss_x = criterion(output_x, label_x)
+        loss_y = criterion(output_y, label_y)
+        loss_z = criterion(output_z, label_z)
+
+        loss = (loss_x + loss_y + loss_z) / 3
 
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
-        acc = calculate_accuracy(output, label)
+        acc_x = calculate_accuracy(output_x, label_x)
+        acc_y = calculate_accuracy(output_y, label_y)
+        acc_z = calculate_accuracy(output_z, label_z)
+        acc = (acc_x + acc_y + acc_z) / 3
 
         epoch_accuracy += acc / len(train_loader)
         epoch_loss += loss / len(train_loader)
@@ -75,7 +92,7 @@ def train_step(train_loader, device, model, criterion, optimizer, epoch, logging
                    "Train accuracy": epoch_accuracy,
                    "Epoch": epoch})
     else:
-        print(f"\n{epoch}:\tTime: {perf_counter() - now:.2f}s;\t Train loss: {epoch_loss:.2f};\tTrain accuracy: {epoch_accuracy:.2f}",
+        print(f"\n{epoch}:\tTime: {perf_counter() - now:.2f}s;\t Train loss: {epoch_loss:.2f};\tTrain accuracy: {epoch_accuracy:.3f}",
               end='\t')
 
     return epoch_loss.detach().cpu().numpy(), epoch_accuracy.detach().cpu().numpy()
@@ -89,12 +106,28 @@ def val_step(val_loader, device, model, criterion, epoch, logging):
     with torch.no_grad():
         for data, label in val_loader:
             data = data.to(device).to(torch.float32)
+
             label = label.to(device).to(torch.float32)
+            label_x = label[:, 0:8]
+            label_y = label[:, 8:16]
+            label_z = label[:, 16:24]
 
             val_output = model(data)
-            val_loss = criterion(val_output, label)
+            val_output_x = val_output[:, 0:8]
+            val_output_y = val_output[:, 8:16]
+            val_output_z = val_output[:, 16:24]
 
-            acc = calculate_accuracy(val_output, label)
+            val_loss_x = criterion(val_output_x, label_x)
+            val_loss_y = criterion(val_output_y, label_y)
+            val_loss_z = criterion(val_output_z, label_z)
+
+            val_loss = (val_loss_x + val_loss_y + val_loss_z) / 3
+
+            acc_x = calculate_accuracy(val_output_x, label_x)
+            acc_y = calculate_accuracy(val_output_y, label_y)
+            acc_z = calculate_accuracy(val_output_z, label_z)
+            acc = (acc_x + acc_y + acc_z) / 3
+
             epoch_val_accuracy += acc / len(val_loader)
             epoch_val_loss += val_loss / len(val_loader)
 
