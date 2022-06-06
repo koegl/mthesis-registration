@@ -93,7 +93,7 @@ class _DenseBlock(nn.ModuleDict):
 
 class DenseNet(nn.Module):
     def __init__(self, growth_rate=32, block_config=(6, 12, 24, 16),
-                 num_init_features=64, bn_size=4, drop_rate=0, num_classes=20, memory_efficient=False):
+                 num_init_features=64, bn_size=4, drop_rate=0, num_classes=24, memory_efficient=False):
         super(DenseNet, self).__init__()
 
         # First convolution and pooling

@@ -146,7 +146,7 @@ def get_architecture(architecture_type):
             dim=128,
             volume_size=32,
             patch_size=4,
-            num_classes=20,
+            num_classes=24,
             channels=2,
             depth=6,
             heads=8,
