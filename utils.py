@@ -214,3 +214,34 @@ def get_label_id_from_label(label):
     label_id = '{0:05b}'.format(label.argmax())
 
     return label_id
+
+
+def patch_inference(model, patches, dim_vals):
+    """
+    This function does inference for a patch_pair
+    :param model: the pretrained model
+    :param patches: the patch pair
+    :param offsets: the possible offsets
+    :return: the expected displacement
+    """
+
+    with torch.no_grad():
+
+        softmax = torch.nn.Softmax(dim=1)
+
+        # transform patches into a batch
+        patches = torch.from_numpy(patches).float().unsqueeze(0)
+
+        # get model predictions on patches
+        model_output = model(patches)
+        predicted_probabilities = softmax(model_output).detach().cpu().numpy()
+        pred_x = predicted_probabilities[:, 0:8]
+        pred_y = predicted_probabilities[:, 8:16]
+        pred_z = predicted_probabilities[:, 16:24]
+
+        # calculate expected displacement
+        e_d_x = np.matmul(pred_x, dim_vals[0])
+        e_d_y = np.matmul(pred_y, dim_vals[1])
+        e_d_z = np.matmul(pred_z, dim_vals[2])
+
+        return e_d_x, e_d_y, e_d_z
