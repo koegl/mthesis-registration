@@ -12,6 +12,7 @@ from utils import calculate_accuracy, get_label_id_from_label
 from logic.patcher import Patcher
 
 
+# todo first save the model, then if the saving was successful, delete the old ones
 def save_model(model, optimizer, epoch, train_array, val_array, start_datetime, save_path="models/model.pt"):
     """
     Function to save models only if the validation accuracy is higher than in all the previous ones
