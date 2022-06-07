@@ -23,12 +23,12 @@ def test(model, test_loader):
 
     test_accuracy = 0.0
 
-    acc_list = np.zeros(20)
-    class_amount = np.zeros(20)
+    acc_list = np.zeros(24)
+    class_amount = np.zeros(24)
 
     counter = 0
-
-    # todo also log another array only when prediction is not 'unrelated'
+    labels_per_disp_dict = {"-16": 0, "-8": 1, "-4": 2, "4": 3, "8": 4, "16": 5, "0": 6, "7": 7}
+    disp_per_label_dict = {str(v): int(k) for k, v in labels_per_disp_dict.items()}
 
     with torch.no_grad():
 
@@ -36,58 +36,70 @@ def test(model, test_loader):
         test_loader = iter(test_loader)
         for _ in t:
             data, label = next(test_loader)
+
             data = data.to(torch.float32)
-            label = label.to(torch.float32)
 
-            label_np = label.squeeze().detach().cpu().numpy()
-            idx_label = label_np.argmax()
+            label_np = label.to(torch.float32).squeeze().detach().cpu().numpy()
 
-            class_amount[idx_label] += 1
+            idx_label_x = label_np[0:8].argmax()
+            idx_label_y = label_np[8:16].argmax()
+            idx_label_z = label_np[16:24].argmax()
 
-            label_id = get_label_id_from_label(label_np)
-            offset = x[label_id]
-            # display_volume_slice(data.squeeze().detach().cpu().numpy(), offset)
+            class_amount[idx_label_x] += 1
+            class_amount[idx_label_y + 8] += 1
+            class_amount[idx_label_z + 16] += 1
 
             test_output = model(data)
 
-            idx_output = test_output.squeeze().detach().cpu().numpy().argmax()
+            # idx_output_x = test_output[:, 0:8].squeeze().detach().cpu().numpy().argmax()
+            # idx_output_y = test_output[:, 8:16].squeeze().detach().cpu().numpy().argmax()
+            # idx_output_z = test_output[:, 16:24].squeeze().detach().cpu().numpy().argmax()
 
-            acc = calculate_accuracy(test_output, label)
+            acc_x = calculate_accuracy(test_output[:, 0:8], label[:, 0:8])
+            acc_y = calculate_accuracy(test_output[:, 8:16], label[:, 8:16])
+            acc_z = calculate_accuracy(test_output[:, 16:24], label[:, 16:24])
+            acc = (acc_x + acc_y + acc_z) / 3
+
             test_accuracy += acc / length_of_test_loader
 
-            if acc >= 1.0:
-                acc_list[idx_label] += 1
+            if acc_x >= 1.0:
+                acc_list[idx_label_x] += 1
+            if acc_y >= 1.0:
+                acc_list[idx_label_y + 8] += 1
+            if acc_z >= 1.0:
+                acc_list[idx_label_z + 16] += 1
 
             # if the label is 'registered'
-            if idx_label == 1:
+            # if idx_label == 1:
+            #
+            #     if idx_label == idx_output:
+            #         title = "Comparison of two patches that have [0, 0, 0] displacement.\n\nPrediction: CORRECT"
+            #     else:
+            #         title = "Comparison of two patches that have [0, 0, 0] displacement.\n\nPrediction: WRONG"
 
-                if idx_label == idx_output:
-                    title = "Comparison of two patches that have [0, 0, 0] displacement.\n\nPrediction: CORRECT"
-                else:
-                    title = "Comparison of two patches that have [0, 0, 0] displacement.\n\nPrediction: WRONG"
-
-                _ = display_volume_slice(data.squeeze().detach().cpu().numpy(), title)
+                # _ = display_volume_slice(data.squeeze().detach().cpu().numpy(), title)
                 # print(5)
 
             t.set_description(f"Testing patches ({test_accuracy:.2f})")
             t.refresh()
 
-            # counter += 1
-            # if counter == 200:
-            #     break
+            counter += 1
+            if counter == 200:
+                break
 
     return test_accuracy, acc_list, class_amount
 
 
 # load model
 model = DenseNet()
-model_params = torch.load("/Users/fryderykkogl/Dropbox (Partners HealthCare)/Experiments/dense net classification robust-oath-133 1/model_epoch23_valacc0.954.pt",
+model_params = torch.load("/Users/fryderykkogl/Dropbox (Partners HealthCare)/Experiments/5-dense-400k-tripleL-rosy-moon/model_epoch36_valacc0.994.pt",
                           map_location=torch.device('cpu'))
 model.load_state_dict(model_params['model_state_dict'])
 model.eval()
 
 # load test data
-loader = get_test_loader("/Users/fryderykkogl/Dropbox (Partners HealthCare)/Experiments/dense net classification robust-oath-133 1/data - 20211129_craini_golby/resliced_perfect_false")
+loader = get_test_loader("/Users/fryderykkogl/Dropbox (Partners HealthCare)/Experiments/test data - 20211129_craini_golby/resliced_perfect_false")
+# loader = get_test_loader("/Users/fryderykkogl/Data/patches/data_npy")
 
 test_accuracy, acc_list, class_amount = test(model, loader)
 
