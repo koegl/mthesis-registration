@@ -3,6 +3,7 @@ import nibabel as nib
 import random
 import os
 import wandb
+import glob
 
 import torch
 
@@ -137,14 +138,26 @@ def initialise_wandb(params, len_train, len_val, project="Classification", entit
                "Validation size": len_val})
 
 
-def get_architecture(architecture_type):
+def get_architecture(params):
+
+    architecture_type = params.architecture_type
+
+    patch_size = get_patch_size_from_data_folder(params.train_and_val_dir)
 
     if architecture_type.lower() == "densenet":
-        model = densenet3d.DenseNet()
+        model = densenet3d.DenseNet(
+            growth_rate=32,
+            block_config=(6, 12, 24, 16),  # original values
+            num_init_features=10,
+            bn_size=4,
+            drop_rate=0,
+            num_classes=20,
+            memory_efficient=False)
+
     elif architecture_type.lower() == "vit":
         model = ViTStandard3D(
             dim=128,
-            volume_size=32,
+            volume_size=patch_size,
             patch_size=4,
             num_classes=20,
             channels=2,
@@ -214,3 +227,20 @@ def get_label_id_from_label(label):
     label_id = '{0:05b}'.format(label.argmax())
 
     return label_id
+
+
+def get_patch_size_from_data_folder(data_path):
+    """
+    This function takes in a path to a folder with patches and returns the patch size - it can do that because the bs is
+    encoded in the file names
+    :param data_path:
+    :return: patch_size
+    """
+
+    patch_file_path_list = glob.glob(os.path.join(data_path, "*_patch.npy"))
+
+    one_patch_path = patch_file_path_list[0].split("_")
+
+    patch_size = int(one_patch_path[3][2:])
+
+    return patch_size
