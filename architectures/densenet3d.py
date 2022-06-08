@@ -126,6 +126,7 @@ class DenseNet(nn.Module):
             num_features += num_layers*growth_rate
 
             # transition layer - if we are not at the end - it outputs half the features
+            # the last layer does not have a transition layer
             if i != len(block_config) - 1:
                 transition = _Transtion(num_features, num_features // 2)
                 self.features.add_module('transition%d' % (i + 1), transition)
