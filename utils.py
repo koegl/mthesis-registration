@@ -137,14 +137,26 @@ def initialise_wandb(params, len_train, len_val, project="Classification", entit
                "Validation size": len_val})
 
 
-def get_architecture(architecture_type):
+def get_architecture(params):
+
+    architecture_type = params.architecture_type
+
+    patch_size, _ = get_patch_size_and_multiplier_from_data_folder(params.train_and_val_dir)
 
     if architecture_type.lower() == "densenet":
-        model = densenet3d.DenseNet()
+        model = densenet3d.DenseNet(
+            growth_rate=32,
+            block_config=(6, 12, 24, 16),  # original values
+            num_init_features=10,
+            bn_size=4,
+            drop_rate=0,
+            num_classes=20,
+            memory_efficient=False)
+
     elif architecture_type.lower() == "vit":
         model = ViTStandard3D(
             dim=128,
-            volume_size=32,
+            volume_size=patch_size,
             patch_size=4,
             num_classes=20,
             channels=2,
