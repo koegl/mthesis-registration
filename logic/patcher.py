@@ -352,5 +352,3 @@ class Patcher:
                 volume_offset = ds_offset.get_fdata()
 
             idx = self.create_and_save_all_patches_and_labels_for_a_pair(volume_fixed, volume_offset, idx)
-
-        print(f"Created in total {idx} patches")
