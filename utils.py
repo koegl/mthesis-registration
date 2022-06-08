@@ -3,6 +3,7 @@ import nibabel as nib
 import random
 import os
 import wandb
+import glob
 
 import torch
 
@@ -141,7 +142,7 @@ def get_architecture(params):
 
     architecture_type = params.architecture_type
 
-    patch_size, _ = get_patch_size_and_multiplier_from_data_folder(params.train_and_val_dir)
+    patch_size = get_patch_size_from_data_folder(params.train_and_val_dir)
 
     if architecture_type.lower() == "densenet":
         model = densenet3d.DenseNet(
@@ -226,3 +227,20 @@ def get_label_id_from_label(label):
     label_id = '{0:05b}'.format(label.argmax())
 
     return label_id
+
+
+def get_patch_size_from_data_folder(data_path):
+    """
+    This function takes in a path to a folder with patches and returns the patch size - it can do that because the bs is
+    encoded in the file names
+    :param data_path:
+    :return: patch_size
+    """
+
+    patch_file_path_list = glob.glob(os.path.join(data_path, "*_patch.npy"))
+
+    one_patch_path = patch_file_path_list[0].split("_")
+
+    patch_size = int(one_patch_path[3][2:])
+
+    return patch_size
