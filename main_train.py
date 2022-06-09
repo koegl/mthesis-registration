@@ -73,6 +73,7 @@ if __name__ == "__main__":
     parser.add_argument("-at", "--architecture_type", default="densenet", choices=["densenet", "vit"])
     parser.add_argument("-dp", "--dropout", default=0.1, type=float,
                         help="Dropout probability")
+    parser.add_argument("-es", "--early_stopping", default=True, type=bool)
 
     args = parser.parse_args()
 
