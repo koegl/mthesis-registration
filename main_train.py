@@ -68,6 +68,8 @@ if __name__ == "__main__":
     parser.add_argument("-v", "--validate", default=True, type=bool, help="Choose whether to validate or not")
     parser.add_argument("-lg", "--logging", default="wandb", choices=["print", "wandb"])
     parser.add_argument("-at", "--architecture_type", default="densenet", choices=["densenet", "vit"])
+    parser.add_argument("-dp", "--dropout", default=0.1, type=float,
+                        help="Dropout probability")
 
     args = parser.parse_args()
 
