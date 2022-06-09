@@ -90,6 +90,9 @@ def get_loader(data_path, batch_size, dataset_size, loader_type='train'):
     # create the dataset
     dataset = PatchDataset(patch_file_path_list, transform=data_transforms)
 
+    if len(dataset) == 0:
+        raise ValueError("No patches found in the dataset")
+
     loader = DataLoader(dataset, batch_size=int(batch_size), shuffle=shuffle)
 
     return loader
