@@ -128,7 +128,8 @@ def initialise_wandb(params, len_train, len_val, project="Classification", entit
         "learning_rate": params.learning_rate,
         "epochs": params.epochs,
         "batch_size": params.batch_size,
-        "training_data": params.train_and_val_dir,
+        "train_dir": params.train_dir,
+        "val_dir": params.val_dir,
         "architecture_type": params.architecture_type,
         "device": str(params.device),
     }
