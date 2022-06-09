@@ -16,7 +16,7 @@ import torch.nn as nn
 
 from utils import seed_everything, initialise_wandb, get_architecture
 from logic.train import train
-from logic.dataloader import get_train_and_val_loaders
+from logic.dataloader import get_loader
 
 
 def main(params):
@@ -32,8 +32,9 @@ def main(params):
     # set seed
     seed_everything(params.seed)
 
-    # get train, val, and test data loaders
-    train_loader, val_loader = get_train_and_val_loaders(params)
+    # get train and data loaders
+    train_loader = get_loader(params.train_dir, params.batch_size, params.dataset_size, loader_type="train")
+    val_loader = get_loader(params.val_dir, params.batch_size, params.dataset_size, loader_type="val")
 
     # get the model
     model = get_architecture(params).to(params.device)
@@ -61,13 +62,17 @@ if __name__ == "__main__":
     parser.add_argument("-e", "--epochs", default=400)
     parser.add_argument("-lr", "--learning_rate", default=0.001)
     parser.add_argument("-s", "--seed", default=42, help="For seeding eveyrthing")
-    parser.add_argument("-tvd", "--train_and_val_dir", default="/Users/fryderykkogl/Data/patches/data_npy",
-                        help="Directory of the training data (and validation")
+    parser.add_argument("-td", "--train_dir", default="/Users/fryderykkogl/Data/patches/train_npy",
+                        help="Directory of the training data")
+    parser.add_argument("-vd", "--val_dir", default="/Users/fryderykkogl/Data/patches/val_npy",
+                        help="Directory of the validation data")
     parser.add_argument("-dv", "--device", default="cpu", choices=["cpu", "mps"])
-    parser.add_argument("-ds", "--dataset_size", default=400, type=int, help="Amount of images used for training")
+    parser.add_argument("-ds", "--dataset_size", default=40, type=int, help="Amount of images used for training")
     parser.add_argument("-v", "--validate", default=True, type=bool, help="Choose whether to validate or not")
-    parser.add_argument("-lg", "--logging", default="wandb", choices=["print", "wandb"])
+    parser.add_argument("-lg", "--logging", default="print", choices=["print", "wandb"])
     parser.add_argument("-at", "--architecture_type", default="densenet", choices=["densenet", "vit"])
+    parser.add_argument("-dp", "--dropout", default=0.1, type=float,
+                        help="Dropout probability")
 
     args = parser.parse_args()
 

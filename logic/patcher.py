@@ -5,13 +5,14 @@ import glob
 import os
 import nibabel as nib
 from itertools import permutations
+from warnings import warn
 
 from utils import crop_volume_borders
 
 
 class Patcher:
     def __init__(self, load_directory, save_directory, file_type, centres_per_dimension, perfect_truth,
-                 patch_size=32, scale_dist=1.5, offset_multiplier=4):
+                 patch_size=32, scale_dist=1.5, offset_multiplier=4, rescale=False, save_type='uint8'):
         """
         :param load_directory: Directory with the niftis
         :param save_directory: Directory where al the patches will be saved
@@ -32,6 +33,8 @@ class Patcher:
         self.patch_size = int(patch_size)
         self.scale_dist = float(scale_dist)
         self.offset_multiplier = int(offset_multiplier)
+        self.rescale = rescale
+        self.save_type = save_type
 
         self.unrelated_offset = np.asarray([7, 7, 7])
         self.offsets = np.asarray([
@@ -265,7 +268,7 @@ class Patcher:
 
         return combined_patch, label
 
-    def create_and_save_all_patches_and_labels_for_a_pair(self, volume_fixed, volume_offset, idx):
+    def create_and_save_all_patches_and_labels_for_a_pair(self, volume_fixed, volume_offset, idx, rescale=False, save_type="uint8"):
 
         patch_centres = self.generate_list_of_patch_centres(volume_fixed)
 
@@ -283,7 +286,18 @@ class Patcher:
                         continue
 
                 patch, label = self.get_patch_and_label(volume_fixed, volume_offset, centre, offset)
-                patch = patch.astype(np.uint8)
+
+                if rescale is True and save_type == "float16":
+                    patch /= np.max(patch)
+                    patch = patch.astype(np.float16)
+                elif rescale is False and save_type == "float16":
+                    patch = patch.astype(np.float16)
+                elif rescale is True and save_type == "uint8":
+                    warn("Rescaling is not possible for uint8. Changing save_type to float16 and re-scaling")
+                    patch /= np.max(patch)
+                    patch = patch.astype(np.float16)
+                elif rescale is False and save_type == "uint8":
+                    patch = patch.astype(np.uint8)
 
                 # save the patch and label
                 np.save(os.path.join(self.save_directory, f"{str(idx).zfill(9)}_{label}_m{int(self.offset_multiplier)}"
@@ -351,4 +365,5 @@ class Patcher:
                 volume_fixed = ds_fixed.get_fdata()
                 volume_offset = ds_offset.get_fdata()
 
-            idx = self.create_and_save_all_patches_and_labels_for_a_pair(volume_fixed, volume_offset, idx)
+            idx = self.create_and_save_all_patches_and_labels_for_a_pair(volume_fixed, volume_offset, idx, self.rescale,
+                                                                          self.save_type)

@@ -142,7 +142,7 @@ def get_architecture(params):
 
     architecture_type = params.architecture_type
 
-    patch_size = get_patch_size_from_data_folder(params.train_and_val_dir)
+    patch_size = get_patch_size_from_data_folder(params.train_dir)
 
     if architecture_type.lower() == "densenet":
         model = densenet3d.DenseNet(
@@ -150,7 +150,7 @@ def get_architecture(params):
             block_config=(6, 12, 24, 16),  # original values
             num_init_features=10,
             bn_size=4,
-            drop_rate=0,
+            drop_rate=float(params.dropout),
             num_classes=20,
             memory_efficient=False)
 
@@ -165,7 +165,7 @@ def get_architecture(params):
             heads=8,
             mlp_dim=2048,
             dropout=0.1,
-            emb_dropout=0.1,
+            emb_dropout=float(params.dropout),
             device="cpu"
         )
     else:
@@ -241,6 +241,6 @@ def get_patch_size_from_data_folder(data_path):
 
     one_patch_path = patch_file_path_list[0].split("_")
 
-    patch_size = int(one_patch_path[3][2:])
+    patch_size = int(one_patch_path[-2][2:])
 
     return patch_size
