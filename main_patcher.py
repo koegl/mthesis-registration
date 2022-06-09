@@ -32,7 +32,7 @@ if __name__ == "__main__":
                         help="File type of the niftis")
     parser.add_argument("-cpd", "--centres_per_dimension", default=5,
                         help="Amount of centres per dimension")
-    parser.add_argument("-pt", "--perfect_truth", default=True,
+    parser.add_argument("-pt", "--perfect_truth", default=False,
                         help="If true, the patches are extracted from the same volumes, otherwise from pairs")
     parser.add_argument("-ps", "--patch_size", default=32,
                         help="Size of the patches")
