@@ -11,6 +11,36 @@ import architectures.densenet3d as densenet3d
 from architectures.vit_standard_3d import ViTStandard3D
 
 
+class EarlyStopping:
+    """
+    Early stops the training if validation loss doesn't improve after a given patience and delta"
+    """
+
+    def __init__(self, patience=6, min_delta=0.01):
+        """
+        :param patience: number of epochs to wait before early stopping
+        :param min_delta: minimum difference between new loss and old loss for new loss to be considered as an
+        improvement
+        """
+        self.patience = patience
+        self.min_delta = min_delta
+        self.counter = 0
+        self.best_loss = None
+        self.early_stop = False
+
+    def __call__(self, val_loss):
+        if self.best_loss is None:
+            self.best_loss = val_loss
+        elif self.best_loss - val_loss > self.min_delta:
+            self.best_loss = val_loss
+            self.counter = 0
+        elif self.best_loss - val_loss < self.min_delta:
+            self.counter += 1
+            if self.counter >= self.patience:
+                print("INFO: Early stopping")
+                self.early_stop = True
+
+
 def save_np_array_as_nifti(array, path, affine, header=None):
     """
     Save an nd array as a nifti file.
