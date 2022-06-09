@@ -1,15 +1,25 @@
 program: main_train.py
-project: Classification
-method: grid
+project: sweep_debugging
+method: random
 metric:
-  name: validation_loss
-  goal: minimize
+  goal: maximize
+  name: Val accuracy
 parameters:
   train_dir:
     value: "/Users/fryderykkogl/Data/patches/train_npy"
   val_dir:
     value: "/Users/fryderykkogl/Data/patches/val_npy"
   learning_rate:
-    values: [0.001, 0.00003, 0.0006, 0.0001, 0.0003]
+    distribution: uniform
+    min: 0.0003
+    max: 0.01
+  epochs:
+    value: 20
   dropout:
-    values: [0.1, 0.2, 0.3, 0.5]
+    distribution: uniform
+    min: 0.0
+    max: 0.5
+early_terminate:
+  type: hyperband
+  max_iter: 20
+  s: 2
