@@ -24,9 +24,9 @@ def main(params):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-ld", "--load_directory", default="/Users/fryderykkogl/Data/temp",
+    parser.add_argument("-ld", "--load_directory", default="/Users/fryderykkogl/Data/patches/val_nii",
                         help="Directory containing all niftis")
-    parser.add_argument("-sd", "--save_directory", default="/Users/fryderykkogl/Data/temp",
+    parser.add_argument("-sd", "--save_directory", default="/Users/fryderykkogl/Data/patches/val_npy",
                         help="Directory to save the numpy patches")
     parser.add_argument("-ft", "--file_type", default="nii.gz", choices=["nii", "nii.gz"],
                         help="File type of the niftis")
@@ -43,7 +43,7 @@ if __name__ == "__main__":
                         help="Standard offset is [0,0,1] and this will be multiplied by this argument")
     parser.add_argument("-rs", "--rescale", default=True,
                         help="If true, the volumes are divided by their maximum value")
-    parser.add_argument("-st", "--save_type", default="float16", choices=["unit8", "float16"])
+    parser.add_argument("-st", "--save_type", default="float16", choices=["uint8", "float16"])
 
     args = parser.parse_args()
 

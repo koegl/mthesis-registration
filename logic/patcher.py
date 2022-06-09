@@ -259,9 +259,7 @@ class Patcher:
         patch_fixed, patch_offset = self.extract_overlapping_patches(volume_fixed, volume_offset, patch_centre, offset)
 
         # join patches along new 4th dimension
-        combined_patch = np.zeros((2, self.patch_size, self.patch_size, self.patch_size))
-        combined_patch[0, :, :, :] = patch_fixed
-        combined_patch[1, :, :, :] = patch_offset
+        combined_patch = np.stack((patch_fixed, patch_offset), 0)
 
         # get the label from the dict
         label = self.offset_to_label_dict[np.array2string(offset, separator=",")]
