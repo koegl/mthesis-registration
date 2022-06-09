@@ -14,12 +14,8 @@ parameters:
     min: 0.0003
     max: 0.01
   epochs:
-    value: 20
+    value: 30
   dropout:
     distribution: uniform
     min: 0.0
     max: 0.5
-early_terminate:
-  type: hyperband
-  max_iter: 20
-  s: 2
