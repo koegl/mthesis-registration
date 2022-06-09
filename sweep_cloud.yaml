@@ -6,9 +6,9 @@ metric:
   goal: minimize
 parameters:
   train_dir:
-  value: "/Users/fryderykkogl/Data/patches/train_npy"
+  value: "/mnt/disks/data/IXI_sedghi_subset_2upscaled/npy/train"
   val_dir:
-    value: "/Users/fryderykkogl/Data/patches/val_npy"
+    value: "/mnt/disks/data/IXI_sedghi_subset_2upscaled/npy/val"
   learning_rate:
     values: [0.001, 0.00003, 0.0006, 0.0001, 0.0003]
   dropout:
