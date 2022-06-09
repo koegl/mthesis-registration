@@ -268,7 +268,7 @@ class Patcher:
 
         return combined_patch, label
 
-    def create_and_save_all_patches_and_labels_for_a_pair(self, volume_fixed, volume_offset, idx, rescale=False, save_type="uint8"):
+    def create_and_save_all_patches_and_labels_for_a_pair(self, volume_fixed, volume_offset, idx):
 
         patch_centres = self.generate_list_of_patch_centres(volume_fixed)
 
@@ -286,18 +286,6 @@ class Patcher:
                         continue
 
                 patch, label = self.get_patch_and_label(volume_fixed, volume_offset, centre, offset)
-
-                if rescale is True and save_type == "float16":
-                    patch /= np.max(patch)
-                    patch = patch.astype(np.float16)
-                elif rescale is False and save_type == "float16":
-                    patch = patch.astype(np.float16)
-                elif rescale is True and save_type == "uint8":
-                    warn("Rescaling is not possible for uint8. Changing save_type to float16 and re-scaling")
-                    patch /= np.max(patch)
-                    patch = patch.astype(np.float16)
-                elif rescale is False and save_type == "uint8":
-                    patch = patch.astype(np.uint8)
 
                 # save the patch and label
                 np.save(os.path.join(self.save_directory, f"{str(idx).zfill(9)}_{label}_m{int(self.offset_multiplier)}"
@@ -340,6 +328,25 @@ class Patcher:
 
         return path_pairs
 
+    def rescale_volume(self, volume):
+        if self.rescale is True and self.save_type == "float16":
+            volume /= np.max(volume)
+            volume = volume.astype(np.float16)
+            volume[volume < 0.005] = 0
+        elif self.rescale is False and self.save_type == "float16":
+            volume = volume.astype(np.float16)
+            volume[volume < 0.005] = 0
+        elif self.rescale is True and self.save_type == "uint8":
+            warn("Rescaling is not possible for uint8. Changing save_type to float16 and re-scaling")
+            volume /= np.max(volume)
+            volume = volume.astype(np.float16)
+            volume[volume < 0.005] = 0
+        elif self.rescale is False and self.save_type == "uint8":
+            volume = volume.astype(np.uint8)
+            volume[volume < 1] = 0
+
+        return volume
+
     def create_and_save_all_patches_and_labels(self):
 
         assert self.file_type == 'nii' or self.file_type == "nii.gz", "Only nii files are supported"
@@ -359,11 +366,14 @@ class Patcher:
                 ds = nib.load(pair[0])
                 volume_fixed = ds.get_fdata()
                 volume_offset = volume_fixed.copy()
+
             else:
                 ds_fixed = nib.load(pair[0])
                 ds_offset = nib.load(pair[1])
                 volume_fixed = ds_fixed.get_fdata()
                 volume_offset = ds_offset.get_fdata()
 
-            idx = self.create_and_save_all_patches_and_labels_for_a_pair(volume_fixed, volume_offset, idx, self.rescale,
-                                                                          self.save_type)
+            volume_fixed = self.rescale_volume(volume_fixed)
+            volume_offset = self.rescale_volume(volume_offset)
+
+            idx = self.create_and_save_all_patches_and_labels_for_a_pair(volume_fixed, volume_offset, idx)
