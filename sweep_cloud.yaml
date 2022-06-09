@@ -6,7 +6,7 @@ metric:
   goal: minimize
 parameters:
   train_dir:
-  value: "/mnt/disks/data/IXI_sedghi_subset_2upscaled/npy/train"
+    value: "/mnt/disks/data/IXI_sedghi_subset_2upscaled/npy/train"
   val_dir:
     value: "/mnt/disks/data/IXI_sedghi_subset_2upscaled/npy/val"
   learning_rate:
