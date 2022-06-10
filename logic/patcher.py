@@ -6,7 +6,8 @@ import os
 import nibabel as nib
 from itertools import permutations
 from warnings import warn
-
+import matplotlib.pyplot as plt
+from visualisations import display_volume_slice
 from utils import crop_volume_borders
 
 
@@ -121,7 +122,7 @@ class Patcher:
         all_permutations = list(set(all_permutations))
 
         # shuffle list order
-        random.shuffle(all_permutations)
+        # random.shuffle(all_permutations)
 
         # loop through all offsets and choose first one which is in the bounds
         for offset in all_permutations:
@@ -187,6 +188,11 @@ class Patcher:
 
         cpd = self.centres_per_dimension
 
+        if volume.dtype == np.uint8:
+            volume[volume < 2] = 0
+        elif volume.dtype == np.float16:
+            volume[volume < 0.05] = 0
+
         centres_list = []
 
         # crop the volume to remove black borders
@@ -230,6 +236,7 @@ class Patcher:
                         continue
 
                     # check if patch has in at least 25% of the volume non-black pixels
+                    # todo maybe also add this check at the very end
                     patch = volume[centre_x - self.patch_size // 2:centre_x + self.patch_size // 2,
                                    centre_y - self.patch_size // 2:centre_y + self.patch_size // 2,
                                    centre_z - self.patch_size // 2:centre_z + self.patch_size // 2]
@@ -239,9 +246,9 @@ class Patcher:
                     centre = [centre_x, centre_y, centre_z]
 
                     centres_list.append(centre)
-
+                    # return centres_list
         # randomise the order of the centres
-        random.shuffle(centres_list)
+        # random.shuffle(centres_list)
 
         return centres_list
 
@@ -272,7 +279,7 @@ class Patcher:
 
         for centre in patch_centres:
             offsets = self.offsets.copy()
-            random.shuffle(offsets)
+            # random.shuffle(offsets)
             for offset in offsets:
 
                 # check if patch is in bounds for related offsets
@@ -285,11 +292,19 @@ class Patcher:
 
                 patch, label = self.get_patch_and_label(volume_fixed, volume_offset, centre, offset)
 
+                # check black pixels again
+                patch_thresh = patch.copy()
+                patch_thresh[patch_thresh < 0.05] = 0
+                if np.count_nonzero(patch[0, ...]) / (self.patch_size ** 3) < 0.25 or \
+                   np.count_nonzero(patch[1, ...]) / (self.patch_size ** 3) < 0.25:
+                    continue
+
                 # save the patch and label
                 np.save(os.path.join(self.save_directory, f"{str(idx).zfill(9)}_{label}_m{int(self.offset_multiplier)}"
                                                           f"_ps{int(self.patch_size)}_patch.npy"), patch)
 
                 idx += 1
+                # return idx
 
         return idx
 
@@ -330,18 +345,14 @@ class Patcher:
         if self.rescale is True and self.save_type == "float16":
             volume /= np.max(volume)
             volume = volume.astype(np.float16)
-            volume[volume < 0.005] = 0
         elif self.rescale is False and self.save_type == "float16":
             volume = volume.astype(np.float16)
-            volume[volume < 0.005] = 0
         elif self.rescale is True and self.save_type == "uint8":
             warn("Rescaling is not possible for uint8. Changing save_type to float16 and re-scaling")
             volume /= np.max(volume)
             volume = volume.astype(np.float16)
-            volume[volume < 0.005] = 0
         elif self.rescale is False and self.save_type == "uint8":
             volume = volume.astype(np.uint8)
-            volume[volume < 1] = 0
 
         return volume
 
