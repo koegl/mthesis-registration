@@ -1,0 +1,21 @@
+program: main_train.py
+project: sweep_debugging
+method: random
+metric:
+  goal: maximize
+  name: Val accuracy
+parameters:
+  train_dir:
+    value: "/Users/fryderykkogl/Data/patches/train_npy"
+  val_dir:
+    value: "/Users/fryderykkogl/Data/patches/val_npy"
+  learning_rate:
+    distribution: uniform
+    min: 0.0003
+    max: 0.01
+  epochs:
+    value: 30
+  dropout:
+    distribution: uniform
+    min: 0.0
+    max: 0.5

@@ -90,48 +90,42 @@ def get_transforms():
     return train_transforms, val_transforms, test_transforms
 
 
-def get_train_and_val_loaders(params):
+def get_loader(data_path, batch_size, dataset_size, loader_type='train'):
 
-    data_path = params.train_and_val_dir
-    batch_size = params.batch_size
+    shuffle = True
+
+    if loader_type == 'train':
+        data_transforms, _, _ = get_transforms()
+    elif loader_type == 'val':
+        _, data_transforms, _ = get_transforms()
+        dataset_size = int(0.2 * dataset_size)
+        if dataset_size < 2:  # that's the minimum dataset size, because 2 is the minimum batch size, because we have
+            # batch norm layers
+            dataset_size = 2
+
+    elif loader_type == 'test':
+        _, _, data_transforms = get_transforms()
+        batch_size = 1
+        shuffle = False
+    else:
+        raise ValueError("loader_type must be either 'train', 'val' or 'test'")
 
     # get paths to the patches
     patch_file_path_list = glob.glob(os.path.join(data_path, "*_patch.npy"))
     patch_file_path_list.sort()
 
     # reduce the dataset size if necessary
-    if params.dataset_size >= len(patch_file_path_list):
-        params.dataset_size = len(patch_file_path_list)
+    if dataset_size >= len(patch_file_path_list):
+        dataset_size = len(patch_file_path_list)
 
-    patch_file_path_list = patch_file_path_list[0:params.dataset_size]
+    patch_file_path_list = patch_file_path_list[0:dataset_size]
 
-    # train and val split
-    if params.validate is True:
-        train_list, val_list = train_test_split(patch_file_path_list, test_size=0.2, random_state=params.seed)
-    else:
-        train_list, val_list = patch_file_path_list, patch_file_path_list
+    # create the dataset
+    dataset = PatchDataset(patch_file_path_list, transform=data_transforms)
 
-    # get transforms
-    train_transforms, val_transforms, _ = get_transforms()
+    if len(dataset) == 0:
+        raise ValueError("No patches found in the dataset")
 
-    # create the datasets
-    train_dataset = PatchDataset(train_list, train_transforms)
-    val_dataset = PatchDataset(val_list, val_transforms)
+    loader = DataLoader(dataset, batch_size=int(batch_size), shuffle=shuffle)
 
-    # pass the dataset to the dataloader
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
-
-    return train_loader, val_loader
-
-
-def get_test_loader(data_path):
-    test_list = glob.glob(os.path.join(data_path, "*_patch.npy"))
-
-    _, _, transform = get_transforms()
-
-    test_dataset = PatchDataset(test_list, transform=transform)
-
-    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
-
-    return test_loader
+    return loader

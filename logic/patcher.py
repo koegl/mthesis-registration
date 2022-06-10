@@ -4,15 +4,16 @@ import random
 import glob
 import os
 import nibabel as nib
-import ast
 from itertools import permutations
-
+from warnings import warn
+import matplotlib.pyplot as plt
+from visualisations import display_volume_slice
 from utils import crop_volume_borders
 
 
 class Patcher:
     def __init__(self, load_directory, save_directory, file_type, centres_per_dimension, perfect_truth,
-                 patch_size=32, scale_dist=1.5):
+                 patch_size=32, scale_dist=1.5, offset_multiplier=4, rescale=False, save_type='uint8'):
         """
         :param load_directory: Directory with the niftis
         :param save_directory: Directory where al the patches will be saved
@@ -21,6 +22,7 @@ class Patcher:
         :param perfect_truth: If true, then patch pairs are extracted fom the same volume, else from volume pairs
         :param patch_size: size of the cubical patch (side of the cube - an int)
         :param scale_dist: factor which determines how far the unrelated patch will be from the patch - if it's one, the
+        :param offset_multiplier: the standard displacement classes start at disp = 1 and are multiplied with this var
         patches will be touching each other. shouldn't be less than one, because then there is overlap
         """
 
@@ -31,32 +33,37 @@ class Patcher:
         self.perfect_truth = perfect_truth
         self.patch_size = int(patch_size)
         self.scale_dist = float(scale_dist)
+        self.offset_multiplier = int(offset_multiplier)
+        self.rescale = rescale
+        self.save_type = save_type
 
-        self.unrelated_offset = "[7, 7, 7]"
-        self.offsets = [
-            self.unrelated_offset,
-            "[0, 0, 0]",
-            "[-16, 0, 0]",
-            "[0, -16, 0]",
-            "[0, 0, -16]",
-            "[-8, 0, 0]",
-            "[0, -8, 0]",
-            "[0, 0, -8]",
-            "[-4, 0, 0]",
-            "[0, -4, 0]",
-            "[0, 0, -4]",
-            "[4, 0, 0]",
-            "[0, 4, 0]",
-            "[0, 0, 4]",
-            "[8, 0, 0]",
-            "[0, 8, 0]",
-            "[0, 0, 8]",
-            "[16, 0, 0]",
-            "[0, 16, 0]",
-            "[0, 0, 16]",
-        ]
+        self.unrelated_offset = np.asarray([7, 7, 7])
+        self.offsets = np.asarray([
+            [0, 0, 0],
+            [0, 0, 0],
+            [-4, 0, 0],
+            [0, -4, 0],
+            [0, 0, -4],
+            [-2, 0, 0],
+            [0, -2, 0],
+            [0, 0, -2],
+            [-1, 0, 0],
+            [0, -1, 0],
+            [0, 0, -1],
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1],
+            [2, 0, 0],
+            [0, 2, 0],
+            [0, 0, 2],
+            [4, 0, 0],
+            [0, 4, 0],
+            [0, 0, 4],
+        ]) * self.offset_multiplier
+        self.offsets[0, :] = self.unrelated_offset
+
         # each offset is mapped to a binary label (which can be transformed to a one-hot vector)
-        self.offset_to_label_dict = {self.offsets[i]: '{0:05b}'.format(i) for i in range(20)}
+        self.offset_to_label_dict = {np.array2string(self.offsets[i], separator=','): '{0:05b}'.format(i) for i in range(20)}
         # create a reversed dict
         self.label_to_offset_dict = {v: k for k, v in self.offset_to_label_dict.items()}
 
@@ -115,7 +122,7 @@ class Patcher:
         all_permutations = list(set(all_permutations))
 
         # shuffle list order
-        random.shuffle(all_permutations)
+        # random.shuffle(all_permutations)
 
         # loop through all offsets and choose first one which is in the bounds
         for offset in all_permutations:
@@ -136,14 +143,14 @@ class Patcher:
         """
 
         if offset is None:
-            offset = [0, 0, 0]
+            offset = np.asarray([0, 0, 0])
 
         assert len(offset) == 3, "Offset must be a 3D vector"
         assert len(center) == 3, "Center must be a 3D vector"
         assert isinstance(self.patch_size, int), "Size must be a scalar integer"
 
         # check if we want the unrelated offset - if yes, then create it
-        if offset == ast.literal_eval(self.unrelated_offset):
+        if np.array_equal(offset, self.unrelated_offset):
             offset = self.create_unrelated_offset(volume.shape, center)
 
         bounds = self.get_bounds(center, offset)
@@ -180,6 +187,11 @@ class Patcher:
         """
 
         cpd = self.centres_per_dimension
+
+        if volume.dtype == np.uint8:
+            volume[volume < 2] = 0
+        elif volume.dtype == np.float16:
+            volume[volume < 0.05] = 0
 
         centres_list = []
 
@@ -224,6 +236,7 @@ class Patcher:
                         continue
 
                     # check if patch has in at least 25% of the volume non-black pixels
+                    # todo maybe also add this check at the very end
                     patch = volume[centre_x - self.patch_size // 2:centre_x + self.patch_size // 2,
                                    centre_y - self.patch_size // 2:centre_y + self.patch_size // 2,
                                    centre_z - self.patch_size // 2:centre_z + self.patch_size // 2]
@@ -233,9 +246,9 @@ class Patcher:
                     centre = [centre_x, centre_y, centre_z]
 
                     centres_list.append(centre)
-
+                    # return centres_list
         # randomise the order of the centres
-        random.shuffle(centres_list)
+        # random.shuffle(centres_list)
 
         return centres_list
 
@@ -250,16 +263,13 @@ class Patcher:
         """
 
         # extract both patches (we give the same volume twice, because we want to extract the patches from the same one)
-        patch_fixed, patch_offset = self.extract_overlapping_patches(volume_fixed, volume_offset, patch_centre,
-                                                                     ast.literal_eval(offset))
+        patch_fixed, patch_offset = self.extract_overlapping_patches(volume_fixed, volume_offset, patch_centre, offset)
 
         # join patches along new 4th dimension
-        combined_patch = np.zeros((2, self.patch_size, self.patch_size, self.patch_size))
-        combined_patch[0, :, :, :] = patch_fixed
-        combined_patch[1, :, :, :] = patch_offset
+        combined_patch = np.stack((patch_fixed, patch_offset), 0)
 
         # get the label from the dict
-        label = self.offset_to_label_dict[offset]
+        label = self.offset_to_label_dict[np.array2string(offset, separator=",")]
 
         return combined_patch, label
 
@@ -269,21 +279,32 @@ class Patcher:
 
         for centre in patch_centres:
             offsets = self.offsets.copy()
-            random.shuffle(offsets)
+            # random.shuffle(offsets)
             for offset in offsets:
 
-                # check if patch is in bounds
-                bounds = self.get_bounds(centre, ast.literal_eval(offset))
-                if self.in_bounds(volume_fixed.shape, bounds) is False:
-                    continue
+                # check if patch is in bounds for related offsets
+                # only for real offsets - later in the code, in the patch extraction itself an unrelated offset will be
+                # generated and the offset checked, so it does not make sense to check for bounds here
+                if not np.array_equal(offset, np.asarray([7, 7, 7])):
+                    bounds = self.get_bounds(centre, offset)
+                    if self.in_bounds(volume_fixed.shape, bounds) is False:
+                        continue
 
                 patch, label = self.get_patch_and_label(volume_fixed, volume_offset, centre, offset)
-                patch = patch.astype(np.uint8)
+
+                # check black pixels again
+                patch_thresh = patch.copy()
+                patch_thresh[patch_thresh < 0.05] = 0
+                if np.count_nonzero(patch[0, ...]) / (self.patch_size ** 3) < 0.25 or \
+                   np.count_nonzero(patch[1, ...]) / (self.patch_size ** 3) < 0.25:
+                    continue
 
                 # save the patch and label
-                np.save(os.path.join(self.save_directory, f"{str(idx).zfill(9)}_{label}_patch.npy"), patch)
+                np.save(os.path.join(self.save_directory, f"{str(idx).zfill(9)}_{label}_m{int(self.offset_multiplier)}"
+                                                          f"_ps{int(self.patch_size)}_patch.npy"), patch)
 
                 idx += 1
+                # return idx
 
         return idx
 
@@ -320,6 +341,21 @@ class Patcher:
 
         return path_pairs
 
+    def rescale_volume(self, volume):
+        if self.rescale is True and self.save_type == "float16":
+            volume /= np.max(volume)
+            volume = volume.astype(np.float16)
+        elif self.rescale is False and self.save_type == "float16":
+            volume = volume.astype(np.float16)
+        elif self.rescale is True and self.save_type == "uint8":
+            warn("Rescaling is not possible for uint8. Changing save_type to float16 and re-scaling")
+            volume /= np.max(volume)
+            volume = volume.astype(np.float16)
+        elif self.rescale is False and self.save_type == "uint8":
+            volume = volume.astype(np.uint8)
+
+        return volume
+
     def create_and_save_all_patches_and_labels(self):
 
         assert self.file_type == 'nii' or self.file_type == "nii.gz", "Only nii files are supported"
@@ -339,10 +375,14 @@ class Patcher:
                 ds = nib.load(pair[0])
                 volume_fixed = ds.get_fdata()
                 volume_offset = volume_fixed.copy()
+
             else:
                 ds_fixed = nib.load(pair[0])
                 ds_offset = nib.load(pair[1])
                 volume_fixed = ds_fixed.get_fdata()
                 volume_offset = ds_offset.get_fdata()
+
+            volume_fixed = self.rescale_volume(volume_fixed)
+            volume_offset = self.rescale_volume(volume_offset)
 
             idx = self.create_and_save_all_patches_and_labels_for_a_pair(volume_fixed, volume_offset, idx)

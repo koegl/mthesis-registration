@@ -10,6 +10,7 @@ import torch.nn
 from visualisations import display_tensor_and_label, display_volume_slice
 from utils import calculate_accuracy, get_label_id_from_label
 from logic.patcher import Patcher
+from utils import calculate_accuracy, EarlyStopping
 
 
 # todo first save the model, then if the saving was successful, delete the old ones
@@ -150,6 +151,7 @@ def train(params, train_loader, model, criterion, optimizer, val_loader, device,
     train_array = np.zeros((params.epochs, 2))
     start_datetime = datetime.now().strftime("%d/%m/%Y %H:%M:%S").replace(" ", "_").replace("/", "").replace(":", "")
     os.mkdir(f"./models/{start_datetime}")
+    early_stopping = EarlyStopping()
 
     time_idx = False
 
@@ -167,9 +169,18 @@ def train(params, train_loader, model, criterion, optimizer, val_loader, device,
         # save model
         save_model(model, optimizer, epoch, train_array, val_array, start_datetime, save_path)
 
+        # log time
         if time_idx is False and params.logging == "wandb":
             time = perf_counter() - now
 
             wandb.log({"Time per epoch": f'{"{:0>8}".format(str(timedelta(seconds=time)))}',
                        "Expected total time": f'{"{:0>8}".format(str(timedelta(seconds=time * params.epochs)))}'})
             time_idx = True
+
+        # early stopping
+        if params.early_stopping is True:
+            early_stopping(val_array[epoch, 0])
+            if early_stopping.early_stop is True:
+                wandb.log({"Early stopping": "True"})
+                break
+

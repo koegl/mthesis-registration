@@ -41,11 +41,11 @@ def display_volume_slice(volumes, label=None):
 
         fig, ax = plt.subplots(1, 3, figsize=(8, 4), gridspec_kw={'width_ratios': [1, 1, 1.1]})
         #plt.subplots_adjust(top=0.2)
-        ax[0].imshow(volume_0[volume_0.shape[0] // 2, :, :], cmap='gray', vmin=0, vmax=0.5)
+        ax[0].imshow(volume_0[volume_0.shape[0] // 2, :, :], cmap='gray')#, vmin=0, vmax=0.5)
         ax[0].set_title("Fixed patch")
-        ax[1].imshow(volume_1[volume_1.shape[0] // 2, :, :], cmap='gray', vmin=0, vmax=0.5)
+        ax[1].imshow(volume_1[volume_1.shape[0] // 2, :, :], cmap='gray')#, vmin=0, vmax=0.5)
         ax[1].set_title("Moving patch")
-        im = ax[2].imshow(np.abs(volume_0[volume_0.shape[0] // 2, :, :] - volume_1[volume_0.shape[0] // 2, :, :]), cmap='inferno')
+        im = ax[2].imshow(np.abs(volume_0[volume_0.shape[0] // 2, :, :] - volume_1[volume_0.shape[0] // 2, :, :]), cmap='inferno', vmin=0, vmax=1)
         ax[2].set_title("Difference")
 
         # [left, bottom, width, height]
@@ -56,10 +56,10 @@ def display_volume_slice(volumes, label=None):
 
         def update_left(val):
             ax[0].clear()
-            ax[0].imshow(volume_0[int(slice.val), :, :], cmap='gray', vmin=0, vmax=1)
+            ax[0].imshow(volume_0[int(slice.val), :, :], cmap='gray')#, vmin=0, vmax=1)
 
             ax[1].clear()
-            ax[1].imshow(volume_1[int(slice.val), :, :], cmap='gray', vmin=0, vmax=1)
+            ax[1].imshow(volume_1[int(slice.val), :, :], cmap='gray')#, vmin=0, vmax=1)
 
             ax[2].clear()
             im = ax[2].imshow(np.abs(volume_0[int(slice.val), :, :] - volume_1[int(slice.val), :, :]), cmap='inferno')
@@ -103,18 +103,21 @@ def display_tensor_and_label(tensor, label):
     plt.show()
 
 
-def visualise_per_class_accuracies(accuracies, class_names, title="Accuracies"):
+def visualise_per_class_accuracies(accuracies, class_names, title="Accuracies", lim=True):
     sns.set_style("darkgrid")
 
     fig, ax = plt.subplots(figsize=(10, 6))
     fig.subplots_adjust(bottom=0.2)
 
+    class_names[0] = "unrelated"
     p = sns.barplot(class_names, accuracies, palette="crest")
 
     p.set_xlabel("Offsets", fontsize=15)
+
     p.set_xticklabels(p.get_xticklabels(), rotation=90)
 
     p.set_ylabel("Accuracies per class", fontsize=15)
-    p.set(ylim=(0, 1))
+    if lim is True:
+        p.set(ylim=(0, 1))
 
     plt.title(title, fontsize=15, fontweight="bold")

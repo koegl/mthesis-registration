@@ -8,7 +8,7 @@ import torch.nn as nn
 
 from utils import calculate_accuracy, get_label_id_from_label
 from visualisations import display_tensor_and_label, display_volume_slice
-from dataloader import get_test_loader
+from dataloader import get_loader
 from architectures.densenet3d import DenseNet
 from logic.patcher import Patcher
 from visualisations import visualise_per_class_accuracies
@@ -87,24 +87,27 @@ def test(model, test_loader):
             if counter == 200:
                 break
 
-    return test_accuracy, acc_list, class_amount
+    return test_accuracy, acc_list, class_amount, unrelated, class_amount_without_unrelated, acc_list_without_unrelated
 
 
 # load model
-model = DenseNet()
-model_params = torch.load("/Users/fryderykkogl/Dropbox (Partners HealthCare)/Experiments/5-dense-400k-tripleL-rosy-moon/model_epoch36_valacc0.994.pt",
+model = DenseNet(num_init_features=10)
+model_params = torch.load("/Users/fryderykkogl/Desktop/model_epoch14_valacc0.678.pt",
                           map_location=torch.device('cpu'))
 model.load_state_dict(model_params['model_state_dict'])
 model.eval()
 
 # load test data
-loader = get_test_loader("/Users/fryderykkogl/Dropbox (Partners HealthCare)/Experiments/test data - 20211129_craini_golby/resliced_perfect_false")
-# loader = get_test_loader("/Users/fryderykkogl/Data/patches/data_npy")
+loader = get_loader("/Users/fryderykkogl/Data/patches/val_npy", 1, 10000000, loader_type="test")
 
-test_accuracy, acc_list, class_amount = test(model, loader)
+test_accuracy, acc_list, class_amount, unrelated, class_amount_without_unrelated, acc_list_without_unrelated = test(model, loader)
 
 # visualise
 patcher = Patcher("", "", "", 10, False)
 x = patcher.offsets
+x = [np.array2string(offset) for offset in x]
 visualise_per_class_accuracies(acc_list/class_amount, x, f"Test per-class accuracies for {len(loader)} 'perfect' patches")
 plt.savefig("/Users/fryderykkogl/Dropbox (Partners HealthCare)/Experiments" + "/test_per_class_accuracies_true.png", dpi=250)
+
+# 165 classes
+# test accuracy = 0.9679

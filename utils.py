@@ -3,11 +3,43 @@ import nibabel as nib
 import random
 import os
 import wandb
+import glob
+import matplotlib.pyplot as plt
 
 import torch
 
 import architectures.densenet3d as densenet3d
 from architectures.vit_standard_3d import ViTStandard3D
+
+
+class EarlyStopping:
+    """
+    Early stops the training if validation loss doesn't improve after a given patience and delta"
+    """
+
+    def __init__(self, patience=5, min_delta=0.02):
+        """
+        :param patience: number of epochs to wait before early stopping
+        :param min_delta: minimum difference between new loss and old loss for new loss to be considered as an
+        improvement
+        """
+        self.patience = patience
+        self.min_delta = min_delta
+        self.counter = 0
+        self.best_loss = None
+        self.early_stop = False
+
+    def __call__(self, val_loss):
+        if self.best_loss is None:
+            self.best_loss = val_loss
+        elif self.best_loss - val_loss > self.min_delta:
+            self.best_loss = val_loss
+            self.counter = 0
+        elif self.best_loss - val_loss < self.min_delta:
+            self.counter += 1
+            if self.counter >= self.patience:
+                print("INFO: Early stopping")
+                self.early_stop = True
 
 
 def save_np_array_as_nifti(array, path, affine, header=None):
@@ -127,7 +159,8 @@ def initialise_wandb(params, len_train, len_val, project="Classification", entit
         "learning_rate": params.learning_rate,
         "epochs": params.epochs,
         "batch_size": params.batch_size,
-        "training_data": params.train_and_val_dir,
+        "train_dir": params.train_dir,
+        "val_dir": params.val_dir,
         "architecture_type": params.architecture_type,
         "device": str(params.device),
     }
@@ -137,14 +170,26 @@ def initialise_wandb(params, len_train, len_val, project="Classification", entit
                "Validation size": len_val})
 
 
-def get_architecture(architecture_type):
+def get_architecture(params):
+
+    architecture_type = params.architecture_type
+
+    patch_size = get_patch_size_from_data_folder(params.train_dir)
 
     if architecture_type.lower() == "densenet":
-        model = densenet3d.DenseNet()
+        model = densenet3d.DenseNet(
+            growth_rate=32,
+            block_config=(6, 12, 24, 16),  # original values
+            num_init_features=64,
+            bn_size=4,
+            drop_rate=float(params.dropout),
+            num_classes=20,
+            memory_efficient=False)
+
     elif architecture_type.lower() == "vit":
         model = ViTStandard3D(
             dim=128,
-            volume_size=32,
+            volume_size=patch_size,
             patch_size=4,
             num_classes=24,
             channels=2,
@@ -152,7 +197,7 @@ def get_architecture(architecture_type):
             heads=8,
             mlp_dim=2048,
             dropout=0.1,
-            emb_dropout=0.1,
+            emb_dropout=float(params.dropout),
             device="cpu"
         )
     else:

@@ -1,21 +1,33 @@
-from logic.patcher import Patcher
+import os
+import glob
+import tqdm
 
+import nibabel as nib
 
-patcher = Patcher("/Users/fryderykkogl/Data/patches/test_data/20211129_craini_golby/resliced",
-                  "/Users/fryderykkogl/Data/patches/test_data/20211129_craini_golby/resliced",
-                  "nii.gz", 10, False)
+x = nib.load("/Users/fryderykkogl/Dropbox (Partners HealthCare)/share/IXI_sedghi_subset_2upscaled/test/1.nii.gz").get_fdata()
+print(x.shape)
+print(x.dtype)
 
-patcher.create_and_save_all_patches_and_labels()
-
-print(5)
-
-# import nibabel as nib
+# folder = "/Users/fryderykkogl/Data/temp"
 #
-# from utils import display_volume_slice
+# files = glob.glob(os.path.join(folder, "*.nii*"))
+# files.sort()
 #
-# volume_fixed = nib.load("/Users/fryderykkogl/Data/patches/test_data/20211129_craini_golby/2.nii.gz")
-# volume_fixed = volume_fixed.get_fdata()
-# volume_moving = nib.load("/Users/fryderykkogl/Data/patches/test_data/20211129_craini_golby/1_2.nii.gz")
-# volume_moving = volume_moving.get_fdata()
+# index = 41
 #
-# _ = display_volume_slice(volume_moving, 'Slicer resampled volumes')
+# for file in tqdm.tqdm(files):
+#     command = f"/Applications/Convert3DGUI.app/Contents/bin/c3d {file} -resample 200% -o {file}"
+#     os.system(command)
+
+    # file_name_1 = f"{index}"
+    # file_name_2 = f"{index+1}_{index}"
+    #
+    # # # rename file
+    # new_file_path_1 = os.path.join(folder, file_name_1 + ".nii.gz")
+    # new_file_path_2 = os.path.join(folder, file_name_2 + ".nii.gz")
+    #
+    # os.rename(files[2*i], new_file_path_1)
+    # os.rename(files[2*i+1], new_file_path_2)
+    #
+    # index += 2
+
