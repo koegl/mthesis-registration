@@ -25,8 +25,10 @@ def test(model, test_loader):
 
     acc_list = np.zeros(20)
     class_amount = np.zeros(20)
+    acc_list_without_unrelated = np.zeros(20)
+    class_amount_without_unrelated = np.zeros(20)
 
-    counter = 0
+    unrelated = 0
 
     # todo also log another array only when prediction is not 'unrelated'
 
@@ -46,7 +48,7 @@ def test(model, test_loader):
 
             label_id = get_label_id_from_label(label_np)
             offset = x[label_id]
-            # display_volume_slice(data.squeeze().detach().cpu().numpy(), offset)
+            # _ = display_volume_slice(data.squeeze().detach().cpu().numpy(), offset)
 
             test_output = model(data)
 
@@ -54,6 +56,14 @@ def test(model, test_loader):
 
             acc = calculate_accuracy(test_output, label)
             test_accuracy += acc / length_of_test_loader
+
+            if idx_output == 0:
+                unrelated += 1
+
+            if idx_output != 0:
+                class_amount_without_unrelated[idx_output] += 1
+                if acc >= 1.0:
+                    acc_list_without_unrelated[idx_label] += 1
 
             if acc >= 1.0:
                 acc_list[idx_label] += 1
@@ -68,7 +78,7 @@ def test(model, test_loader):
             # if counter == 200:
             #     break
 
-    return test_accuracy, acc_list, class_amount
+    return test_accuracy, acc_list, class_amount, unrelated, class_amount_without_unrelated, acc_list_without_unrelated
 
 
 # load model
@@ -81,7 +91,7 @@ model.eval()
 # load test data
 loader = get_loader("/Users/fryderykkogl/Data/patches/val_npy", 1, 10000000, loader_type="test")
 
-test_accuracy, acc_list, class_amount = test(model, loader)
+test_accuracy, acc_list, class_amount, unrelated, class_amount_without_unrelated, acc_list_without_unrelated = test(model, loader)
 
 # visualise
 patcher = Patcher("", "", "", 10, False)
@@ -89,3 +99,6 @@ x = patcher.offsets
 x = [np.array2string(offset) for offset in x]
 visualise_per_class_accuracies(acc_list/class_amount, x, f"Test per-class accuracies for {len(loader)} 'perfect' patches")
 plt.savefig("/Users/fryderykkogl/Dropbox (Partners HealthCare)/Experiments" + "/test_per_class_accuracies_true.png", dpi=250)
+
+# 165 classes
+# test accuracy = 0.9679

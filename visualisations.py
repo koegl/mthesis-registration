@@ -45,7 +45,7 @@ def display_volume_slice(volumes, label=None):
         ax[0].set_title("Fixed patch")
         ax[1].imshow(volume_1[volume_1.shape[0] // 2, :, :], cmap='gray')#, vmin=0, vmax=0.5)
         ax[1].set_title("Moving patch")
-        im = ax[2].imshow(np.abs(volume_0[volume_0.shape[0] // 2, :, :] - volume_1[volume_0.shape[0] // 2, :, :]), cmap='inferno')
+        im = ax[2].imshow(np.abs(volume_0[volume_0.shape[0] // 2, :, :] - volume_1[volume_0.shape[0] // 2, :, :]), cmap='inferno', vmin=0, vmax=1)
         ax[2].set_title("Difference")
 
         # [left, bottom, width, height]
