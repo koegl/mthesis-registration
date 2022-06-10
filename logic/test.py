@@ -8,7 +8,7 @@ import torch.nn as nn
 
 from utils import calculate_accuracy, get_label_id_from_label
 from visualisations import display_tensor_and_label, display_volume_slice
-from dataloader import get_test_loader
+from dataloader import get_loader
 from architectures.densenet3d import DenseNet
 from logic.patcher import Patcher
 from visualisations import visualise_per_class_accuracies
@@ -58,16 +58,8 @@ def test(model, test_loader):
             if acc >= 1.0:
                 acc_list[idx_label] += 1
 
-            # if the label is 'registered'
-            if idx_label == 1:
-
-                if idx_label == idx_output:
-                    title = "Comparison of two patches that have [0, 0, 0] displacement.\n\nPrediction: CORRECT"
-                else:
-                    title = "Comparison of two patches that have [0, 0, 0] displacement.\n\nPrediction: WRONG"
-
-                _ = display_volume_slice(data.squeeze().detach().cpu().numpy(), title)
-                # print(5)
+            # _ = display_volume_slice(data.squeeze().detach().cpu().numpy(), title)
+            # print(5)
 
             t.set_description(f"Testing patches ({test_accuracy:.2f})")
             t.refresh()
@@ -80,19 +72,20 @@ def test(model, test_loader):
 
 
 # load model
-model = DenseNet()
-model_params = torch.load("/Users/fryderykkogl/Dropbox (Partners HealthCare)/Experiments/dense net classification robust-oath-133 1/model_epoch23_valacc0.954.pt",
+model = DenseNet(num_init_features=10)
+model_params = torch.load("/Users/fryderykkogl/Desktop/model_epoch14_valacc0.678.pt",
                           map_location=torch.device('cpu'))
 model.load_state_dict(model_params['model_state_dict'])
 model.eval()
 
 # load test data
-loader = get_test_loader("/Users/fryderykkogl/Dropbox (Partners HealthCare)/Experiments/dense net classification robust-oath-133 1/data - 20211129_craini_golby/resliced_perfect_false")
+loader = get_loader("/Users/fryderykkogl/Data/patches/val_npy", 1, 10000000, loader_type="test")
 
 test_accuracy, acc_list, class_amount = test(model, loader)
 
 # visualise
 patcher = Patcher("", "", "", 10, False)
 x = patcher.offsets
+x = [np.array2string(offset) for offset in x]
 visualise_per_class_accuracies(acc_list/class_amount, x, f"Test per-class accuracies for {len(loader)} 'perfect' patches")
 plt.savefig("/Users/fryderykkogl/Dropbox (Partners HealthCare)/Experiments" + "/test_per_class_accuracies_true.png", dpi=250)
