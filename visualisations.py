@@ -103,7 +103,7 @@ def display_tensor_and_label(tensor, label):
     plt.show()
 
 
-def visualise_per_class_accuracies(accuracies, class_names, title="Accuracies", lim=True):
+def visualise_per_class_accuracies(accuracies, class_names, title="Accuracies", lim=(0, 1)):
     sns.set_style("darkgrid")
 
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -117,7 +117,6 @@ def visualise_per_class_accuracies(accuracies, class_names, title="Accuracies", 
     p.set_xticklabels(p.get_xticklabels(), rotation=90)
 
     p.set_ylabel("Accuracies per class", fontsize=15)
-    if lim is True:
-        p.set(ylim=(0, 1))
+    p.set(ylim=lim)
 
     plt.title(title, fontsize=15, fontweight="bold")
