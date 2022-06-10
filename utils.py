@@ -280,9 +280,9 @@ def patch_inference(model, patches, offsets):
 
         # get model predictions on patches
         model_output = model(patches)
-        visualise_per_class_accuracies(model_output.detach().squeeze().numpy(),
-                                       class_names=[np.array2string(offset) for offset in offsets],
-                                       title="Predicted probabilities per class", lim=False)
+        # visualise_per_class_accuracies(model_output.detach().squeeze().numpy(),
+        #                                class_names=[np.array2string(offset) for offset in offsets],
+        #                                title="Predicted probabilities per class", lim=False)
         predicted_probabilities = softmax(model_output).detach().cpu().numpy().squeeze()
 
         # calculate expected displacement
@@ -295,7 +295,7 @@ def patch_inference(model, patches, offsets):
 
         result = e_d.squeeze()
 
-        return result
+        return result, model_output.detach().squeeze().numpy(), predicted_probabilities
 
 
 def get_patch_size_from_data_folder(data_path):
