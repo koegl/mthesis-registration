@@ -7,6 +7,8 @@ import glob
 import matplotlib.pyplot as plt
 
 import torch
+from torch.autograd import Variable
+import torch.nn.functional as F
 
 import architectures.densenet3d as densenet3d
 from architectures.vit_standard_3d import ViTStandard3D
@@ -290,3 +292,20 @@ def patch_inference(model, patches, dim_vals):
         e_d_z = np.matmul(pred_z, dim_vals[2])
 
         return e_d_x, e_d_y, e_d_z
+
+
+def get_patch_size_from_data_folder(data_path):
+    """
+    This function takes in a path to a folder with patches and returns the patch size - it can do that because the bs is
+    encoded in the file names
+    :param data_path:
+    :return: patch_size
+    """
+
+    patch_file_path_list = glob.glob(os.path.join(data_path, "*_patch.npy"))
+
+    one_patch_path = patch_file_path_list[0].split("_")
+
+    patch_size = int(one_patch_path[-2][2:])
+
+    return patch_size
