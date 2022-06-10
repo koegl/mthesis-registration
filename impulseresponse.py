@@ -5,7 +5,7 @@ import os
 from tqdm import tqdm
 import shutil
 import matplotlib.pyplot as plt
-from offsets import offsets_xyz as offsets
+from offsets import offsets_single as offsets
 from joblib import Parallel, delayed
 import multiprocessing
 
@@ -38,6 +38,8 @@ def create_irs(new_offset, i, model):
         offsets=[new_offset]
     )
     original_patcher = Patcher("", "", "", 10, "")
+    original_offsets = original_patcher.offsets.copy()
+    original_offsets[0] = np.asarray([0, 0, 0])
     # create new patches
     patcher.create_and_save_all_patches_and_labels()
 
@@ -46,22 +48,37 @@ def create_irs(new_offset, i, model):
     patches.sort()
 
     ir = np.zeros(20)
+    ed = np.zeros(3)
 
     for patch_path in tqdm(patches):
         patch = np.load(patch_path)
 
         # predict displacement
-        _, output, _ = patch_inference(model, patch, original_patcher.offsets)
+        _, output, _ = patch_inference(model, patch, original_offsets)
 
         ir += output
+
+        output[output < 0] = 0
+        output[0] = 0
+        output[1] = 0
+        output = np.exp(output)
+        sum_output = np.sum(output)
+        if sum_output == 0:
+            pass
+        else:
+            output /= sum_output
+            ed_temp = np.matmul(output, original_offsets)
+            ed += ed_temp
 
     if len(patches) == 0:
         return
 
     ir /= len(patches)
+    ed /= len(patches)
 
     visualise_per_class_accuracies(ir, [np.array2string(x, separator=',') for x in original_patcher.offsets],
-                                   f"Average IR for {len(patches)} patches with offset f{new_offset}",
+                                   f"Average IR for {len(patches)} patches with offset f{new_offset}\n" +
+                                   f"Average E(d) f{ed}",
                                    lim=(-15, 15))
     plt.savefig(
         "/Users/fryderykkogl/Dropbox (Partners HealthCare)/DL/Experiments/mr impulse response/08-dense-267k-mr-balmy-sweep-3" +
@@ -80,6 +97,8 @@ model_dict = torch.load(
     map_location=torch.device('cpu'))
 model_inference.load_state_dict(model_dict['model_state_dict'])
 model_inference.eval()
+
+# create_irs(offsets[0], 0, model_inference)
 
 num_cores = multiprocessing.cpu_count()
 return_list = Parallel(n_jobs=num_cores)(delayed(create_irs)(offsets[i], i, model_inference)
