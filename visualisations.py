@@ -103,18 +103,21 @@ def display_tensor_and_label(tensor, label):
     plt.show()
 
 
-def visualise_per_class_accuracies(accuracies, class_names, title="Accuracies"):
+def visualise_per_class_accuracies(accuracies, class_names, title="Accuracies", lim=True):
     sns.set_style("darkgrid")
 
     fig, ax = plt.subplots(figsize=(10, 6))
     fig.subplots_adjust(bottom=0.2)
 
+    class_names[0] = "unrelated"
     p = sns.barplot(class_names, accuracies, palette="crest")
 
     p.set_xlabel("Offsets", fontsize=15)
+
     p.set_xticklabels(p.get_xticklabels(), rotation=90)
 
     p.set_ylabel("Accuracies per class", fontsize=15)
-    p.set(ylim=(0, 1))
+    if lim is True:
+        p.set(ylim=(0, 1))
 
     plt.title(title, fontsize=15, fontweight="bold")
