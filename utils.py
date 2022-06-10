@@ -185,7 +185,7 @@ def get_architecture(params):
             num_init_features=64,
             bn_size=4,
             drop_rate=float(params.dropout),
-            num_classes=20,
+            num_classes=6,
             memory_efficient=False)
 
     elif architecture_type.lower() == "vit":
@@ -208,29 +208,24 @@ def get_architecture(params):
     return model
 
 
-def calculate_accuracy(output, label):
+def calculate_accuracy(output, target, threshold=0.2):
     """
     Calculate the accuracy between the output and the label
     :param output: output of the network
-    :param label: label/target/ground truth
+    :param target: label/target/ground truth
+    :param threshold: threshold for the accuracy
     :return: accuracy
     """
+    output = torch.reshape(output, (output.size()[0], 2, 3))
+    sigma = torch.zeros_like(target)
+    label = torch.cat((target.unsqueeze(1), sigma.unsqueeze(1)), dim=1)
 
-    softmax = torch.nn.Softmax(dim=1)
-    output = softmax(output)
+    output = torch.flatten(output)
+    label = torch.flatten(label)
 
-    # get the index of the maximal value in the output and the label
-    output_argmax = output.argmax(dim=1)
-    label_argmax = label.argmax(dim=1)
+    n_correct = torch.sum((torch.abs(output - label) < torch.abs(threshold * label)))
 
-    # compare the maximal indices - a list of booleans
-    correct_bool = (output_argmax == label_argmax)
-
-    # transform the list of bools to a list of floats
-    correct_float = correct_bool.float()
-
-    # calculate the mean of the list of floats (the accuracy)
-    accuracy = correct_float.mean()
+    accuracy = n_correct.item() / len(label)
 
     return accuracy
 
@@ -309,3 +304,24 @@ def get_patch_size_from_data_folder(data_path):
     patch_size = int(one_patch_path[-2][2:])
 
     return patch_size
+
+
+def mean_var_loss(model_output, target):
+    """
+    Estimate target value for sigma with (y_pred - y) ** 2
+    #    actual y     is target[:,0]
+    # predicted y     is model_output[:,0]
+    #    actual sigma is target[:,1]
+    # predicted sigma is model_output[:,0]
+    :param model_output:
+    :param target:
+    :return:
+    """
+
+    model_output = torch.reshape(model_output, (model_output.size()[0], 2, 3))
+
+    sigma = (model_output[:, 0, :] - target) ** 2
+
+    label = torch.cat((target.unsqueeze(1), sigma.unsqueeze(1)), dim=1)
+
+    return F.mse_loss(model_output, label)

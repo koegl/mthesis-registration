@@ -7,7 +7,7 @@
 # 3. pass this big list of lists to the dataloader
 
 # https://sebastianraschka.com/blog/2022/pytorch-m1-gpu.html
-
+# https://github.com/sthorn/deep-learning-explorations/blob/master/predicting-uncertainty-variance.ipynb
 import argparse
 
 import torch
@@ -58,22 +58,22 @@ def main(params):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-bs", "--batch_size", default=800)
-    parser.add_argument("-e", "--epochs", default=15)
-    parser.add_argument("-lr", "--learning_rate", default=0.001)
+    parser.add_argument("-bs", "--batch_size", default=32)
+    parser.add_argument("-e", "--epochs", default=1000)
+    parser.add_argument("-lr", "--learning_rate", default=0.0009)
     parser.add_argument("-s", "--seed", default=42, help="For seeding eveyrthing")
     parser.add_argument("-td", "--train_dir", default="/Users/fryderykkogl/Data/patches/train_npy",
                         help="Directory of the training data")
     parser.add_argument("-vd", "--val_dir", default="/Users/fryderykkogl/Data/patches/val_npy",
                         help="Directory of the validation data")
     parser.add_argument("-dv", "--device", default="cpu", choices=["cpu", "mps"])
-    parser.add_argument("-ds", "--dataset_size", default=100000000, type=int, help="Amount of images used for training")
+    parser.add_argument("-ds", "--dataset_size", default=32, type=int, help="Amount of images used for training")
     parser.add_argument("-v", "--validate", default=True, type=bool, help="Choose whether to validate or not")
-    parser.add_argument("-lg", "--logging", default="wandb", choices=["print", "wandb"])
+    parser.add_argument("-lg", "--logging", default="print", choices=["print", "wandb"])
     parser.add_argument("-at", "--architecture_type", default="densenet", choices=["densenet", "vit"])
-    parser.add_argument("-dp", "--dropout", default=0.1, type=float,
+    parser.add_argument("-dp", "--dropout", default=0.0, type=float,
                         help="Dropout probability")
-    parser.add_argument("-es", "--early_stopping", default=True, type=bool)
+    parser.add_argument("-es", "--early_stopping", default=False, type=bool)
 
     args = parser.parse_args()
 

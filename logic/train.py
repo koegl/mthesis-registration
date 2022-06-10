@@ -10,7 +10,7 @@ import torch.nn
 from visualisations import display_tensor_and_label, display_volume_slice
 from utils import calculate_accuracy, get_label_id_from_label
 from logic.patcher import Patcher
-from utils import calculate_accuracy, EarlyStopping
+from utils import calculate_accuracy, EarlyStopping, mean_var_loss
 
 
 # todo first save the model, then if the saving was successful, delete the old ones
@@ -57,34 +57,20 @@ def train_step(train_loader, device, model, criterion, optimizer, epoch, logging
     epoch_loss = 0
     now = perf_counter()
 
-    for data, label in train_loader:
+    for data, offset in train_loader:
 
         data = data.to(device).to(torch.float32)
-
-        label = label.to(device).to(torch.float32)
-        label_x = label[:, 0:8]
-        label_y = label[:, 8:16]
-        label_z = label[:, 16:24]
+        offset = offset.to(device).to(torch.float32)
 
         output = model(data)
-        output_x = output[:, 0:8]
-        output_y = output[:, 8:16]
-        output_z = output[:, 16:24]
 
-        loss_x = criterion(output_x, label_x)
-        loss_y = criterion(output_y, label_y)
-        loss_z = criterion(output_z, label_z)
-
-        loss = (loss_x + loss_y + loss_z) / 3
+        loss = mean_var_loss(output, offset)
 
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
-        acc_x = calculate_accuracy(output_x, label_x)
-        acc_y = calculate_accuracy(output_y, label_y)
-        acc_z = calculate_accuracy(output_z, label_z)
-        acc = (acc_x + acc_y + acc_z) / 3
+        acc = calculate_accuracy(output, offset)
 
         epoch_accuracy += acc / len(train_loader)
         epoch_loss += loss / len(train_loader)
@@ -97,7 +83,7 @@ def train_step(train_loader, device, model, criterion, optimizer, epoch, logging
         print(f"\n{epoch}:\tTime: {perf_counter() - now:.2f}s;\t Train loss: {epoch_loss:.2f};\tTrain accuracy: {epoch_accuracy:.3f}",
               end='\t')
 
-    return epoch_loss.detach().cpu().numpy(), epoch_accuracy.detach().cpu().numpy()
+    return epoch_loss.detach().cpu().numpy(), epoch_accuracy
 
 
 def val_step(val_loader, device, model, criterion, epoch, logging):
@@ -106,29 +92,15 @@ def val_step(val_loader, device, model, criterion, epoch, logging):
     epoch_val_loss = 0
 
     with torch.no_grad():
-        for data, label in val_loader:
+        for data, offset in val_loader:
             data = data.to(device).to(torch.float32)
-
-            label = label.to(device).to(torch.float32)
-            label_x = label[:, 0:8]
-            label_y = label[:, 8:16]
-            label_z = label[:, 16:24]
+            offset = offset.to(device).to(torch.float32)
 
             val_output = model(data)
-            val_output_x = val_output[:, 0:8]
-            val_output_y = val_output[:, 8:16]
-            val_output_z = val_output[:, 16:24]
 
-            val_loss_x = criterion(val_output_x, label_x)
-            val_loss_y = criterion(val_output_y, label_y)
-            val_loss_z = criterion(val_output_z, label_z)
+            val_loss = mean_var_loss(val_output, offset)
 
-            val_loss = (val_loss_x + val_loss_y + val_loss_z) / 3
-
-            acc_x = calculate_accuracy(val_output_x, label_x)
-            acc_y = calculate_accuracy(val_output_y, label_y)
-            acc_z = calculate_accuracy(val_output_z, label_z)
-            acc = (acc_x + acc_y + acc_z) / 3
+            acc = calculate_accuracy(val_output, offset)
 
             epoch_val_accuracy += acc / len(val_loader)
             epoch_val_loss += val_loss / len(val_loader)
@@ -140,7 +112,7 @@ def val_step(val_loader, device, model, criterion, epoch, logging):
     else:
         print(f"Val loss: {epoch_val_loss:.2f};\tVal accuracy: {epoch_val_accuracy:.2f}")
 
-    return epoch_val_loss.detach().cpu().numpy(), epoch_val_accuracy.detach().cpu().numpy()
+    return epoch_val_loss.detach().cpu().numpy(), epoch_val_accuracy
 
 
 def train(params, train_loader, model, criterion, optimizer, val_loader, device, save_path="models/model.pt"):

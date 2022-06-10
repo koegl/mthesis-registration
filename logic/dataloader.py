@@ -26,29 +26,10 @@ class PatchDataset(Dataset):
     def get_triple_label(self, label_id):
         offset = literal_eval(self.patcher.label_to_offset_dict[label_id])
 
-        if offset == [7, 7, 7] or offset == [0, 0, 0]:
-            temp = 0
-            pass
+        if offset == [7, 7, 7]:
+            offset = [0, 0, 0]
 
-        # get displacement in each dimension
-        x_disp = offset[0]
-        y_disp = offset[1]
-        z_disp = offset[2]
-
-        # create a label for each dimension
-        x_label = np.zeros(8)
-        y_label = np.zeros(8)
-        z_label = np.zeros(8)
-
-        # get the id of each spatial translation, and assign the label at this id to 1
-        x_label[self.labels_per_d_dict[str(x_disp)]] = 1
-        y_label[self.labels_per_d_dict[str(y_disp)]] = 1
-        z_label[self.labels_per_d_dict[str(z_disp)]] = 1
-
-        # concatenate the labels
-        label = np.concatenate((x_label, y_label, z_label), axis=0)
-
-        return label
+        return offset
 
     def __getitem__(self, idx):
         """
@@ -65,7 +46,7 @@ class PatchDataset(Dataset):
 
         label = self.get_triple_label(label_id)
 
-        return patch, label
+        return patch, np.asarray(label)
 
 
 def get_transforms():
