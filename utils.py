@@ -179,7 +179,7 @@ def get_architecture(params):
         model = densenet3d.DenseNet(
             growth_rate=32,
             block_config=(6, 12, 24, 16),  # original values
-            num_init_features=10,
+            num_init_features=64,
             bn_size=4,
             drop_rate=float(params.dropout),
             num_classes=20,
