@@ -4,6 +4,7 @@ import random
 import os
 import wandb
 import glob
+import matplotlib.pyplot as plt
 
 import torch
 
@@ -258,6 +259,43 @@ def get_label_id_from_label(label):
     label_id = '{0:05b}'.format(label.argmax())
 
     return label_id
+
+
+def patch_inference(model, patches, offsets):
+    """
+    This function does inference for a patch_pair
+    :param model: the pretrained model
+    :param patches: the patch pair
+    :param offsets: the possible offsets
+    :return: the expected displacement
+    """
+    from visualisations import visualise_per_class_accuracies
+
+    with torch.no_grad():
+
+        softmax = torch.nn.Softmax(dim=1)
+
+        # transform patches into a batch
+        patches = torch.from_numpy(patches).float().unsqueeze(0)
+
+        # get model predictions on patches
+        model_output = model(patches)
+        visualise_per_class_accuracies(model_output.detach().squeeze().numpy(),
+                                       class_names=[np.array2string(offset) for offset in offsets],
+                                       title="Predicted probabilities per class", lim=False)
+        predicted_probabilities = softmax(model_output).detach().cpu().numpy().squeeze()
+
+        # calculate expected displacement
+        e_d = np.matmul(predicted_probabilities, offsets)
+        # set numpy print options to 2 signfigures
+        np.set_printoptions(precision=2)
+        # visualise_per_class_accuracies(predicted_probabilities,
+        #                                class_names=[np.array2string(offset) for offset in offsets],
+        #                                title=f"Softmaxed probabilities per class.\nE(d) = {e_d}", lim=False)
+
+        result = e_d.squeeze()
+
+        return result
 
 
 def get_patch_size_from_data_folder(data_path):
