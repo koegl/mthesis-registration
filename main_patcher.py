@@ -1,6 +1,7 @@
 import argparse
 
 from logic.patcher import Patcher
+from offsets import all_permutations as offsets
 
 
 def main(params):
@@ -16,6 +17,7 @@ def main(params):
         offset_multiplier=params.offset_multiplier,
         rescale=params.rescale,
         save_type=params.save_type,
+        offsets=offsets,
     )
 
     patcher.create_and_save_all_patches_and_labels()
@@ -23,6 +25,7 @@ def main(params):
     print("=" * 80)
     print("Done exporting patches")
     print("=" * 80)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -33,7 +36,7 @@ if __name__ == "__main__":
                         help="Directory to save the numpy patches")
     parser.add_argument("-ft", "--file_type", default="nii.gz", choices=["nii", "nii.gz"],
                         help="File type of the niftis")
-    parser.add_argument("-cpd", "--centres_per_dimension", default=5,
+    parser.add_argument("-cpd", "--centres_per_dimension", default=3,
                         help="Amount of centres per dimension")
     parser.add_argument("-pt", "--perfect_truth", default=False,
                         help="If true, the patches are extracted from the same volumes, otherwise from pairs")
@@ -42,7 +45,7 @@ if __name__ == "__main__":
     parser.add_argument("-sdst", "--scale_dist", default=1.5,
                         help="Should be bigger than 1. If it is one, then the unrelated patch is adjacent to the "
                              "normal patch")
-    parser.add_argument("-om", "--offset_multiplier", default=4,
+    parser.add_argument("-om", "--offset_multiplier", default=1,
                         help="Standard offset is [0,0,1] and this will be multiplied by this argument")
     parser.add_argument("-rs", "--rescale", default=True,
                         help="If true, the volumes are divided by their maximum value")
