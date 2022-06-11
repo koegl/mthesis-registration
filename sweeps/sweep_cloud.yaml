@@ -1,6 +1,6 @@
 program: main_train.py
-project: sweep_debugging
-method: random
+project: Classification
+method: grid
 metric:
   name: Val loss
   goal: minimize
