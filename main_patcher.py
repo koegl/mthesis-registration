@@ -20,6 +20,9 @@ def main(params):
 
     patcher.create_and_save_all_patches_and_labels()
 
+    print("=" * 80)
+    print("Done exporting patches")
+    print("=" * 80)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

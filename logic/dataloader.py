@@ -12,9 +12,10 @@ from utils import get_label_from_label_id
 
 
 class PatchDataset(Dataset):
-    def __init__(self, patch_file_path_list, transform=None):
+    def __init__(self, patch_file_path_list, transform=None, class_amount=20):
         self.patch_file_path_list = patch_file_path_list
         self.transform = transform
+        self.class_amount = class_amount
 
     def __len__(self):
         return len(self.patch_file_path_list)
@@ -30,7 +31,7 @@ class PatchDataset(Dataset):
         label_id = os.path.basename(path).split('_')[1]  # second part of the name is the id as a binary number
 
         patch = np.load(path)
-        label = get_label_from_label_id(label_id)
+        label = get_label_from_label_id(label_id, self.class_amount)
 
         return patch, label
 
@@ -88,7 +89,7 @@ def get_loader(data_path, batch_size, dataset_size, loader_type='train'):
     patch_file_path_list = patch_file_path_list[0:dataset_size]
 
     # create the dataset
-    dataset = PatchDataset(patch_file_path_list, transform=data_transforms)
+    dataset = PatchDataset(patch_file_path_list, transform=data_transforms, class_amount=343)
 
     if len(dataset) == 0:
         raise ValueError("No patches found in the dataset")
