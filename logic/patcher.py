@@ -7,8 +7,8 @@ import nibabel as nib
 from itertools import permutations
 from warnings import warn
 import matplotlib.pyplot as plt
-from visualisations import display_volume_slice
-from utils import crop_volume_borders
+from helpers.visualisations import display_volume_slice
+from helpers.utils import crop_volume_borders
 
 
 class Patcher:

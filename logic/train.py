@@ -7,8 +7,8 @@ import wandb
 import torch
 import torch.nn
 
-from visualisations import display_tensor_and_label, display_volume_slice
-from utils import calculate_accuracy, EarlyStopping
+from helpers.utils import calculate_accuracy
+from logic.regularisation import EarlyStopping, LRScheduler
 
 
 def save_model(model, optimizer, epoch, train_array, val_array, start_datetime, save_path="models/model.pt"):
@@ -116,9 +116,10 @@ def train(params, train_loader, model, criterion, optimizer, val_loader, device,
     train_array = np.zeros((params.epochs, 2))
     start_datetime = datetime.now().strftime("%d/%m/%Y %H:%M:%S").replace(" ", "_").replace("/", "").replace(":", "")
     os.mkdir(f"./models/{start_datetime}")
-    early_stopping = EarlyStopping()
-
     time_idx = False
+
+    early_stopping = EarlyStopping()
+    lr_scheduler = LRScheduler(optimizer, params.lr_scheduler_patience, params.lr_scheduler_min_lr, params.lr_scheduler_factor)
 
     for epoch in range(params.epochs):
 
@@ -131,6 +132,20 @@ def train(params, train_loader, model, criterion, optimizer, val_loader, device,
         if params.validate is True:
             val_array[epoch] = val_step(val_loader, device, model, criterion, epoch, params.logging)
 
+            # early stopping
+            if params.early_stopping is True:
+                early_stopping(val_array[epoch, 0])
+                if early_stopping.early_stop is True:
+                    wandb.log({"Early stopping": "True",
+                               "Epoch": epoch})
+                    break
+
+            # learning rate scheduler
+            if params.lr_scheduler is True:
+                lr_scheduler(val_array[epoch][0], epoch)
+                wandb.log({"LR scheduled": optimizer.param_groups[0]['lr'],
+                           "Epoch": epoch})
+
         # save model
         save_model(model, optimizer, epoch, train_array, val_array, start_datetime, save_path)
 
@@ -141,11 +156,3 @@ def train(params, train_loader, model, criterion, optimizer, val_loader, device,
             wandb.log({"Time per epoch": f'{"{:0>8}".format(str(timedelta(seconds=time)))}',
                        "Expected total time": f'{"{:0>8}".format(str(timedelta(seconds=time * params.epochs)))}'})
             time_idx = True
-
-        # early stopping
-        if params.early_stopping is True:
-            early_stopping(val_array[epoch, 0])
-            if early_stopping.early_stop is True:
-                wandb.log({"Early stopping": "True"})
-                break
-

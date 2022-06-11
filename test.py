@@ -1,17 +1,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import tqdm
 from tqdm import trange
 
 import torch
-import torch.nn as nn
 
-from utils import calculate_accuracy, get_label_id_from_label
-from visualisations import display_tensor_and_label, display_volume_slice
-from dataloader import get_loader
+from helpers.utils import calculate_accuracy, get_label_id_from_label
+from logic.dataloader import get_loader
 from architectures.densenet3d import DenseNet
-from logic.patcher import Patcher
-from visualisations import visualise_per_class_accuracies
+from helpers.visualisations import visualise_per_class_accuracies
 from logic.patcher import Patcher
 
 

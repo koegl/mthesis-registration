@@ -2,8 +2,8 @@ program: main_train.py
 project: sweep_debugging
 method: random
 metric:
-  goal: maximize
-  name: Val accuracy
+  name: Val loss
+  goal: minimize
 parameters:
   train_dir:
     value: "/Users/fryderykkogl/Data/patches/train_npy"

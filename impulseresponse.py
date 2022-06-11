@@ -1,13 +1,9 @@
-import nibabel as nib
 import numpy as np
 import torch
-from ast import literal_eval
 
 from logic.patcher import Patcher
-from visualisations import display_volume_slice
-from utils import patch_inference
+from helpers.utils import patch_inference
 from architectures.densenet3d import DenseNet
-from architectures.vit_standard_3d import ViTStandard3D
 
 
 def ssd(a, b):

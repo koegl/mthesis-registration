@@ -1,11 +1,3 @@
-
-
-# PLAN
-# 1. get a list of all files (.niftis)
-# 2. for each file create a list of centres - combine into list of lists
-# 3. create and save the patches as numpy arrays in a new folder
-# 3. pass this big list of lists to the dataloader
-
 # https://sebastianraschka.com/blog/2022/pytorch-m1-gpu.html
 
 import argparse
@@ -13,8 +5,7 @@ import argparse
 import torch
 import torch.optim as optim
 import torch.nn as nn
-
-from utils import seed_everything, initialise_wandb, get_architecture
+from helpers.utils import seed_everything, initialise_wandb, get_architecture
 from logic.train import train
 from logic.dataloader import get_loader
 
@@ -58,8 +49,8 @@ def main(params):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-bs", "--batch_size", default=800)
-    parser.add_argument("-e", "--epochs", default=15)
+    parser.add_argument("-bs", "--batch_size", default=32)
+    parser.add_argument("-e", "--epochs", default=30)
     parser.add_argument("-lr", "--learning_rate", default=0.001)
     parser.add_argument("-s", "--seed", default=42, help="For seeding eveyrthing")
     parser.add_argument("-td", "--train_dir", default="/Users/fryderykkogl/Data/patches/train_npy",
@@ -67,16 +58,19 @@ if __name__ == "__main__":
     parser.add_argument("-vd", "--val_dir", default="/Users/fryderykkogl/Data/patches/val_npy",
                         help="Directory of the validation data")
     parser.add_argument("-dv", "--device", default="cpu", choices=["cpu", "mps"])
-    parser.add_argument("-ds", "--dataset_size", default=100000000, type=int, help="Amount of images used for training")
+    parser.add_argument("-ds", "--dataset_size", default=128, type=int, help="Amount of images used for training")
     parser.add_argument("-v", "--validate", default=True, type=bool, help="Choose whether to validate or not")
     parser.add_argument("-lg", "--logging", default="wandb", choices=["print", "wandb"])
-    parser.add_argument("-at", "--architecture_type", default="densenet264", choices=["densenet121", "densenet169",
+    parser.add_argument("-at", "--architecture_type", default="densenet121", choices=["densenet121", "densenet169",
                                                                                       "densenet201", "densenet264",
                                                                                       "vit"])
     parser.add_argument("-dp", "--dropout", default=0.1, type=float,
                         help="Dropout probability")
     parser.add_argument("-es", "--early_stopping", default=True, type=bool)
-
+    parser.add_argument("-lrs", "--lr_scheduler", default=False)
+    parser.add_argument("-lrp", "--lr_scheduler_patience", default=3, type=int)
+    parser.add_argument("-lrm", "--lr_scheduler_min_lr", default=0.0001, type=float)
+    parser.add_argument("-lrf", "--lr_scheduler_factor", default=0.3, type=float)
     args = parser.parse_args()
 
     main(args)

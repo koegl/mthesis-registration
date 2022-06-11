@@ -8,7 +8,7 @@ from torchvision import transforms
 from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
 
-from utils import get_label_from_label_id
+from helpers.utils import get_label_from_label_id
 
 
 class PatchDataset(Dataset):
