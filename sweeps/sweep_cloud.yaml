@@ -5,6 +5,20 @@ metric:
   name: Val loss
   goal: minimize
 parameters:
+  batch_size:
+    value: 800
+  epochs:
+    value: 15
+  dataset_size:
+    value: 1000000000
+  validate:
+    value: True
+  logging:
+    value: "wandb"
+  early_stopping:
+    value: True
+  lr_scheduler:
+    value: False
   train_dir:
     value: "/mnt/disks/data/IXI_sedghi_subset_2upscaled/npy/train"
   val_dir:
