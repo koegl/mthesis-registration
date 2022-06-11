@@ -244,7 +244,7 @@ def patch_inference(model, patches, offsets):
     :param offsets: the possible offsets
     :return: the expected displacement
     """
-    from visualisations import visualise_per_class_accuracies
+    from helpers.visualisations import visualise_per_class_accuracies
 
     with torch.no_grad():
 
@@ -255,9 +255,9 @@ def patch_inference(model, patches, offsets):
 
         # get model predictions on patches
         model_output = model(patches)
-        visualise_per_class_accuracies(model_output.detach().squeeze().numpy(),
-                                       class_names=[np.array2string(offset) for offset in offsets],
-                                       title="Predicted probabilities per class", lim=False)
+        # visualise_per_class_accuracies(model_output.detach().squeeze().numpy(),
+        #                                class_names=[np.array2string(offset) for offset in offsets],
+        #                                title="Predicted probabilities per class", lim=False)
         predicted_probabilities = softmax(model_output).detach().cpu().numpy().squeeze()
 
         # calculate expected displacement
