@@ -10,12 +10,12 @@ parameters:
   val_dir:
     value: "/Users/fryderykkogl/Data/patches/val_npy"
   learning_rate:
-    distribution: uniform
-    min: 0.0003
-    max: 0.01
+    distribution: log_uniform
+    min: -8
+    max: -4.7
   epochs:
-    value: 30
+    value: 1
   dropout:
     distribution: uniform
-    min: 0.0
-    max: 0.5
+    min: 0.2
+    max: 0.7
