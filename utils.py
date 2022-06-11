@@ -176,10 +176,16 @@ def get_architecture(params):
 
     patch_size = get_patch_size_from_data_folder(params.train_dir)
 
-    if architecture_type.lower() == "densenet":
+    if "densenet" in architecture_type.lower():
+
+        dense_dict = {"densenet121": (6, 12, 24, 16),
+                      "densenet169": (6, 12, 32, 32),
+                      "densenet201": (6, 12, 48, 32),
+                      "densenet264": (6, 12, 64, 48)}
+
         model = densenet3d.DenseNet(
             growth_rate=32,
-            block_config=(6, 12, 24, 16),  # original values
+            block_config=dense_dict[architecture_type.lower()],
             num_init_features=64,
             bn_size=4,
             drop_rate=float(params.dropout),
