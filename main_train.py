@@ -50,7 +50,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-bs", "--batch_size", default=32)
-    parser.add_argument("-e", "--epochs", default=30)
+    parser.add_argument("-e", "--epochs", default=15)
     parser.add_argument("-lr", "--learning_rate", default=0.001)
     parser.add_argument("-s", "--seed", default=42, help="For seeding eveyrthing")
     parser.add_argument("-td", "--train_dir", default="/Users/fryderykkogl/Data/patches/train_npy",
