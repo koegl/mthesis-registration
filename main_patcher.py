@@ -30,7 +30,7 @@ if __name__ == "__main__":
                         help="Directory to save the numpy patches")
     parser.add_argument("-ft", "--file_type", default="nii.gz", choices=["nii", "nii.gz"],
                         help="File type of the niftis")
-    parser.add_argument("-cpd", "--centres_per_dimension", default=13,
+    parser.add_argument("-cpd", "--centres_per_dimension", default=12,
                         help="Amount of centres per dimension")
     parser.add_argument("-pt", "--perfect_truth", default=False,
                         help="If true, the patches are extracted from the same volumes, otherwise from pairs")
