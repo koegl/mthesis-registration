@@ -70,7 +70,9 @@ if __name__ == "__main__":
     parser.add_argument("-ds", "--dataset_size", default=100000000, type=int, help="Amount of images used for training")
     parser.add_argument("-v", "--validate", default=True, type=bool, help="Choose whether to validate or not")
     parser.add_argument("-lg", "--logging", default="wandb", choices=["print", "wandb"])
-    parser.add_argument("-at", "--architecture_type", default="densenet", choices=["densenet", "vit"])
+    parser.add_argument("-at", "--architecture_type", default="densenet264", choices=["densenet121", "densenet169",
+                                                                                      "densenet201", "densenet264",
+                                                                                      "vit"])
     parser.add_argument("-dp", "--dropout", default=0.1, type=float,
                         help="Dropout probability")
     parser.add_argument("-es", "--early_stopping", default=True, type=bool)
