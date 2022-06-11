@@ -183,7 +183,7 @@ def get_architecture(params):
             num_init_features=64,
             bn_size=4,
             drop_rate=float(params.dropout),
-            num_classes=20,
+            num_classes=343,
             memory_efficient=False)
 
     elif architecture_type.lower() == "vit":
@@ -233,19 +233,19 @@ def calculate_accuracy(output, label):
     return accuracy
 
 
-def get_label_from_label_id(label_id):
+def get_label_from_label_id(label_id, amount_of_classes):
     """
     Get a dictionary that maps the label id to the label
     :return:
     """
-    empty = np.zeros(20)
+    empty = np.zeros(amount_of_classes)
     empty_list = []
-    for i in range(20):
+    for i in range(amount_of_classes):
         empty[i] = 1
         empty_list.append(empty.copy())
         empty[i] = 0
 
-    label_id_to_label_dict = {'{0:05b}'.format(i): empty_list[i] for i in range(20)}
+    label_id_to_label_dict = {'{0:05b}'.format(i): empty_list[i] for i in range(amount_of_classes)}
 
     return label_id_to_label_dict[label_id]
 
