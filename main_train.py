@@ -58,7 +58,7 @@ if __name__ == "__main__":
     parser.add_argument("-vd", "--val_dir", default="/Users/fryderykkogl/Data/patches/val_npy",
                         help="Directory of the validation data")
     parser.add_argument("-dv", "--device", default="cpu", choices=["cpu", "mps"])
-    parser.add_argument("-ds", "--dataset_size", default=128, type=int, help="Amount of images used for training")
+    parser.add_argument("-ds", "--dataset_size", default=1000000000, type=int, help="Amount of images used for training")
     parser.add_argument("-v", "--validate", default=True, type=bool, help="Choose whether to validate or not")
     parser.add_argument("-lg", "--logging", default="wandb", choices=["print", "wandb"])
     parser.add_argument("-at", "--architecture_type", default="densenet121", choices=["densenet121", "densenet169",
