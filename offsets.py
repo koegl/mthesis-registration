@@ -1,3 +1,5 @@
+from itertools import permutations
+
 offsets_single = [[0, 0, 0],
                   [0, 0, 1],
                   [0, 0, 2],
@@ -111,3 +113,18 @@ offsets_xyz = [[-16, -16, -16],
                [8, 8, 8],
                [16, 16, 16],
 ]
+
+displacements = [0, 0, 0,
+                 4, 4, 4,
+                 8, 8, 8,
+                 16, 16, 16,
+                 -4, -4, -4,
+                 -8, -8, -8,
+                 -16, -16, -16,
+                 ]
+
+# get all possible permutations of length 3 of the displacements
+all_permutations = permutations(displacements, 3)
+
+# many duplicates, so remove them with set() and then change to list()
+all_permutations = list(set(all_permutations))
