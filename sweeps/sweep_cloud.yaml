@@ -1,6 +1,6 @@
 program: main_train.py
 project: Classification
-method: grid
+method: random
 metric:
   name: Val loss
   goal: minimize
@@ -8,13 +8,7 @@ parameters:
   batch_size:
     value: 800
   epochs:
-    value: 15
-  dataset_size:
-    value: 1000000000
-  validate:
-    value: True
-  logging:
-    value: "wandb"
+    value: 10
   early_stopping:
     value: True
   lr_scheduler:
@@ -24,8 +18,12 @@ parameters:
   val_dir:
     value: "/mnt/disks/data/IXI_sedghi_subset_2upscaled/npy/val"
   learning_rate:
-    value: 0.001
+    distribution: log_uniform
+    min: -8
+    max: -4.7
   dropout:
-    value: 0.3
+    distribution: uniform
+    min: 0.2
+    max: 0.7
   architecture_type:
-    values: ["densenet121", "densenet169", "densenet201", "densenet264"]
+    value: "densenet121"
