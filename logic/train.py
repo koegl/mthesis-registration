@@ -136,7 +136,7 @@ def train(params, train_loader, model, criterion, optimizer, val_loader, device,
             if params.early_stopping is True:
                 early_stopping(val_array[epoch, 0])
                 if early_stopping.early_stop is True:
-                    wandb.log({"Early stopping": "True",
+                    wandb.log({"Early stopped": "True",
                                "Epoch": epoch})
                     break
 
@@ -152,7 +152,6 @@ def train(params, train_loader, model, criterion, optimizer, val_loader, device,
         # log time
         if time_idx is False and params.logging == "wandb":
             time = perf_counter() - now
-
-            wandb.log({"Time per epoch": f'{"{:0>8}".format(str(timedelta(seconds=time)))}',
-                       "Expected total time": f'{"{:0>8}".format(str(timedelta(seconds=time * params.epochs)))}'})
+            wandb.config.update({"time_per_epoch": f'{"{:0>8}".format(str(timedelta(seconds=time)))[:-4]}',
+                                 "expected_total_time": f'{"{:0>8}".format(str(timedelta(seconds=time * params.epochs)))[:-4]}'})
             time_idx = True

@@ -121,22 +121,27 @@ def initialise_wandb(params, len_train, len_val, project="Classification", entit
     :return:
     """
 
-    wandb.init(project=project, entity=entity)
-    os.environ["WANDB_NOTEBOOK_NAME"] = "Classification"
-
     config_dict = {
-        "learning_rate": params.learning_rate,
-        "epochs": params.epochs,
         "batch_size": params.batch_size,
+        "epochs": params.epochs,
+        "learning_rate": params.learning_rate,
+        "seed": params.seed,
         "train_dir": params.train_dir,
         "val_dir": params.val_dir,
-        "architecture_type": params.architecture_type,
         "device": str(params.device),
+        "architecture_type": params.architecture_type,
+        "dropout": params.dropout,
+        "early_stopping": params.early_stopping,
+        "lr_scheduler": params.lr_scheduler,
+        "lr_scheduler_patience": params.lr_scheduler_patience,
+        "lr_scheduler_min_lr": params.lr_scheduler_min_lr,
+        "lr_scheduler_factor": params.lr_scheduler_factor,
+        "training_size": len_train,
+        "validation_size": len_val
     }
-    wandb.config = config_dict
-    wandb.log(config_dict)
-    wandb.log({"Training size": len_train,
-               "Validation size": len_val})
+
+    wandb.init(config=config_dict, project=project, entity=entity)
+    os.environ["WANDB_NOTEBOOK_NAME"] = "Classification"
 
 
 def get_architecture(params):
