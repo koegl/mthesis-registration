@@ -5,7 +5,7 @@ import os
 from tqdm import tqdm
 import shutil
 import matplotlib.pyplot as plt
-from offsets import offsets_single as offsets
+from offsets import offsets_xy as offsets
 from joblib import Parallel, delayed
 import multiprocessing
 
@@ -28,7 +28,7 @@ def create_irs(new_offset, i, model):
         load_directory=f"/Users/fryderykkogl/Data/patches/val_nii",
         save_directory=f"/Users/fryderykkogl/Data/patches/val_npy_{i}",
         file_type="nii.gz",
-        centres_per_dimension=12,
+        centres_per_dimension=6,
         perfect_truth=False,
         patch_size=32,
         scale_dist=1.5,
@@ -57,7 +57,7 @@ def create_irs(new_offset, i, model):
         _, output, _ = patch_inference(model, patch, original_offsets)
 
         ir += output
-
+        np.set_printoptions(formatter={'float': lambda x: "{0:0.1f}".format(x)})
         output[output < 0] = 0
         output[0] = 0
         output[1] = 0
@@ -68,6 +68,7 @@ def create_irs(new_offset, i, model):
         else:
             output /= sum_output
             ed_temp = np.matmul(output, original_offsets)
+            print(f"True offset {new_offset}: {ed_temp}")
             ed += ed_temp
 
     if len(patches) == 0:
@@ -81,7 +82,7 @@ def create_irs(new_offset, i, model):
                                    f"Average E(d) f{ed}",
                                    lim=(-15, 15))
     plt.savefig(
-        "/Users/fryderykkogl/Dropbox (Partners HealthCare)/DL/Experiments/mr impulse response/08-dense-267k-mr-balmy-sweep-3" +
+        "/Users/fryderykkogl/Dropbox (Partners HealthCare)/DL/Experiments/" +
         f"/ir_{new_offset}.png",
         dpi=250)
     plt.close()
@@ -91,18 +92,21 @@ def create_irs(new_offset, i, model):
 
 
 # get the model
-model_inference = DenseNet(num_init_features=10)
+model_inference = DenseNet(num_init_features=64)
 model_dict = torch.load(
-    "/Users/fryderykkogl/Dropbox (Partners HealthCare)/DL/Models/08-dense-267k-mr-balmy-sweep-3/model_epoch14_valacc0.678.pt",
+    "/Users/fryderykkogl/Desktop/model_epoch3_valacc0.870.pt",
     map_location=torch.device('cpu'))
 model_inference.load_state_dict(model_dict['model_state_dict'])
 model_inference.eval()
 
 # create_irs(offsets[0], 0, model_inference)
 
+for i in range(len(offsets)):
+    create_irs(offsets[i], i, model_inference)
+
 num_cores = multiprocessing.cpu_count()
-return_list = Parallel(n_jobs=num_cores)(delayed(create_irs)(offsets[i], i, model_inference)
-                                         for i in range(len(offsets)))
+# return_list = Parallel(n_jobs=num_cores)(delayed(create_irs)(offsets[i], i, model_inference)
+#                                          for i in range(len(offsets)))
 
 print("="*30)
 print("Done")
