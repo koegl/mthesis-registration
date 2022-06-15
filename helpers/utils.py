@@ -275,7 +275,7 @@ def patch_inference(model, patches, offsets):
 
         result = e_d.squeeze()
 
-        return result
+        return result, model_output.detach().squeeze().numpy(), predicted_probabilities
 
 
 def get_patch_size_from_data_folder(data_path):

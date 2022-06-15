@@ -13,7 +13,7 @@ from helpers.utils import crop_volume_borders
 
 class Patcher:
     def __init__(self, load_directory, save_directory, file_type, centres_per_dimension, perfect_truth,
-                 patch_size=32, scale_dist=1.5, offset_multiplier=4, rescale=False, save_type='uint8'):
+                 patch_size=32, scale_dist=1.5, offset_multiplier=4, rescale=False, save_type='uint8', offsets="default"):
         """
         :param load_directory: Directory with the niftis
         :param save_directory: Directory where al the patches will be saved
@@ -38,32 +38,35 @@ class Patcher:
         self.save_type = save_type
 
         self.unrelated_offset = np.asarray([7, 7, 7])
-        self.offsets = np.asarray([
-            [0, 0, 0],
-            [0, 0, 0],
-            [-4, 0, 0],
-            [0, -4, 0],
-            [0, 0, -4],
-            [-2, 0, 0],
-            [0, -2, 0],
-            [0, 0, -2],
-            [-1, 0, 0],
-            [0, -1, 0],
-            [0, 0, -1],
-            [1, 0, 0],
-            [0, 1, 0],
-            [0, 0, 1],
-            [2, 0, 0],
-            [0, 2, 0],
-            [0, 0, 2],
-            [4, 0, 0],
-            [0, 4, 0],
-            [0, 0, 4],
-        ]) * self.offset_multiplier
-        self.offsets[0, :] = self.unrelated_offset
+        if offsets == "default":
+            self.offsets = np.asarray([
+                [0, 0, 0],
+                [0, 0, 0],
+                [-4, 0, 0],
+                [0, -4, 0],
+                [0, 0, -4],
+                [-2, 0, 0],
+                [0, -2, 0],
+                [0, 0, -2],
+                [-1, 0, 0],
+                [0, -1, 0],
+                [0, 0, -1],
+                [1, 0, 0],
+                [0, 1, 0],
+                [0, 0, 1],
+                [2, 0, 0],
+                [0, 2, 0],
+                [0, 0, 2],
+                [4, 0, 0],
+                [0, 4, 0],
+                [0, 0, 4],
+            ]) * self.offset_multiplier
+            self.offsets[0, :] = self.unrelated_offset
+        else:
+            self.offsets = np.asarray(offsets)
 
         # each offset is mapped to a binary label (which can be transformed to a one-hot vector)
-        self.offset_to_label_dict = {np.array2string(self.offsets[i], separator=','): '{0:05b}'.format(i) for i in range(20)}
+        self.offset_to_label_dict = {np.array2string(self.offsets[i], separator=','): '{0:05b}'.format(i) for i in range(len(self.offsets))}
         # create a reversed dict
         self.label_to_offset_dict = {v: k for k, v in self.offset_to_label_dict.items()}
 
