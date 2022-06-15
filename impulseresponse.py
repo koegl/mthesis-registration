@@ -10,8 +10,8 @@ from joblib import Parallel, delayed
 import multiprocessing
 
 from logic.patcher import Patcher
-from visualisations import display_volume_slice, visualise_per_class_accuracies
-from utils import patch_inference, get_label_from_label_id
+from helpers.visualisations import display_volume_slice, visualise_per_class_accuracies
+from helpers.utils import patch_inference, get_label_from_label_id, softmax_sq
 from architectures.densenet3d import DenseNet
 from architectures.vit_standard_3d import ViTStandard3D
 from time import perf_counter, sleep
