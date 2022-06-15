@@ -293,3 +293,10 @@ def get_patch_size_from_data_folder(data_path):
     patch_size = int(one_patch_path[-2][2:])
 
     return patch_size
+
+
+def softmax_sq(array):
+    """
+    This function takes in an array and returns the square softmax of the array
+    """
+    return array ** 2 / np.sum(array ** 2)
