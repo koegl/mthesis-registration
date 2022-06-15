@@ -3,46 +3,57 @@ from itertools import product
 
 
 # todo extend to 3-D
-def create_grid_of_control_points(control_points_per_dimension, volume_size):
+def create_deformation_grid(list_of_vectors, grid_shape, dim=2):
     """
-    Function that creates a grid of control points and their coordinates
-    :param control_points_per_dimension: list of integers of how many control points there are per dimension
-    :param volume_size: volume size
-    :return: grid, centers
+    This function takes a list of vectors and creates a grid of deformation vectors for the package 'elasticdeform'.
+    The length of list_of_vectors must be equal to the product of all elements in grid_shape.
+    The first vector is th edeformation of the top right point, the second vector is the next point to the right, etc
+    until all rows are filled. The last vector is the deformation of the bottom right point.
+
+    Example 1:
+    shape: (2, 4, 3);
+    shape[0]: spatial dimensions of the input image -> 2D (top row are y-coordinates, bottom x-coordinates)
+    shape[1]: number of rows (of control points)    -> four rows of control points
+    shape[2]: number of columns (of control points) -> three columns of control points
+
+    Example 2:
+    for shape (2, 3, 3)
+    [[top-left-inY, top-center-inY, top-right-inY], [center-left-inY, center-center-inY, center-right-inY], [down-left-inY, down-center-inY, down-right-inY]],
+    [[top-left-inX, top-center-inX, top-right-inX], [center-left-inX, center-center-inX, center-right-inX], [down-left-inX, down-center-inX, down-right-inX]]
+
+    Example 3:
+    (input list_of_vectors as a list but written with new lines to make it easier to read)
+    [[0, -16], [0, 0], [0, 0], [0, -16],
+     [0, 0],   [0, 0], [0, 0], [0, 0],
+     [0, 16],  [0, 0], [0, 0], [0, 16]]
+     this corresponds to a grid with control points 'p', where active ones are marked with A
+     A = = p = = p = = A
+     = = = = = = = = = =
+     = = = = = = = = = =
+     p = = p = = p = = p
+     = = = = = = = = = =
+     = = = = = = = = = =
+     A = = p = = p = = A
+
+    :param list_of_vectors: A list containing all displacement vectors
+    :param grid_shape: The shape of the grid (how many vectors in each dimension)
+    :param dim: The dimension of the volume
+    :return: The deformation grid
     """
-    assert isinstance(control_points_per_dimension, list), 'control_points_per_dimension must be a list of integers'
-    assert len(control_points_per_dimension) == len(volume_size), "Bost must have the same amount of dimensions"
 
-    # reverse control_points_per_dimension to get the correct order for the for loops
-    # control_points_per_dimension = control_points_per_dimension[::-1]
+    assert isinstance(list_of_vectors, list), 'list_of_vectors must be a list'
+    assert isinstance(grid_shape, list), 'grid_shape must be a list'
+    assert len(list_of_vectors) == np.prod(grid_shape), 'The length of list_of_vectors must be equal to the product of' \
+                                                        ' all elements in grid_shape'
 
-    for p in control_points_per_dimension:
-        assert p > 1, 'There must be more than one control point for every dimension'
+    assert dim == 2, 'The dimension of the volume must be 2. 3D will be implemented later'
 
-    spatial_dimension_of_the_volume = [len(volume_size)]
+    # convert the list of vectors to a numpy array
+    vectors = np.asarray(list_of_vectors)
 
-    grid_shape = spatial_dimension_of_the_volume + control_points_per_dimension[::-1]
+    coors = np.stack((vectors[:, 1], vectors[:, 0]))
 
-    grid = np.zeros(grid_shape)
+    # reshape the vectors so that they match the elasticdeform requirements
+    deformation_grid = np.reshape(coors, [dim] + grid_shape)
 
-    volume_dims = len(volume_size)
-
-    coordinates = []
-
-    for dim in range(volume_dims):
-
-        distance = volume_size[dim] // (control_points_per_dimension[dim] - 1)
-
-        points = []
-
-        for i in range(control_points_per_dimension[dim]):
-            points.append(distance * i)
-
-
-        points[-1] = volume_size[dim]
-
-        coordinates.append(points)
-
-    all_coordinates = list(product(coordinates[0], coordinates[1]))
-
-    return grid, all_coordinates
+    return deformation_grid
