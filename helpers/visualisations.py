@@ -3,6 +3,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.widgets import Slider
+from matplotlib.lines import Line2D
 
 
 def display_volume_slice(volumes, label=None):
@@ -123,19 +124,16 @@ def visualise_per_class_accuracies(accuracies, class_names, title="Accuracies", 
     plt.title(title, fontsize=15, fontweight="bold")
 
 
-def plot_offsets(true_offset, predicted_offset=None):
+def plot_offsets(true_offset, predicted_offsets=None):
     """
     Works only for not compounded offsets in x or y
     :param true_offset:
-    :param predicted_offset:
+    :param predicted_offsets:
     :return:
     """
 
-    if true_offset[2] != 0:
-        raise ValueError("Works only for offsets in x or y")
-
     # Create figure and axes
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(10, 10), dpi=100)
 
     ax.spines['left'].set_position('zero')
     ax.spines['bottom'].set_position('zero')
@@ -146,19 +144,80 @@ def plot_offsets(true_offset, predicted_offset=None):
     ax.set_xlim(-20, 20)
     ax.set_ylim(-20, 20)
 
+    plt.xticks([], [])
+    plt.yticks([], [])
+
+    plt.gca().set_aspect('equal', adjustable='box')
+
+    plt.text(19.5, 1, 'x', fontsize=10)
+    plt.text(19.5, -0.5, '>', fontsize=10)
+    plt.text(-1.5, 19.5, 'y', fontsize=10)
+    plt.text(-0.8, 19.5, '>', fontsize=10, rotation=90)
+    plt.legend(loc='upper right')
+
+    custom_lines = [Line2D([0], [0], color='k', lw=4),
+                    Line2D([0], [0], color='g', lw=4),
+                    Line2D([0], [0], color='b', lw=4)]
+
+    ax.legend(custom_lines, ['True offset', 'Predicted x-offset', 'Predicted y-offset'], loc='upper right')
+
+    plt.suptitle("True and predicted offsets in x-y.\n", fontsize=15, fontweight="bold")
+    plt.title("The bigger the opacity of green or blue, the bigger the predicted probability\n"
+              "The length of the bars corresponds to the predicted offset", style="italic")
+
+    if true_offset[2] != 0:
+        return
+
     # display true offset
     if true_offset[0] == 0:
-        starting_point = (-2, 0)
-        width = 4
+        starting_point = (-0.25, 0)
+        width = 0.5
         height = true_offset[1]
     else:
-        starting_point = (0, -2)
+        starting_point = (0, -0.25)
         width = true_offset[0]
-        height = 4
+        height = 0.5
 
-    rect = patches.Rectangle(starting_point, width, height, linewidth=1, edgecolor='k', facecolor='0.8')
+    rect = patches.Rectangle(starting_point, width, height, linewidth=0, edgecolor='k', facecolor='0.0')
     ax.add_patch(rect)  # Add the patch to the Axes
 
+    # get amount of offsets in x, y and z
+    amounts_xy = [0, 0]
+    for packet in predicted_offsets:
+        offset = packet[0]
+
+        if offset[0] == 0:
+            amounts_xy[0] += 1
+        elif offset[1] == 0:
+            amounts_xy[1] += 1
+
+    counter_xy = [0, 0]
     # display predicted offsets
+    starts_in_x = np.linspace(-amounts_xy[0], amounts_xy[0], amounts_xy[0])
+    starts_in_y = np.linspace(-amounts_xy[1], amounts_xy[1], amounts_xy[1])
+    for packet in predicted_offsets:
+        offset = packet[0]
+        prob = packet[1]
+
+        if offset[0] == 0:
+            width = 2
+            height = offset[1]
+            starting_point = (starts_in_x[counter_xy[0]] - width/2, 0)
+            if amounts_xy[0] == 1:
+                starting_point = (starts_in_x[counter_xy[0]], 0)
+            counter_xy[0] += 1
+            color = 'b'
+        else:
+            width = offset[0]
+            height = 2
+            starting_point = (0, starts_in_y[counter_xy[1]] - height/2)
+            if amounts_xy[1] == 1:
+                starting_point = (starts_in_y[counter_xy[1]], 0)
+            counter_xy[1] += 1
+            color = 'g'
+
+        rect = patches.Rectangle(starting_point, width, height, linewidth=0, facecolor=color, alpha=prob)
+        ax.add_patch(rect)
+
 
     plt.show()
