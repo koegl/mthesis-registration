@@ -1,6 +1,7 @@
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 from matplotlib.widgets import Slider
 
 
@@ -120,3 +121,44 @@ def visualise_per_class_accuracies(accuracies, class_names, title="Accuracies", 
     p.set(ylim=lim)
 
     plt.title(title, fontsize=15, fontweight="bold")
+
+
+def plot_offsets(true_offset, predicted_offset=None):
+    """
+    Works only for not compounded offsets in x or y
+    :param true_offset:
+    :param predicted_offset:
+    :return:
+    """
+
+    if true_offset[2] != 0:
+        raise ValueError("Works only for offsets in x or y")
+
+    # Create figure and axes
+    fig, ax = plt.subplots()
+
+    ax.spines['left'].set_position('zero')
+    ax.spines['bottom'].set_position('zero')
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+
+    # set axis limits
+    ax.set_xlim(-20, 20)
+    ax.set_ylim(-20, 20)
+
+    # display true offset
+    if true_offset[0] == 0:
+        starting_point = (-2, 0)
+        width = 4
+        height = true_offset[1]
+    else:
+        starting_point = (0, -2)
+        width = true_offset[0]
+        height = 4
+
+    rect = patches.Rectangle(starting_point, width, height, linewidth=1, edgecolor='k', facecolor='0.8')
+    ax.add_patch(rect)  # Add the patch to the Axes
+
+    # display predicted offsets
+
+    plt.show()
