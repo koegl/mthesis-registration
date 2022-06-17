@@ -1,13 +1,14 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import trange
+from ast import literal_eval
 
 import torch
 
 from helpers.utils import calculate_accuracy, get_label_id_from_label
 from logic.dataloader import get_loader
 from architectures.densenet3d import DenseNet
-from helpers.visualisations import visualise_per_class_accuracies
+from helpers.visualisations import visualise_per_class_accuracies, plot_offsets
 from logic.patcher import Patcher
 
 
@@ -55,6 +56,8 @@ def test(model, test_loader):
             t.set_description(f"Testing patches ({test_accuracy:.2f})")
             t.refresh()
 
+
+
             # counter += 1
             # if counter == 200:
             #     break
@@ -64,7 +67,7 @@ def test(model, test_loader):
 
 # load model
 model = DenseNet(num_init_features=64)
-model_params = torch.load("/Users/fryderykkogl/Desktop/model_epoch3_valacc0.870.pt",
+model_params = torch.load("/Users/fryderykkogl/Dropbox (Partners HealthCare)/DL/Models/39-dense-515k-mr-vocal-sweep3-10/model_epoch7_valacc0.910.pt",
                           map_location=torch.device('cpu'))
 model.load_state_dict(model_params['model_state_dict'])
 model.eval()
