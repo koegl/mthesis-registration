@@ -124,11 +124,16 @@ def visualise_per_class_accuracies(accuracies, class_names, title="Accuracies", 
     plt.title(title, fontsize=15, fontweight="bold")
 
 
-def plot_offsets(true_offset, predicted_offsets=None):
+def plot_offsets(true_offset, e_d, predicted_offsets=None, path=None):
+
+    #todo add plotting of true offset if it is [0,0,0]
+
     """
     Works only for not compounded offsets in x or y
     :param true_offset:
+    :param e_d:
     :param predicted_offsets:
+    :param path:
     :return:
     """
 
@@ -149,17 +154,18 @@ def plot_offsets(true_offset, predicted_offsets=None):
 
     plt.gca().set_aspect('equal', adjustable='box')
 
-    plt.text(19.5, 1, 'x', fontsize=10)
-    plt.text(19.5, -0.5, '>', fontsize=10)
+    plt.text(19.5, 0.7, 'x', fontsize=10)
+    plt.text(19.5, -0.25, '>', fontsize=10)
     plt.text(-1.5, 19.5, 'y', fontsize=10)
-    plt.text(-0.8, 19.5, '>', fontsize=10, rotation=90)
+    plt.text(-0.37, 19.8, '>', fontsize=10, rotation=90)
     plt.legend(loc='upper right')
 
     custom_lines = [Line2D([0], [0], color='k', lw=4),
-                    Line2D([0], [0], color='g', lw=4),
-                    Line2D([0], [0], color='b', lw=4)]
+                    Line2D([0], [0], color='r', lw=4),
+                    Line2D([0], [0], color='b', lw=4),
+                    Line2D([0], [0], color="#800080", lw=4)]
 
-    ax.legend(custom_lines, ['True offset', 'Predicted x-offset', 'Predicted y-offset'], loc='upper right')
+    ax.legend(custom_lines, ['True offset', 'Predicted x-offset', 'Predicted y-offset', 'Predicted offset'], loc='upper right')
 
     plt.suptitle("True and predicted offsets in x-y.\n", fontsize=15, fontweight="bold")
     plt.title("The bigger the opacity of green or blue, the bigger the predicted probability\n"
@@ -168,27 +174,14 @@ def plot_offsets(true_offset, predicted_offsets=None):
     if true_offset[2] != 0:
         return
 
-    # display true offset
-    if true_offset[0] == 0:
-        starting_point = (-0.25, 0)
-        width = 0.5
-        height = true_offset[1]
-    else:
-        starting_point = (0, -0.25)
-        width = true_offset[0]
-        height = 0.5
-
-    rect = patches.Rectangle(starting_point, width, height, linewidth=0, edgecolor='k', facecolor='0.0')
-    ax.add_patch(rect)  # Add the patch to the Axes
-
     # get amount of offsets in x, y and z
     amounts_xy = [0, 0]
     for packet in predicted_offsets:
         offset = packet[0]
 
-        if offset[0] == 0:
+        if offset[1] != 0:
             amounts_xy[0] += 1
-        elif offset[1] == 0:
+        if offset[0] != 0:
             amounts_xy[1] += 1
 
     counter_xy = [0, 0]
@@ -199,7 +192,7 @@ def plot_offsets(true_offset, predicted_offsets=None):
         offset = packet[0]
         prob = packet[1]
 
-        if offset[0] == 0:
+        if offset[1] != 0:
             width = 2
             height = offset[1]
             starting_point = (starts_in_x[counter_xy[0]] - width/2, 0)
@@ -207,17 +200,55 @@ def plot_offsets(true_offset, predicted_offsets=None):
                 starting_point = (starts_in_x[counter_xy[0]], 0)
             counter_xy[0] += 1
             color = 'b'
-        else:
+
+            rect = patches.Rectangle(starting_point, width, height, linewidth=0, facecolor=color, alpha=prob)
+            ax.add_patch(rect)
+
+        if offset[0] != 0:
             width = offset[0]
             height = 2
             starting_point = (0, starts_in_y[counter_xy[1]] - height/2)
             if amounts_xy[1] == 1:
-                starting_point = (starts_in_y[counter_xy[1]], 0)
+                starting_point = (0, starts_in_y[counter_xy[1]])
             counter_xy[1] += 1
-            color = 'g'
+            color = 'r'
+            rect = patches.Rectangle(starting_point, width, height, linewidth=0, facecolor=color, alpha=prob)
+            ax.add_patch(rect)
 
-        rect = patches.Rectangle(starting_point, width, height, linewidth=0, facecolor=color, alpha=prob)
-        ax.add_patch(rect)
+    np.set_printoptions(formatter={'float': lambda x: "{0:0.1f}".format(x)})
+    plt.suptitle(f"True and predicted offsets in x-y.\nTrue vs xpected displacement: {true_offset}->{e_d}",
+                 fontsize=15, fontweight="bold")
 
+    # display true offset
+    # if np.array_equal(true_offset, np.asarray([0, 0, 0])):
+    #     starting_point = (-0.25, -0.25)
+    #     width = 0.5
+    #     height = 0.5
+    # elif true_offset[0] == 0:
+    #     starting_point = (-0.25, 0)
+    #     width = 0.5
+    #     height = true_offset[1]
+    # elif true_offset[1] == 0:
+    #     starting_point = (0, -0.25)
+    #     width = true_offset[0]
+    #     height = 0.5
 
-    plt.show()
+    # rect = patches.Rectangle(starting_point, width, height, linewidth=0, edgecolor='k', facecolor='0.0')
+    # ax.add_patch(rect)  # Add the patch to the Axes
+
+    plt.plot([0, true_offset[0]], [0, true_offset[1]], color='k', linestyle='-', linewidth=4)
+    plt.plot([0, e_d[0]], [0, e_d[1]], color="#800080", linestyle='-', linewidth=4)
+    # fig.add_artist(Line2D([0, 0], [true_offset[0], true_offset[1]], color='k', linestyle='-', linewidth=2))
+
+    if np.array_equal(true_offset, np.asarray([0, 0, 0])):
+        starting_point = (-0.25, -0.25)
+        width = 0.5
+        height = 0.5
+        rect = patches.Rectangle(starting_point, width, height, linewidth=0, edgecolor='k', facecolor='0.0')
+        ax.add_patch(rect)  # Add the patch to the Axes
+
+    # plt.show()
+
+    if path is not None:
+        plt.savefig(path)
+        plt.close(fig)
