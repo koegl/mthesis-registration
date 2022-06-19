@@ -4,23 +4,20 @@ import elasticdeform
 import matplotlib.pyplot as plt
 import numpy as np
 
-from utils import create_deformation_grid
+from utils import create_deformation_grid, elastic_transform_scipy_2d
 
 x = np.ones((10, 10), dtype=float)
 x[::2] = 0
 x[:, ::2] = 1 - x[:, ::2]
-x = x.repeat(10, axis=0).repeat(10, axis=1)
+checkerboard = x.repeat(10, axis=0).repeat(10, axis=1)
 plt.imshow(x, cmap='gray')
 plt.title('Original')
 
-deformation = create_deformation_grid([[0, -16], [0, 0], [0, 0], [0, -16],
-                                       [0, 0],   [0, 0], [0, 0], [0, 0],
-                                       [0, 16],  [0, 0], [0, 0], [0, 16]],
-                                      [3, 4], dim=2)
+checkerboard_deformed = elastic_transform_scipy_2d(checkerboard, alpha=40, sigma=2, random_state=None)
 
-Y = elasticdeform.deform_grid(X=x, displacement=deformation, order=0)
+
 plt.figure()
-plt.imshow(Y)
+plt.imshow(checkerboard_deformed, cmap='gray')
 
 print(4)
 
