@@ -3,11 +3,9 @@ import SimpleITK as sitk
 
 
 class Deformer:
-    def __init__(self):
-        pass
 
     @staticmethod
-    def generate_bspline_deformation(displacements, shape):
+    def generate_bspline_deformation(displacements, shape, fix_outer_boundary=False):
         """
         Creates a b-spline deformation. Its inputs are the shape of the volume and an array of displacement vectors
         following the elasticdeform package convention.
@@ -15,6 +13,7 @@ class Deformer:
         https://www.programcreek.com/python/example/96384/SimpleITK.BSplineTransformInitializer
         :param displacements: nd array of displacements
         :param shape: shape of the volume
+        :param fix_outer_boundary: if True, the grid points on the outer boundary of the volume are fixed to zero disp
         :return: the bspline deformation
         """
         assert isinstance(displacements, np.ndarray), 'displacements must be a numpy array'
@@ -31,6 +30,11 @@ class Deformer:
         params_shape = list(grid_shape - 3)
         params_shape = [int(x) for x in params_shape]
         bst = sitk.BSplineTransformInitializer(ref_volume, params_shape)
+
+        if fix_outer_boundary is True:
+            if len(shape) == 2:
+                displacements[:, [0, -1], :] = 0
+                displacements[:, :, [0, -1]] = 0
 
         # Transform displacements so that they can be used by the bspline transform
         p = displacements.flatten('A')
@@ -105,14 +109,14 @@ class Deformer:
 
         if len(volume_shape) == 2:
             x, y = np.mgrid[0:volume_shape[0]:complex(0, grid_shape[0]),
-                   0:volume_shape[1]:complex(0, grid_shape[1])]
+                            0:volume_shape[1]:complex(0, grid_shape[1])]
 
             coordinates = np.stack((x, y))
 
         else:
             x, y, z = np.mgrid[0:volume_shape[0]:complex(0, grid_shape[0]),
-                      0:volume_shape[1]:complex(0, grid_shape[1]),
-                      0:volume_shape[2]:complex(0, grid_shape[2])]
+                               0:volume_shape[1]:complex(0, grid_shape[1]),
+                               0:volume_shape[2]:complex(0, grid_shape[2])]
 
             coordinates = np.stack((x, y, z))
 

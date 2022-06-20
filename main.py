@@ -34,7 +34,7 @@ else:
     grid[0, 2, 2, 2] = 20
 
 # create deformation field
-deformation = deformer.generate_bspline_deformation(grid, volume_shape)
+deformation = deformer.generate_bspline_deformation(grid, volume_shape, fix_outer_boundary=True)
 
 # transform volume
 transformed_volume = deformer.transform_volume(volume, deformation)
