@@ -1,5 +1,5 @@
 import numpy as np
-import sitk
+import SimpleITK as sitk
 
 
 class Deformer:

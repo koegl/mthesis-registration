@@ -3,13 +3,16 @@ import SimpleITK as sitk
 import PIL.Image as Image
 import matplotlib.pyplot as plt
 
-from helpers.volumes import get_image, generate_bspline_deformation, generate_deformation_field, transform_volume, create_checkerboard
-from helpers.visualisations import  display_volume_slice
+from helpers.volumes import get_image, create_checkerboard
+from helpers.visualisations import display_volume_slice
+from logic.deformer import Deformer
 
 
-dim = 3
+dim = 2
 
 assert dim in [2, 3], "Dimension must be 2 or 3"
+
+deformer = Deformer()
 
 if dim == 2:
     volume_shape = (60, 60)
@@ -31,16 +34,16 @@ else:
     grid[0, 2, 2, 2] = 20
 
 # create deformation field
-deformation = generate_bspline_deformation(grid, volume_shape)
+deformation = deformer.generate_bspline_deformation(grid, volume_shape)
 
 # transform volume
-transformed_volume = transform_volume(volume, deformation)
+transformed_volume = deformer.transform_volume(volume, deformation)
 
 point_transformed = deformation.TransformPoint(point)
 
 point_transformed = np.asarray(volume_shape) - point_transformed
 
-field = generate_deformation_field(deformation, volume_shape)
+field = deformer.generate_deformation_field(deformation, volume_shape)
 
 if dim == 2:
     plt.imshow(transformed_volume, cmap='gray')
