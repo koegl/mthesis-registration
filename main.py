@@ -3,42 +3,47 @@ import SimpleITK as sitk
 import PIL.Image as Image
 import matplotlib.pyplot as plt
 
-from utils import get_image, generate_bspline_deformation, generate_deformation_field, transform_image
+from utils import get_image, generate_bspline_deformation, generate_deformation_field, transform_volume, create_checkerboard, display_volume_slice
 
 
-imshape = (50, 50)
+dim = 3
 
-image = get_image("/Users/fryderykkogl/Downloads/cat.jpg", imshape)
+assert dim in [2, 3], "Dimension must be 2 or 3"
 
-# set center pixel to 0
-image[24:26, 24:26] = 0
-plt.figure()
-plt.imshow(image, cmap='gray')
+if dim == 2:
+    volume_shape = (60, 60)
+    point = (30, 30)
+else:
+    volume_shape = (60, 60, 60)
+    point = (30, 30, 30)
 
-# create deformation vectors
-grid = np.zeros((2, 5, 5))
-grid[1, 1:4, 1:4] = 20
+volume = create_checkerboard(dim, volume_shape)
+
+# set center pixel to 0 and make grid
+if dim == 2:
+    volume[28:32, 28:32] = 0.5
+    grid = np.zeros((2, 5, 5))
+    grid[0, 2, 2] = 20
+else:
+    volume[28:32, 28:32, 28:32] = 0.5
+    grid = np.zeros((3, 5, 5, 5))
+    grid[0, 2, 2, 2] = 20
 
 # create deformation field
-deformation = generate_bspline_deformation(grid, imshape)
+deformation = generate_bspline_deformation(grid, volume_shape)
 
-# transform image
-out_img = transform_image(image, deformation)
+# transform volume
+transformed_volume = transform_volume(volume, deformation)
 
-# display image
-plt.figure()
-plt.imshow(out_img, cmap='gray')
+point_transformed = deformation.TransformPoint(point)
 
-px, py = deformation.TransformPoint((25, 25))
+point_transformed = np.asarray(volume_shape) - point_transformed
 
-py = imshape[1] - py
-px = imshape[0] - px
+field = generate_deformation_field(deformation, volume_shape)
 
-field = generate_deformation_field(deformation, imshape)
-
-plt.figure()
-plt.imshow(field[:, :, 0])
-plt.figure()
-plt.imshow(field[:, :, 1])
+if dim == 2:
+    plt.imshow(transformed_volume, cmap='gray')
+else:
+    display_volume_slice(transformed_volume, 0)
 
 print(5)

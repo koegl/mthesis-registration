@@ -4,6 +4,8 @@ from scipy.ndimage.filters import gaussian_filter
 import PIL.Image as Image
 import SimpleITK as sitk
 import matplotlib.pyplot as plt
+from matplotlib.widgets import Slider
+import sys
 
 
 def elastic_transform_scipy_2d(image, alpha=0.5, sigma=2, random_state=None):
@@ -111,7 +113,6 @@ def generate_bspline_deformation(displacements, shape):
     :return: the bspline deformation
     """
     assert isinstance(displacements, np.ndarray), 'displacements must be a numpy array'
-    assert isinstance(shape, tuple), 'shape must be a tuple'
     assert displacements.shape[0] == len(shape), "The dimension of the displacement array must match the dimension of "\
                                                  "the volume"
 
@@ -120,11 +121,11 @@ def generate_bspline_deformation(displacements, shape):
 
     # Initialize bspline transform
     args = shape+(sitk.sitkFloat32,)
-    ref_image = sitk.Image(*args)
+    ref_volume = sitk.Image(*args)
 
     params_shape = list(grid_shape - 3)
     params_shape = [int(x) for x in params_shape]
-    bst = sitk.BSplineTransformInitializer(ref_image, params_shape)
+    bst = sitk.BSplineTransformInitializer(ref_volume, params_shape)
 
     # Transform displacements so that they can be used by the bspline transform
     p = displacements.flatten('A')
@@ -142,33 +143,32 @@ def generate_deformation_field(bspline_deformation, shape):
     :param shape: the shape of the volume
     :return:
     """
-    assert isinstance(shape, tuple), 'shape must be a tuple'
     assert isinstance(bspline_deformation, sitk.BSplineTransform), 'bspline_deformation must be a bspline transform'
 
     args = shape + (sitk.sitkFloat32,)
-    ref_image = sitk.Image(*args)
+    ref_volume = sitk.Image(*args)
 
     displacement_filter = sitk.TransformToDisplacementFieldFilter()
-    displacement_filter.SetReferenceImage(ref_image)
+    displacement_filter.SetReferenceImage(ref_volume)
     displacement_field = displacement_filter.Execute(bspline_deformation)
 
-    field = np.asarray(displacement_field).reshape(shape + (2,))
+    field = np.asarray(displacement_field).reshape(shape + (len(shape),))
 
     return field
 
 
-def transform_image(image, bspline_deformation):
+def transform_volume(volume, bspline_deformation):
     """
-    Transforms an image using a sitk bspline deformation field.
-    :param image: the image to transform
+    Transforms a volume using a sitk bspline deformation field.
+    :param volume: the volume to transform
     :param bspline_deformation: the deformation field
     """
-    # check if the image is a numpy array
-    assert isinstance(image, np.ndarray), 'image must be a numpy array'
+    # check if the volume is a numpy array
+    assert isinstance(volume, np.ndarray), 'volume must be a numpy array'
     assert isinstance(bspline_deformation, sitk.BSplineTransform), 'bspline_deformation must be a bspline transform'
 
-    # create sitk image from numpy array
-    sitk_volume = sitk.GetImageFromArray(image, isVector=False)
+    # create sitk volume from numpy array
+    sitk_volume = sitk.GetImageFromArray(volume, isVector=False)
 
     # create resampler
     resampler = sitk.ResampleImageFilter()
@@ -178,7 +178,7 @@ def transform_image(image, bspline_deformation):
     resampler.SetTransform(bspline_deformation)
     resampler.SetDefaultPixelValue(0)
 
-    # deform the image
+    # deform the volume
     deformed_volume = resampler.Execute(sitk_volume)
     deformed_volume = sitk.GetArrayFromImage(deformed_volume)
     deformed_volume = deformed_volume.astype(dtype=np.float32)
@@ -188,7 +188,7 @@ def transform_image(image, bspline_deformation):
 
 def create_checkerboard(dimension, shape):
     assert dimension == 2 or dimension == 3, 'dimension must be 2 or 3'
-    assert len(shape) == dimension, 'shape must be a tuple of length 2 or 3'
+    assert len(shape) == dimension, 'shape must be of length dimension'
 
     for sh in shape:
         assert sh % 10 == 0, 'shape must be divisible by 10'
