@@ -3,7 +3,8 @@ import SimpleITK as sitk
 import PIL.Image as Image
 import matplotlib.pyplot as plt
 
-from utils import get_image, generate_bspline_deformation, generate_deformation_field, transform_volume, create_checkerboard, display_volume_slice
+from helpers.volumes import get_image, generate_bspline_deformation, generate_deformation_field, transform_volume, create_checkerboard
+from helpers.visualisations import  display_volume_slice
 
 
 dim = 3

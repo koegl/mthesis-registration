@@ -8,7 +8,7 @@ from itertools import permutations
 from warnings import warn
 import matplotlib.pyplot as plt
 from helpers.visualisations import display_volume_slice
-from helpers.utils import crop_volume_borders
+from helpers.volumes import crop_volume_borders
 
 
 class Patcher:

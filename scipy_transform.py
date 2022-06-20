@@ -4,7 +4,7 @@ import elasticdeform
 import matplotlib.pyplot as plt
 import numpy as np
 
-from utils import create_deformation_grid, elastic_transform_scipy_2d
+from helpers.volumes import elastic_transform_scipy_2d
 
 x = np.ones((10, 10), dtype=float)
 x[::2] = 0
