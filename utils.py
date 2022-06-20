@@ -217,75 +217,7 @@ def create_checkerboard(dimension, shape):
     return checkerboard_3d.T
 
 
-def display_volume_slice(volume, title=None):
-    """
-    Displays a slice of a 3D volume in a matplotlib figure
-    :param volume: the volume
-    :param title: the title of the plot
-    """
 
-    fig, ax = plt.subplots()
-    plt.subplots_adjust(bottom=0.35)
-    ax.imshow(volume[volume.shape[0] // 2, :, :], cmap='gray')
-    ax.set_xlabel('y')
-    ax.set_ylabel('z')
-
-    global axis
-    axis = 'x'
-
-    if title is not None:
-        plt.title(title, fontweight="bold")
-    else:
-        ax.set_title(f"Axis {axis}")
-
-    ax_slider = plt.axes([0.25, 0.2, 0.65, 0.03])
-    slider = Slider(ax_slider, 'Slice', 0, volume.shape[0] - 1, valinit=volume.shape[0] // 2)
-
-    def on_press(event):
-        global axis
-
-        sys.stdout.flush()
-        if event.key == 'x':
-            axis = 'x'
-            update(int(slider.val))
-        elif event.key == 'y':
-            axis = 'y'
-            update(int(slider.val))
-        elif event.key == 'z':
-            axis = 'z'
-            update(int(slider.val))
-
-    def update(val):
-        ax.clear()
-        global axis
-
-        if axis == 'x':
-            ax.imshow(volume[int(slider.val), :, :], cmap='gray')
-            ax.set_xlabel('y')
-            ax.set_ylabel('z')
-        elif axis == 'y':
-            ax.imshow(volume[:, int(slider.val), :], cmap='gray')
-            ax.set_xlabel('z')
-            ax.set_ylabel('x')
-        elif axis == 'z':
-            ax.imshow(volume[:, :, int(slider.val)], cmap='gray')
-            ax.set_xlabel('y')
-            ax.set_ylabel('x')
-
-        if title is not None:
-            ax.set_title(title, fontweight="bold")
-        else:
-            ax.set_title(f"Axis {axis}")
-
-        fig.canvas.draw_idle()
-
-    slider.on_changed(update)
-
-    fig.canvas.mpl_connect('key_press_event', on_press)
-
-    plt.show()
-
-    return slider
 
 
 def generate_grid_coordinates(grid_shape, volume_shape):

@@ -4,85 +4,130 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.widgets import Slider
 from matplotlib.lines import Line2D
+import sys
 
 
-def display_volume_slice(volumes, label=None):
-    """
-    Displays a slice of a 3D volume in a matplotlib figure
-    :param volumes: the volume(s)
-    :param label: the displacement label
-    """
+def display_two_volume_slices(volumes, title=None):
 
-    volumes /= 255
+    assert len(volumes.shape) == 4, "Volume must be 4D"
 
-    if len(volumes.shape) == 3:
-        fig, ax = plt.subplots()
-        plt.subplots_adjust(bottom=0.35)
-        ax.imshow(volumes[volumes.shape[0] // 2, :, :], cmap='gray')
+    volume_0 = volumes[0, :, :, :]
+    volume_1 = volumes[1, :, :, :]
 
-        ax_slider = plt.axes([0.25, 0.2, 0.65, 0.03])
-        slice = Slider(ax_slider, 'Slice', 0, volumes.shape[0] - 1, valinit=volumes.shape[0] // 2)
+    fig, ax = plt.subplots(1, 3, figsize=(8, 4), gridspec_kw={'width_ratios': [1, 1, 1.1]})
+    # plt.subplots_adjust(top=0.2)
+    ax[0].imshow(volume_0[volume_0.shape[0] // 2, :, :], cmap='gray')  # , vmin=0, vmax=0.5)
+    ax[0].set_title("Fixed patch")
+    ax[1].imshow(volume_1[volume_1.shape[0] // 2, :, :], cmap='gray')  # , vmin=0, vmax=0.5)
+    ax[1].set_title("Moving patch")
+    im = ax[2].imshow(np.abs(volume_0[volume_0.shape[0] // 2, :, :] - volume_1[volume_0.shape[0] // 2, :, :]),
+                      cmap='inferno', vmin=0, vmax=1)
+    ax[2].set_title("Difference")
 
-        def update(val):
-            ax.clear()
-            ax.imshow(volumes[int(slice.val), :, :], cmap='gray')
-            fig.canvas.draw_idle()
+    # [left, bottom, width, height]
+    ax_slider = plt.axes([0.3, 0.1, 0.4, 0.03])
 
-        slice.on_changed(update)
+    # add sliders
+    slice = Slider(ax_slider, 'Slice', 0, volume_0.shape[0] - 1, valinit=volume_0.shape[0] // 2)
 
-        if label is not None:
-            plt.title(label, fontweight="bold")
+    def update_left(val):
+        ax[0].clear()
+        ax[0].imshow(volume_0[int(slice.val), :, :], cmap='gray')  # , vmin=0, vmax=1)
 
-        plt.show()
+        ax[1].clear()
+        ax[1].imshow(volume_1[int(slice.val), :, :], cmap='gray')  # , vmin=0, vmax=1)
 
-        return slice
+        ax[2].clear()
+        im = ax[2].imshow(np.abs(volume_0[int(slice.val), :, :] - volume_1[int(slice.val), :, :]), cmap='inferno')
 
-    elif len(volumes.shape) == 4:
-        volume_0 = volumes[0, :, :, :]
-        volume_1 = volumes[1, :, :, :]
+        fig.canvas.draw_idle()
 
-        fig, ax = plt.subplots(1, 3, figsize=(8, 4), gridspec_kw={'width_ratios': [1, 1, 1.1]})
-        #plt.subplots_adjust(top=0.2)
-        ax[0].imshow(volume_0[volume_0.shape[0] // 2, :, :], cmap='gray')#, vmin=0, vmax=0.5)
         ax[0].set_title("Fixed patch")
-        ax[1].imshow(volume_1[volume_1.shape[0] // 2, :, :], cmap='gray')#, vmin=0, vmax=0.5)
         ax[1].set_title("Moving patch")
-        im = ax[2].imshow(np.abs(volume_0[volume_0.shape[0] // 2, :, :] - volume_1[volume_0.shape[0] // 2, :, :]), cmap='inferno', vmin=0, vmax=1)
         ax[2].set_title("Difference")
 
-        # [left, bottom, width, height]
-        ax_slider = plt.axes([0.3, 0.1, 0.4, 0.03])
+    slice.on_changed(update_left)
 
-        # add sliders
-        slice = Slider(ax_slider, 'Slice', 0, volume_0.shape[0] - 1, valinit=volume_0.shape[0] // 2)
+    if title is not None:
+        plt.suptitle(title, fontweight="bold")
 
-        def update_left(val):
-            ax[0].clear()
-            ax[0].imshow(volume_0[int(slice.val), :, :], cmap='gray')#, vmin=0, vmax=1)
+    fig.colorbar(im, ax=ax[2], fraction=0.046, pad=0.04)
 
-            ax[1].clear()
-            ax[1].imshow(volume_1[int(slice.val), :, :], cmap='gray')#, vmin=0, vmax=1)
+    # plt.tight_layout()
+    plt.show()
 
-            ax[2].clear()
-            im = ax[2].imshow(np.abs(volume_0[int(slice.val), :, :] - volume_1[int(slice.val), :, :]), cmap='inferno')
+    return slice
 
-            fig.canvas.draw_idle()
 
-            ax[0].set_title("Fixed patch")
-            ax[1].set_title("Moving patch")
-            ax[2].set_title("Difference")
+def display_volume_slice(volume, title=None):
+    """
+    Displays a slice of a 3D volume in a matplotlib figure
+    :param volume: the volume
+    :param title: the title of the plot
+    """
 
-        slice.on_changed(update_left)
+    fig, ax = plt.subplots()
+    plt.subplots_adjust(bottom=0.35)
+    ax.imshow(volume[volume.shape[0] // 2, :, :], cmap='gray')
+    ax.set_xlabel('y')
+    ax.set_ylabel('z')
 
-        if label is not None:
-            plt.suptitle(label, fontweight="bold")
+    global axis
+    axis = 'x'
 
-        fig.colorbar(im, ax=ax[2], fraction=0.046, pad=0.04)
+    if title is not None:
+        plt.title(title, fontweight="bold")
+    else:
+        ax.set_title(f"Axis {axis}")
 
-        # plt.tight_layout()
-        plt.show()
+    ax_slider = plt.axes([0.25, 0.2, 0.65, 0.03])
+    slider = Slider(ax_slider, 'Slice', 0, volume.shape[0] - 1, valinit=volume.shape[0] // 2)
 
-        return slice
+    def on_press(event):
+        global axis
+
+        sys.stdout.flush()
+        if event.key == 'x':
+            axis = 'x'
+            update(int(slider.val))
+        elif event.key == 'y':
+            axis = 'y'
+            update(int(slider.val))
+        elif event.key == 'z':
+            axis = 'z'
+            update(int(slider.val))
+
+    def update(val):
+        ax.clear()
+        global axis
+
+        if axis == 'x':
+            ax.imshow(volume[int(slider.val), :, :], cmap='gray')
+            ax.set_xlabel('y')
+            ax.set_ylabel('z')
+        elif axis == 'y':
+            ax.imshow(volume[:, int(slider.val), :], cmap='gray')
+            ax.set_xlabel('z')
+            ax.set_ylabel('x')
+        elif axis == 'z':
+            ax.imshow(volume[:, :, int(slider.val)], cmap='gray')
+            ax.set_xlabel('y')
+            ax.set_ylabel('x')
+
+        if title is not None:
+            ax.set_title(title, fontweight="bold")
+        else:
+            ax.set_title(f"Axis {axis}")
+
+        fig.canvas.draw_idle()
+
+    slider.on_changed(update)
+
+    fig.canvas.mpl_connect('key_press_event', on_press)
+
+    plt.show()
+
+    return slider
 
 
 def display_tensor_and_label(tensor, label):
