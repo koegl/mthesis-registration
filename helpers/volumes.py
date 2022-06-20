@@ -1,11 +1,99 @@
 import numpy as np
+import nibabel as nib
 from scipy.ndimage.interpolation import map_coordinates
 from scipy.ndimage.filters import gaussian_filter
 import PIL.Image as Image
 import SimpleITK as sitk
 import matplotlib.pyplot as plt
-from matplotlib.widgets import Slider
-import sys
+
+
+def save_np_array_as_nifti(array, path, affine, header=None):
+    """
+    Save an nd array as a nifti file.
+    :param array: the nd array to save
+    :param path: the path to save the nifti file
+    :param header: the header of the nifti file
+    :param affine: the affine of the nifti file
+    """
+
+    img = nib.Nifti1Image(array, affine=affine, header=header)
+
+    nib.save(img, path)
+
+
+def create_radial_gradient(width, height, depth):
+    """
+    Create a radial gradient.
+    :param width: width of the volume
+    :param height: height of the volume
+    :param depth: depth of the volume
+    :return: the gradient volume as a nd array
+    """
+
+    x, y, z = np.meshgrid(np.linspace(-1, 1, width), np.linspace(-1, 1, height), np.linspace(-1, 1, depth))
+    r = np.sqrt(x ** 2 + y ** 2 + z ** 2)
+
+    r = r / np.max(r)
+
+    return r
+
+
+def crop_volume_borders(volume):
+    """
+    Removes as much surrounding black pixels from a volume as possible
+    :param volume: The entire volume
+    :return: volume_cropped
+    """
+
+    shape = volume.shape
+
+    assert len(shape) == 3, "Volume must be 3D"
+
+    # set maximum and minimum boundaries in case the volume touches the sides of the image
+    min_x = 0
+    min_y = 0
+    min_z = 0
+    max_x = shape[0] - 1
+    max_y = shape[1] - 1
+    max_z = shape[2] - 1
+
+    # find first plane in the x-direction that contains a non-black pixel - from the 'left'
+    for i in range(shape[0]):
+        if np.count_nonzero(volume[i, :, :]) > 0:
+            min_x = i
+            break
+    # find first plane in the x-direction that contains a non-black pixel - from the 'right'
+    for i in range(shape[0] - 1, -1, -1):
+        if np.count_nonzero(volume[i, :, :]) > 0:
+            max_x = i
+            break
+
+    # find first plane in the y-direction that contains a non-black pixel - from the 'left'
+    for i in range(shape[1]):
+        if np.count_nonzero(volume[:, i, :]) > 0:
+            min_y = i
+            break
+    # find first plane in the y-direction that contains a non-black pixel - from the 'right'
+    for i in range(shape[1] - 1, -1, -1):
+        if np.count_nonzero(volume[:, i, :]) > 0:
+            max_y = i
+            break
+
+    # find first plane in the z-direction that contains a non-black pixel - from the 'left'
+    for i in range(shape[2]):
+        if np.count_nonzero(volume[:, :, i]) > 0:
+            min_z = i
+            break
+    # find first plane in the z-direction that contains a non-black pixel - from the 'right'
+    for i in range(shape[2] - 1, -1, -1):
+        if np.count_nonzero(volume[:, :, i]) > 0:
+            max_z = i
+            break
+
+    # crop the volume
+    volume_cropped = volume[min_x:max_x + 1, min_y:max_y + 1, min_z:max_z + 1]
+
+    return volume_cropped
 
 
 def elastic_transform_scipy_2d(image, alpha=0.5, sigma=2, random_state=None):
@@ -32,63 +120,6 @@ def elastic_transform_scipy_2d(image, alpha=0.5, sigma=2, random_state=None):
     indices = np.reshape(x + dx, (-1, 1)), np.reshape(y + dy, (-1, 1))
 
     return map_coordinates(image, indices, order=1).reshape(shape)
-
-
-# todo extend to 3-D
-def create_deformation_grid(list_of_vectors, grid_shape, dim=2):
-    """
-    This function takes a list of vectors and creates a grid of deformation vectors for the package 'elasticdeform'.
-    The length of list_of_vectors must be equal to the product of all elements in grid_shape.
-    The first vector is th edeformation of the top right point, the second vector is the next point to the right, etc
-    until all rows are filled. The last vector is the deformation of the bottom right point.
-
-    Example 1:
-    shape: (2, 4, 3);
-    shape[0]: spatial dimensions of the input image -> 2D (top row are y-coordinates, bottom x-coordinates)
-    shape[1]: number of rows (of control points)    -> four rows of control points
-    shape[2]: number of columns (of control points) -> three columns of control points
-
-    Example 2:
-    for shape (2, 3, 3)
-    [[top-left-inY, top-center-inY, top-right-inY], [center-left-inY, center-center-inY, center-right-inY], [down-left-inY, down-center-inY, down-right-inY]],
-    [[top-left-inX, top-center-inX, top-right-inX], [center-left-inX, center-center-inX, center-right-inX], [down-left-inX, down-center-inX, down-right-inX]]
-
-    Example 3:
-    (input list_of_vectors as a list but written with new lines to make it easier to read)
-    [[0, -16], [0, 0], [0, 0], [0, -16],
-     [0, 0],   [0, 0], [0, 0], [0, 0],
-     [0, 16],  [0, 0], [0, 0], [0, 16]]
-     this corresponds to a grid with control points 'p', where active ones are marked with A
-     A = = p = = p = = A
-     = = = = = = = = = =
-     = = = = = = = = = =
-     p = = p = = p = = p
-     = = = = = = = = = =
-     = = = = = = = = = =
-     A = = p = = p = = A
-
-    :param list_of_vectors: A list containing all displacement vectors
-    :param grid_shape: The shape of the grid (how many vectors in each dimension)
-    :param dim: The dimension of the volume
-    :return: The deformation grid
-    """
-
-    assert isinstance(list_of_vectors, list), 'list_of_vectors must be a list'
-    assert isinstance(grid_shape, list), 'grid_shape must be a list'
-    assert len(list_of_vectors) == np.prod(grid_shape), 'The length of list_of_vectors must be equal to the product of' \
-                                                        ' all elements in grid_shape'
-
-    assert dim == 2, 'The dimension of the volume must be 2. 3D will be implemented later'
-
-    # convert the list of vectors to a numpy array
-    vectors = np.asarray(list_of_vectors)
-
-    coors = np.stack((vectors[:, 1], vectors[:, 0]))
-
-    # reshape the vectors so that they match the elasticdeform requirements
-    deformation_grid = np.reshape(coors, [dim] + grid_shape)
-
-    return deformation_grid
 
 
 def get_image(path, im_size):
@@ -215,9 +246,6 @@ def create_checkerboard(dimension, shape):
     checkerboard_3d = np.tile(packet, (shape[2]//20, 1, 1))
 
     return checkerboard_3d.T
-
-
-
 
 
 def generate_grid_coordinates(grid_shape, volume_shape):
