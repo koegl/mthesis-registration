@@ -152,7 +152,9 @@ def generate_deformation_field(bspline_deformation, shape):
     displacement_filter.SetReferenceImage(ref_image)
     displacement_field = displacement_filter.Execute(bspline_deformation)
 
-    return displacement_field
+    field = np.asarray(displacement_field).reshape(shape + (2,))
+
+    return field
 
 
 def transform_image(image, bspline_deformation):

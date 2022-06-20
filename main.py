@@ -3,7 +3,7 @@ import SimpleITK as sitk
 import PIL.Image as Image
 import matplotlib.pyplot as plt
 
-from utils import get_image, generate_bspline_deformation, transform_image
+from utils import get_image, generate_bspline_deformation, generate_deformation_field, transform_image
 
 
 imshape = (50, 50)
@@ -33,5 +33,12 @@ px, py = deformation.TransformPoint((25, 25))
 
 py = imshape[1] - py
 px = imshape[0] - px
+
+field = generate_deformation_field(deformation, imshape)
+
+plt.figure()
+plt.imshow(field[:, :, 0])
+plt.figure()
+plt.imshow(field[:, :, 1])
 
 print(5)
