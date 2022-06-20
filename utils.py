@@ -1,6 +1,9 @@
 import numpy as np
 from scipy.ndimage.interpolation import map_coordinates
 from scipy.ndimage.filters import gaussian_filter
+import PIL.Image as Image
+import SimpleITK as sitk
+import matplotlib.pyplot as plt
 
 
 def elastic_transform_scipy_2d(image, alpha=0.5, sigma=2, random_state=None):
@@ -84,3 +87,98 @@ def create_deformation_grid(list_of_vectors, grid_shape, dim=2):
     deformation_grid = np.reshape(coors, [dim] + grid_shape)
 
     return deformation_grid
+
+
+def get_image(path, im_size):
+    im = Image.open(path)
+    im = im.convert("L")
+    min_shape = np.min(np.asarray(im).shape)
+    im = im.crop((0, 0, min_shape, min_shape))
+    im = im.resize(im_size, Image.ANTIALIAS)
+    im = np.asarray(im)
+
+    return im
+
+
+def generate_bspline_deformation(displacements, shape):
+    """
+    Creates a b-spline deformation. Its inputs are the shape of the volume and an array of displacement vectors
+    following the elasticdeform package convention.
+    https://elasticdeform.readthedocs.io/en/latest/
+    https://www.programcreek.com/python/example/96384/SimpleITK.BSplineTransformInitializer
+    :param displacements: nd array of displacements
+    :param shape: shape of the volume
+    :return: the bspline deformation
+    """
+    assert isinstance(displacements, np.ndarray), 'displacements must be a numpy array'
+    assert isinstance(shape, tuple), 'shape must be a tuple'
+    assert displacements.shape[0] == len(shape), "The dimension of the displacement array must match the dimension of "\
+                                                 "the volume"
+
+    # get the shape of the grid
+    grid_shape = np.asarray(displacements.shape[1:])  # we skip the first dimension because it is the dim of the volume
+
+    # Initialize bspline transform
+    args = shape+(sitk.sitkFloat32,)
+    ref_image = sitk.Image(*args)
+
+    params_shape = list(grid_shape - 3)
+    params_shape = [int(x) for x in params_shape]
+    bst = sitk.BSplineTransformInitializer(ref_image, params_shape)
+
+    # Transform displacements so that they can be used by the bspline transform
+    p = displacements.flatten('A')
+
+    # Set bspline transform parameters to the above shifts
+    bst.SetParameters(p)
+
+    return bst
+
+
+def generate_deformation_field(bspline_deformation, shape):
+    """
+    Generates a deformation field from a bspline deformation.
+    :param bspline_deformation: the deformation
+    :param shape: the shape of the volume
+    :return:
+    """
+    assert isinstance(shape, tuple), 'shape must be a tuple'
+    assert isinstance(bspline_deformation, sitk.BSplineTransform), 'bspline_deformation must be a bspline transform'
+
+    args = shape + (sitk.sitkFloat32,)
+    ref_image = sitk.Image(*args)
+
+    displacement_filter = sitk.TransformToDisplacementFieldFilter()
+    displacement_filter.SetReferenceImage(ref_image)
+    displacement_field = displacement_filter.Execute(bspline_deformation)
+
+    return displacement_field
+
+
+def transform_image(image, bspline_deformation):
+    """
+    Transforms an image using a sitk bspline deformation field.
+    :param image: the image to transform
+    :param bspline_deformation: the deformation field
+    """
+    # check if the image is a numpy array
+    assert isinstance(image, np.ndarray), 'image must be a numpy array'
+    assert isinstance(bspline_deformation, sitk.BSplineTransform), 'bspline_deformation must be a bspline transform'
+
+    # create sitk image from numpy array
+    sitk_volume = sitk.GetImageFromArray(image, isVector=False)
+
+    # create resampler
+    resampler = sitk.ResampleImageFilter()
+    resampler.SetReferenceImage(sitk_volume)
+    resampler.SetInterpolator(sitk.sitkLinear)
+    resampler.SetDefaultPixelValue(0)
+    resampler.SetTransform(bspline_deformation)
+    resampler.SetDefaultPixelValue(0)
+
+    # deform the image
+    deformed_volume = resampler.Execute(sitk_volume)
+    deformed_volume = sitk.GetArrayFromImage(deformed_volume)
+    deformed_volume = deformed_volume.astype(dtype=np.float32)
+
+    return deformed_volume
