@@ -287,3 +287,30 @@ def display_volume_slice(volume, title=None):
 
     return slider
 
+
+def generate_grid_coordinates(grid_shape, volume_shape):
+    """
+    This function generates a grid (that is uniform along each axis separately). The 0th grid point lies in the corner
+    of the volume (not in the center of the corresponding patch)
+    :param grid_shape: shape of the grid
+    :param volume_shape: shape of the volume
+    :return: the grid coordinates
+    """
+
+    assert len(grid_shape) == len(volume_shape), 'grid_shape and volume_shape must be of same length'
+    assert len(grid_shape) in [2, 3], 'grid_shape must be of length 2 or 3'
+
+    if len(volume_shape) == 2:
+        x, y = np.mgrid[0:volume_shape[0]:complex(0, grid_shape[0]),
+                        0:volume_shape[1]:complex(0, grid_shape[1])]
+
+        coordinates = np.stack((x, y))
+
+    else:
+        x, y, z = np.mgrid[0:volume_shape[0]:complex(0, grid_shape[0]),
+                           0:volume_shape[1]:complex(0, grid_shape[1]),
+                           0:volume_shape[2]:complex(0, grid_shape[2])]
+
+        coordinates = np.stack((x, y, z))
+
+    return coordinates
