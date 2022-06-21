@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.widgets import Slider
 from matplotlib.lines import Line2D
+import matplotlib
 import sys
 
 
@@ -297,3 +298,10 @@ def plot_offsets(true_offset, e_d, predicted_offsets=None, path=None):
     if path is not None:
         plt.savefig(path)
         plt.close(fig)
+
+
+def get_cmap(list_of_colors):
+
+    custom_camp = matplotlib.colors.LinearSegmentedColormap.from_list("", list_of_colors)
+
+    return custom_camp
