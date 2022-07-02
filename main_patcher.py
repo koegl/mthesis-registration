@@ -24,13 +24,13 @@ def main(params):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-ld", "--load_directory", default="/Users/fryderykkogl/Data/patches/val_nii",
+    parser.add_argument("-ld", "--load_directory", default="/Users/fryderykkogl/Data/patches/val_nii_small",
                         help="Directory containing all niftis")
     parser.add_argument("-sd", "--save_directory", default="/Users/fryderykkogl/Data/patches/val_npy",
                         help="Directory to save the numpy patches")
     parser.add_argument("-ft", "--file_type", default="nii.gz", choices=["nii", "nii.gz"],
                         help="File type of the niftis")
-    parser.add_argument("-cpd", "--centres_per_dimension", default=12,
+    parser.add_argument("-cpd", "--centres_per_dimension", default=6,
                         help="Amount of centres per dimension")
     parser.add_argument("-pt", "--perfect_truth", default=False,
                         help="If true, the patches are extracted from the same volumes, otherwise from pairs")
