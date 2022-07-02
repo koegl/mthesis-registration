@@ -66,7 +66,28 @@ class Patcher:
             self.offsets = np.asarray(offsets)
 
         # each offset is mapped to a binary label (which can be transformed to a one-hot vector)
-        self.offset_to_label_dict = {np.array2string(self.offsets[i], separator=','): '{0:05b}'.format(i) for i in range(len(self.offsets))}
+        self.offset_to_label_dict = {
+            '[7,7,7]': '00000',
+            '[0,0,0]': '00001',
+            '[-16,  0,  0]': '00010',
+            '[  0,-16,  0]': '00011',
+            '[  0,  0,-16]': '00100',
+            '[-8, 0, 0]': '00101',
+            '[ 0,-8, 0]': '00110',
+            '[ 0, 0,-8]': '00111',
+            '[-4, 0, 0]': '01000',
+            '[ 0,-4, 0]': '01001',
+            '[ 0, 0,-4]': '01010',
+            '[4,0,0]': '01011',
+            '[0,4,0]': '01100',
+            '[0,0,4]': '01101',
+            '[8,0,0]': '01110',
+            '[0,8,0]': '01111',
+            '[0,0,8]': '10000',
+            '[16, 0, 0]': '10001',
+            '[ 0,16, 0]': '10010',
+            '[ 0, 0,16]': '10011'
+        }
         # create a reversed dict
         self.label_to_offset_dict = {v: k for k, v in self.offset_to_label_dict.items()}
 
