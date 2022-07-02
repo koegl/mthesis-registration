@@ -7,7 +7,7 @@ from helpers.volumes import get_image, create_checkerboard
 from helpers.visualisations import display_volume_slice, get_cmap
 from logic.deformer import Deformer
 
-dim = 3
+dim = 2
 
 assert dim in [2, 3], "Dimension must be 2 or 3"
 
@@ -24,28 +24,16 @@ volume = create_checkerboard(dim, volume_shape)
 
 # set center pixel to 0 and make grid
 if dim == 2:
-    volume[28:32, 28:32] = 0.5
-    grid = np.zeros((2, 7, 7))
+    # volume[28:32, 28:32] = 0.5
+    grid = np.zeros((2, 4, 4))
     grid_x = np.array([
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 20, 20, 20, 0, 0],
-        [0, 0, 20, 20, 20, 0, 0],
-        [0, 0, 20, 20, 20, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0]
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
     ])
     grid[0, :, :] = grid_x
 
-    grid_y = np.array([
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 20, 20, 20, 0, 0],
-        [0, 0, 20, 20, 20, 0, 0],
-        [0, 0, 20, 20, 20, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0]])
-    grid[1, :, :] = grid_y
 else:
     # volume[28:32, 28:32, 28:32] = 0.5
     grid = np.zeros((3, 7, 7, 7))
@@ -54,7 +42,7 @@ else:
     # grid[2, 2:5, 2:5, 2:5] = 15
 
 # create deformation field
-deformation = deformer.generate_bspline_deformation(grid, volume_shape, fix_outer_boundary=False)
+deformation = deformer.generate_bspline_deformation(grid, volume_shape)
 
 # transform volume
 transformed_volume = deformer.transform_volume(volume, deformation)

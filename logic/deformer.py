@@ -5,7 +5,7 @@ import SimpleITK as sitk
 class Deformer:
 
     @staticmethod
-    def generate_bspline_deformation(displacements, shape, fix_outer_boundary=False):
+    def generate_bspline_deformation(displacements, shape):
         """
         Creates a b-spline deformation. Its inputs are the shape of the volume and an array of displacement vectors
         following the elasticdeform package convention.
@@ -13,31 +13,25 @@ class Deformer:
         https://www.programcreek.com/python/example/96384/SimpleITK.BSplineTransformInitializer
         :param displacements: nd array of displacements
         :param shape: shape of the volume
-        :param fix_outer_boundary: if True, the grid points on the outer boundary of the volume are fixed to zero disp
         :return: the bspline deformation
         """
         assert isinstance(displacements, np.ndarray), 'displacements must be a numpy array'
         assert displacements.shape[0] == len(shape),\
             "The dimension of the displacement array must match the dimension of the volume"
 
-        # get the shape of the grid
-        grid_shape = np.asarray(displacements.shape[1:])  # we skip the first dimension because it is the volume dim
+        squares_per_d = [x - 1 for x in displacements.shape[1:]]
 
         # Initialize bspline transform
         args = shape + (sitk.sitkFloat32,)
         ref_volume = sitk.Image(*args)
 
-        params_shape = list(grid_shape - 3)
-        params_shape = [int(x) for x in params_shape]
-        bst = sitk.BSplineTransformInitializer(ref_volume, params_shape)
+        bst = sitk.BSplineTransformInitializer(ref_volume, squares_per_d)
 
-        if fix_outer_boundary is True:
-            if len(shape) == 2:
-                displacements[:, [0, -1], :] = 0
-                displacements[:, :, [0, -1]] = 0
+        # pad the displacement array with zeros
+        padded_displacements = np.pad(displacements, ((0, 0), (1, 1), (1, 1)))
 
         # Transform displacements so that they can be used by the bspline transform
-        p = displacements.flatten('A')
+        p = padded_displacements.flatten('A')
 
         # Set bspline transform parameters to the above shifts
         bst.SetParameters(p)
