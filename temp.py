@@ -1,16 +1,19 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 
-from helpers.visualisations import plot_offsets
+import helpers.visualisations as visualisations
 
 
-offset = [4, -8, 0]
-predicted_offsets = [
-    ([4, 0, 0], 0.3),
-    ([0, 16, 0], 0.5),
-    ([16, 0, 0], 0.2),
-    ([0, 4, 0], 0.3),
-]
+volume_fixed = np.load("/Users/fryderykkogl/Data/patches/offset_volumes/49.npy")
+volume_offset = np.load("/Users/fryderykkogl/Data/patches/offset_volumes/50_49.npy")
 
-plot_offsets(offset, [3, -10, 0], predicted_offsets)
+# pad volume_offset with 16 pixels on the left side of x
+volume_offset = np.pad(volume_offset, ((12, 0), (0, 0), (0, 0)), constant_values=0)
+volume_offset = volume_offset.astype(np.float16)[:-12, :, :]
+
+np.save("/Users/fryderykkogl/Data/patches/offset_volumes/50_49_pad_x12.npy", volume_offset)
+
+# combined = np.stack((volume_fixed, volume_offset), 0)
+#
+# visualisations.display_two_volume_slices(combined)
+
+print(5)
