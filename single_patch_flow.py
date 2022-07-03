@@ -63,7 +63,7 @@ def main():
         # print("======================================")
         # print(f"centre: {centre}\n")
         # centre = [118, 308, 54]
-        offset = np.array([3., 3., 3.])
+        offset = np.array([-16., 0., -16.])
         initial_offset = offset.copy()
         idx = 0
         max_iter = 10
@@ -116,10 +116,53 @@ def main():
         file_string += "\nAll offsets:\n"
         for idx, offset in enumerate(offset_list):
             # print(f"{idx}: {np.round(offset)}")
-            file_string += f"{idx}: {np.round(offset)}\n"
+            file_string += f"{idx}: {offset}\n"
 
         # print(break_reason)
         file_string += break_reason
+
+
+        plt.close()
+
+        ax = plt.gca(projection="3d")
+        coors = [[0.0, 0.0, 0.0]]
+        coors += [list(initial_offset.copy())]
+        offset_list = [list(val) for val in offset_list]
+        coors += offset_list
+        # set lien thickness
+
+        # ax.plot((0, initial_offset[0]), (0, initial_offset[1]), (0, initial_offset[2]), color="k", linewidth=2)
+
+        coors_prev = np.asarray(coors[0])
+        coors_new = np.asarray(coors[1])
+
+        ax.plot((coors_prev[0], coors_new[0]),
+                (coors_prev[1], coors_new[1]),
+                (coors_prev[2], coors_new[2]),
+                color="k", linewidth=2)
+
+        for i in range(1, len(coors) - 1):
+            coors_prev = coors_new.copy()
+            coors_new -= np.asarray(coors[i + 1])
+            ax.plot((coors_prev[0], coors_new[0]),
+                    (coors_prev[1], coors_new[1]),
+                    (coors_prev[2], coors_new[2]),
+                    color="r", linewidth=1)
+
+        ax.set_xlim3d(-20, 5)
+        ax.set_ylim3d(-20, 5)
+        ax.set_zlim3d(-20, 5)
+
+        # label axes
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        ax.set_zlabel("z")
+
+        print(file_string)
+
+        plt.show()
+
+
 
         # with open(
         #         f"/Users/fryderykkogl/Dropbox (Partners HealthCare)/DL/Experiments/mr patch convergence/"
