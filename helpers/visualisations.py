@@ -297,3 +297,41 @@ def plot_offsets(true_offset, e_d, predicted_offsets=None, path=None):
     if path is not None:
         plt.savefig(path)
         plt.close(fig)
+
+
+def plot_offset_convergence(initial_offset, aggregated_offsets):
+
+    ax = plt.gca(projection="3d")
+    coors = [[0.0, 0.0, 0.0]]
+    coors += [list(initial_offset)]
+    offset_list = [list(val) for val in aggregated_offsets]
+    coors += offset_list
+
+    coors_prev = np.asarray(coors[0])
+    coors_new = np.asarray(coors[1])
+
+    # plot the first line which show the true offsets
+    ax.plot((coors_prev[0], coors_new[0]),
+            (coors_prev[1], coors_new[1]),
+            (coors_prev[2], coors_new[2]),
+            color="k", linewidth=2)
+
+    # plot the rest of the lines
+    for i in range(1, len(coors) - 1):
+        coors_prev = coors_new.copy()
+        coors_new -= np.asarray(coors[i + 1])
+        ax.plot((coors_prev[0], coors_new[0]),
+                (coors_prev[1], coors_new[1]),
+                (coors_prev[2], coors_new[2]),
+                color="r", linewidth=1)
+
+    ax.set_xlim3d(-20, 5)
+    ax.set_ylim3d(-20, 5)
+    ax.set_zlim3d(-20, 5)
+
+    # label axes
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("z")
+
+    plt.show()

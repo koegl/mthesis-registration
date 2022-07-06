@@ -1,4 +1,5 @@
 # script to test inference one patch at a time
+import argparse
 import numpy as np
 import torch
 from ast import literal_eval
@@ -8,37 +9,41 @@ import os
 import nibabel as nib
 
 from logic.patcher import Patcher
-from helpers.visualisations import display_two_volume_slices
-from helpers.utils import patch_inference
-from architectures.densenet3d import DenseNet
+import helpers.visualisations as visualisations
+import helpers.utils as utils
+from helpers.volumes import mark_patch_borders
 
 
-def main():
+def convergence_check(offset: 'np.ndarray', patch_centres: list, success_rate: float, idx, max_iter: int = 10)\
+                      -> (bool, float, str):
+
+    if all(np.abs(d) < 2 for d in offset):
+        break_reason = "\nAll offsets are below 1.0. Done iterating"
+        success_rate += 1 / len(patch_centres)
+        return True, success_rate, break_reason, idx
+    elif idx == max_iter:
+        break_reason = f"\nMax iteration of {max_iter} reached. Done iterating"
+        return True, success_rate, break_reason, idx
+    elif any(np.abs(d) > 20 for d in offset):
+        break_reason = "\nAn offset exceeded 20. Done iterating"
+        return True, success_rate, break_reason, idx
+    else:
+        return False, success_rate, "", idx
+
+
+def main(params):
+    fig = None
     np.set_printoptions(suppress=True)
     np.set_printoptions(formatter={'float': '{: 0.4f}'.format})
 
     # generate patches
-    patcher = Patcher(
-        load_directory=f"/Users/fryderykkogl/Data/patches/val_nii_small",
-        save_directory=f"/Users/fryderykkogl/Data/patches/val_npy",
-        file_type="nii.gz",
-        centres_per_dimension=6,
-        perfect_truth=False,
-        patch_size=32,
-        scale_dist=1.5,
-        rescale=True,
-        save_type="float16",
-    )
+    patcher = Patcher(load_directory="", save_directory="", file_type="nii.gz",
+                      centres_per_dimension=6, perfect_truth=False, rescale=True, save_type="float16")
 
-    volume_fixed = np.load("/Users/fryderykkogl/Dropbox (Partners HealthCare)/DL/Experiments/mr patch convergence/data/49.npy")
-    volume_offset = np.load("/Users/fryderykkogl/Dropbox (Partners HealthCare)/DL/Experiments/mr patch convergence/data/50_49.npy")
+    volume_fixed = np.load(params.fixed_volume_path)
+    volume_offset = np.load(params.offset_volume_path)
 
-    model = DenseNet(num_init_features=64)
-    model_params = torch.load(
-        "/Users/fryderykkogl/Dropbox (Partners HealthCare)/DL/Models/39-dense-515k-mr-vocal-sweep3-10/model_epoch7_valacc0.910.pt",
-        map_location=torch.device('cpu'))
-    model.load_state_dict(model_params['model_state_dict'])
-    model.eval()
+    model = utils.load_model_for_inference(params.model_path)
 
     original_offsets = patcher.offsets
     original_offsets[0, :] = np.array([0., 0., 0.])
@@ -50,119 +55,59 @@ def main():
     # 385, 162], [177, 77, 54], [177, 77, 108], [177, 77, 162], [177, 154, 54], [177, 154, 108], [177, 154, 162],
     # [177, 231, 54], [177, 231, 108], [177, 231, 162], [177, 308, 54], [177, 308, 108], [177, 308, 162], [177, 385,
     # 54], [177, 385, 108], [177, 385, 162]] subset which at offset 0 are in bounds etc
-    patch_centres = [[118, 154, 54], [118, 154, 108], [118, 154, 162], [118, 231, 54], [118, 231, 108], [118, 231, 162],
+    patch_centres = [[118, 154, 54],
+                     [118, 154, 108],
+                     [118, 154, 162],
+                     [118, 231, 54], [118, 231, 108], [118, 231, 162],
                      [118, 308, 54], [118, 308, 108], [118, 308, 162], [118, 385, 54], [118, 385, 108], [118, 385, 162],
                      [177, 77, 54], [177, 77, 162], [177, 154, 54], [177, 154, 108], [177, 154, 162], [177, 231, 54],
                      [177, 231, 108], [177, 231, 162], [177, 308, 54], [177, 308, 108], [177, 308, 162], [177, 385, 54],
                      [177, 385, 108], [177, 385, 162]]
 
     success_rate = 0
+    idx = 0
 
     for centre in patch_centres:
-        # print("\n\n\n\n\n\n\n\n======================================")
-        # print("======================================")
-        # print(f"centre: {centre}\n")
-        # centre = [118, 308, 54]
         offset = np.array([-16., 0., -16.])
         initial_offset = offset.copy()
-        idx = 0
-        max_iter = 10
         offset_list = []
         file_string = ""
         file_string += f"centre: {centre}\n\n"
 
+        # iterate until convergence
         while True:
 
-            if all(np.abs(d) < 2 for d in offset):
-                break_reason = "\nAll offsets are below 1.0. Done iterating"
-                success_rate += 1/len(patch_centres)
+            break_val, success_rate, break_reason, idx = convergence_check(offset, patch_centres, success_rate, idx)
+            idx += 1
+            if break_val:
                 break
-            if idx == max_iter:
-                break_reason = f"\nMax iteration of {max_iter} reached. Done iterating"
-                break
-            if any(np.abs(d) > 20 for d in offset):
-                break_reason = "\nAn offset exceeded 20. Done iterating"
-                break
-
-            # plt.close("all")
 
             patch_fixed, patch_offset = patcher.extract_overlapping_patches(volume_fixed, volume_offset, centre, offset)
             patch = np.stack((patch_fixed, patch_offset), 0)
 
-            e_d, model_output, predicted_probabilities = patch_inference(model, patch, original_offsets)
+            e_d, model_output, predicted_probabilities = utils.patch_inference(model, patch, original_offsets)
 
             offset_list.append(e_d)
 
             offset = offset - e_d
             offset = np.round(offset).astype(int)
 
-            # print(f"[{e_d[0]:.2f}, {e_d[1]:.2f}, {e_d[2]:.2f}];\tcentre={centre}")
-            idx += 1
-
-            # _ = display_two_volume_slices(patch)
-
         total_offset = np.array(offset_list)
-        # print(f"Initial offset:\t\t[{initial_offset[0]:.2f} {initial_offset[1]:.2f} {initial_offset[2]:.2f}]\n"
-        #       f"Total offset:\t\t{np.sum(total_offset, 0)}\n"
-        #       f"Remaining offset:\t{initial_offset - np.sum(total_offset, 0)}"
-        #       f"\n")
 
         file_string += f"Initial offset:\t\t[{initial_offset[0]:.2f} {initial_offset[1]:.2f} {initial_offset[2]:.2f}]\n"\
                        f"Total offset:\t\t{np.sum(total_offset, 0)}\n"\
                        f"Remaining offset:\t{initial_offset - np.sum(total_offset, 0)}"\
                        f"\n"
 
-        # print("All offsets:")
         file_string += "\nAll offsets:\n"
         for idx, offset in enumerate(offset_list):
-            # print(f"{idx}: {np.round(offset)}")
             file_string += f"{idx}: {offset}\n"
 
-        # print(break_reason)
         file_string += break_reason
 
-
-        plt.close()
-
-        ax = plt.gca(projection="3d")
-        coors = [[0.0, 0.0, 0.0]]
-        coors += [list(initial_offset.copy())]
-        offset_list = [list(val) for val in offset_list]
-        coors += offset_list
-        # set lien thickness
-
-        # ax.plot((0, initial_offset[0]), (0, initial_offset[1]), (0, initial_offset[2]), color="k", linewidth=2)
-
-        coors_prev = np.asarray(coors[0])
-        coors_new = np.asarray(coors[1])
-
-        ax.plot((coors_prev[0], coors_new[0]),
-                (coors_prev[1], coors_new[1]),
-                (coors_prev[2], coors_new[2]),
-                color="k", linewidth=2)
-
-        for i in range(1, len(coors) - 1):
-            coors_prev = coors_new.copy()
-            coors_new -= np.asarray(coors[i + 1])
-            ax.plot((coors_prev[0], coors_new[0]),
-                    (coors_prev[1], coors_new[1]),
-                    (coors_prev[2], coors_new[2]),
-                    color="r", linewidth=1)
-
-        ax.set_xlim3d(-20, 5)
-        ax.set_ylim3d(-20, 5)
-        ax.set_zlim3d(-20, 5)
-
-        # label axes
-        ax.set_xlabel("x")
-        ax.set_ylabel("y")
-        ax.set_zlabel("z")
-
-        print(file_string)
-
-        plt.show()
-
-
+        plt.close(1)
+        plt.close(2)
+        visualisations.plot_offset_convergence(initial_offset, offset_list)
 
         # with open(
         #         f"/Users/fryderykkogl/Dropbox (Partners HealthCare)/DL/Experiments/mr patch convergence/"
@@ -170,6 +115,16 @@ def main():
         #         "w+") as f:
         #     f.write(file_string)
 
+        print("\n\n\n" + file_string)
+
+        # create borders in volumes showing the patches
+        centre_with_offset = list(np.array(centre).astype(int) + np.array(initial_offset).astype(int))
+        volume_fixed_border = mark_patch_borders(volume_fixed, centre, 1.0, 16)
+        volume_offset_border = mark_patch_borders(volume_offset, centre_with_offset, 1.0, 16)
+
+        volumes = np.stack((volume_fixed_border, volume_offset_border), 0)
+
+        _ = visualisations.display_two_volume_slices(volumes)
         ss = 7
 
     print("\n\nDONE\n\n")
@@ -177,7 +132,21 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("-mp", "--model_path", default="/Users/fryderykkogl/Dropbox (Partners HealthCare)/DL/Models/"
+                                                       "39-dense-515k-mr-vocal-sweep3-10/model_epoch7_valacc0.910.pt",
+                        help="Path to the trained .pt model file")
+    parser.add_argument("-fvp", "--fixed_volume_path", default="/Users/fryderykkogl/Dropbox (Partners HealthCare)/DL/"
+                                                               "Experiments/mr patch convergence/data/49.npy",
+                        help="Path to the fixed .npy volume")
+    parser.add_argument("-ovp", "--offset_volume_path", default="/Users/fryderykkogl/Dropbox (Partners HealthCare)/DL/"
+                                                                "Experiments/mr patch convergence/data/50_49.npy",
+                        help="Path to the offset .npy volume")
+
+    args = parser.parse_args()
+
+    main(args)
 
 
 """
