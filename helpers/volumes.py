@@ -274,3 +274,29 @@ def generate_grid_coordinates(grid_shape, volume_shape):
         coordinates = np.stack((x, y, z))
 
     return coordinates
+
+
+def mark_patch_borders(volume: 'np.ndarray', centre: list, border_value: float, halp_patch_size: int):
+
+    assert isinstance(volume, np.ndarray), 'volume must be a numpy array'
+    assert isinstance(centre, list), 'centre must be a list'
+    assert len(centre) == len(volume.shape), 'centre and volume must be of same length'
+
+    d = halp_patch_size
+
+    bounds = [centre[0] - d, centre[0] + d, centre[1] - d, centre[1] + d, centre[2] - d, centre[2] + d]
+
+    # plane 1
+    volume[bounds[0]:bounds[1], bounds[2]:bounds[3], centre[2] - d] = border_value
+    # plane 2
+    volume[bounds[0]:bounds[1], bounds[2]:bounds[3], centre[2] + d] = border_value
+    # plane 3
+    volume[bounds[0]:bounds[1], centre[1] - d, bounds[4]:bounds[5]] = border_value
+    # plane 4
+    volume[bounds[0]:bounds[1], centre[1] + d, bounds[4]:bounds[5]] = border_value
+    # plane 5
+    volume[centre[0] - d, bounds[2]:bounds[3], bounds[4]:bounds[5]] = border_value
+    # plane 6
+    volume[centre[0] + d, bounds[2]:bounds[3], bounds[4]:bounds[5]] = border_value
+
+    return volume
