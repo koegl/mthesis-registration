@@ -6,7 +6,7 @@ import glob
 
 import torch
 
-import architectures.densenet3d as densenet3d
+from architectures.densenet3d import DenseNet
 from architectures.vit_standard_3d import ViTStandard3D
 
 
@@ -67,7 +67,7 @@ def get_architecture(params):
                       "densenet201": (6, 12, 48, 32),
                       "densenet264": (6, 12, 64, 48)}
 
-        model = densenet3d.DenseNet(
+        model = DenseNet(
             growth_rate=32,
             block_config=dense_dict[architecture_type.lower()],
             num_init_features=64,
@@ -210,3 +210,13 @@ def softmax_sq(array):
     This function takes in an array and returns the square softmax of the array
     """
     return array ** 2 / np.sum(array ** 2)
+
+
+def load_model_for_inference(model_path, init_features=64):
+
+    model = DenseNet(num_init_features=init_features)
+    model_params = torch.load(model_path, map_location=torch.device('cpu'))
+    model.load_state_dict(model_params['model_state_dict'])
+    model.eval()
+
+    return model
