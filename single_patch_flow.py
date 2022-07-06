@@ -14,7 +14,7 @@ import helpers.utils as utils
 from helpers.volumes import mark_patch_borders
 
 
-def convergence_check(offset: 'np.ndarray', patch_centres: list, success_rate: float, idx, max_iter: int = 10)\
+def convergence_check(offset: np.ndarray, patch_centres: list, success_rate: float, idx, max_iter: int = 10)\
                       -> (bool, float, str):
 
     if all(np.abs(d) < 2 for d in offset):
@@ -75,6 +75,7 @@ def main(params):
         file_string += f"centre: {centre}\n\n"
 
         # iterate until convergence
+        variance = []
         while True:
 
             break_val, success_rate, break_reason, idx = convergence_check(offset, patch_centres, success_rate, idx)
@@ -86,6 +87,8 @@ def main(params):
             patch = np.stack((patch_fixed, patch_offset), 0)
 
             e_d, model_output, predicted_probabilities = utils.patch_inference(model, patch, original_offsets)
+
+            variance.append(utils.calculate_variance(predicted_probabilities, original_offsets))
 
             offset_list.append(e_d)
 
@@ -105,10 +108,6 @@ def main(params):
 
         file_string += break_reason
 
-        plt.close(1)
-        plt.close(2)
-        visualisations.plot_offset_convergence(initial_offset, offset_list)
-
         # with open(
         #         f"/Users/fryderykkogl/Dropbox (Partners HealthCare)/DL/Experiments/mr patch convergence/"
         #         f"centre{centre}_{initial_offset}.txt",
@@ -116,6 +115,11 @@ def main(params):
         #     f.write(file_string)
 
         print("\n\n\n" + file_string)
+        print(f"\n{variance}")
+
+        plt.close(1)
+        plt.close(2)
+        visualisations.plot_offset_convergence(initial_offset, offset_list)
 
         # create borders in volumes showing the patches
         centre_with_offset = list(np.array(centre).astype(int) + np.array(initial_offset).astype(int))

@@ -220,3 +220,20 @@ def load_model_for_inference(model_path, init_features=64):
     model.eval()
 
     return model
+
+
+def calculate_variance(predictions: np.ndarray, offsets: np.ndarray) -> np.ndarray:
+    """
+    This function calculates the variance of the predictions in x, y and z
+    Var(X) = E[X^2] - E[X]^2
+    :param predictions: the predictions
+    :param offsets: the offsets
+    :return: the variance vector
+    """
+
+    e_d = np.matmul(predictions, offsets)
+
+    variance = np.dot(predictions, (offsets - e_d) ** 2)
+
+    return variance
+
