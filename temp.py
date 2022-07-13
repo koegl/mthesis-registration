@@ -1,19 +1,31 @@
+import helpers.visualisations as visualisations
+from helpers.volumes import mark_patch_borders
+import nibabel as nib
 import numpy as np
 
-import helpers.visualisations as visualisations
 
+fixed = np.load("/Users/fryderykkogl/Data/patches/offset_volumes/49.npy")
+offset = np.load("/Users/fryderykkogl/Data/patches/offset_volumes/50_49.npy")
+# _ = visualisations.display_volume_slice(skin, 0)
 
-volume_fixed = np.load("/Users/fryderykkogl/Data/patches/offset_volumes/49.npy")
-volume_offset = np.load("/Users/fryderykkogl/Data/patches/offset_volumes/50_49.npy")
+fixed = np.swapaxes(fixed, 0, 2)
+offset = np.swapaxes(offset, 0, 2)
 
-# pad volume_offset with 16 pixels on the left side of x
-volume_offset = np.pad(volume_offset, ((12, 0), (0, 0), (0, 0)), constant_values=0)
-volume_offset = volume_offset.astype(np.float16)[:-12, :, :]
+# load patch centres
+patch_centres = np.load("/Users/fryderykkogl/Data/patches/val_npy/centres.npy")
+patch_centres = list(patch_centres)
+patch_centres = [list(x) for x in patch_centres]
 
-np.save("/Users/fryderykkogl/Data/patches/offset_volumes/50_49_pad_x12.npy", volume_offset)
+for centre in patch_centres:
 
-# combined = np.stack((volume_fixed, volume_offset), 0)
-#
-# visualisations.display_two_volume_slices(combined)
+    temp = centre.copy()
+
+    centre[0] = temp[2]
+    centre[2] = temp[0]
+
+    fixed = mark_patch_borders(fixed, centre, 1.0, 16)
+    offset = mark_patch_borders(offset, centre, 1.0, 16)
+
+_ = visualisations.display_two_volume_slices(np.stack((fixed, offset), 0))
 
 print(5)
