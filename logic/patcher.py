@@ -219,37 +219,25 @@ class Patcher:
 
         centres_list = []
 
-        # crop the volume to remove black borders
-        volume = crop_volume_borders(volume)
         volume_size = volume.shape
 
         # get maximum dimension
         max_dim = np.max(volume_size)
         dimension_factor = volume_size / max_dim  # so we have a uniform grid in all dimensions
 
+        offset_x = volume_size[0] / int(cpd * dimension_factor[0])
+        offset_y = volume_size[1] / int(cpd * dimension_factor[1])
+        offset_z = volume_size[2] / int(cpd * dimension_factor[2])
+
         # loop through the amount of centres per dimension with three nesting loops (one for each dimension)
         for i in range(int(cpd * dimension_factor[0])):
             for j in range(int(cpd * dimension_factor[1])):
                 for k in range(int(cpd * dimension_factor[2])):
 
-                    # calculate the factors, that is by how much we have to move the centre in each dimension
-                    factor_x = volume_size[0] // cpd
-                    factor_y = volume_size[1] // cpd
-                    factor_z = volume_size[2] // cpd
-
-                    # check if the function argument centres_per_dimension is greater than image size
-                    # if so, this would mean that we would try to extract 'subpixel' centres, so we set the factors to 1
-                    if cpd > volume_size[0]:
-                        factor_x = 1
-                    if cpd > volume_size[1]:
-                        factor_y = 1
-                    if cpd > volume_size[2]:
-                        factor_z = 1
-
-                    # multiply the factors with the indices to get the i,j,k centre
-                    centre_x = i * factor_x
-                    centre_y = j * factor_y
-                    centre_z = k * factor_z
+                    # multiply the offsets with the indices to get the i,j,k centre (starting at 16)
+                    centre_x = int(i * offset_x + 16)
+                    centre_y = int(j * offset_y + 16)
+                    centre_z = int(k * offset_z + 16)
 
                     # check for out of bounds
                     if centre_x < self.patch_size // 2 or centre_x > volume_size[0] - self.patch_size // 2:
@@ -260,7 +248,8 @@ class Patcher:
                         continue
 
                     # check if patch has in at least 25% of the volume non-black pixels
-                    # todo maybe also add this check at the very end
+                    # this is also done in the extraction itself, because due to the offset, the offset patch might
+                    # not contain enough non-black pixels
                     patch = volume[centre_x - self.patch_size // 2:centre_x + self.patch_size // 2,
                                    centre_y - self.patch_size // 2:centre_y + self.patch_size // 2,
                                    centre_z - self.patch_size // 2:centre_z + self.patch_size // 2]
@@ -270,7 +259,7 @@ class Patcher:
                     centre = [centre_x, centre_y, centre_z]
 
                     centres_list.append(centre)
-                    # return centres_list
+
         # randomise the order of the centres
         # random.shuffle(centres_list)
 
