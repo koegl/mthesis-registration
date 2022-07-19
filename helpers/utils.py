@@ -235,5 +235,5 @@ def calculate_variance(predictions: np.ndarray, offsets: np.ndarray) -> np.ndarr
 
     variance = np.dot(predictions, (offsets - e_d) ** 2)
 
-    return variance
+    return np.sum(variance)
 

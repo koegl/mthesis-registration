@@ -325,9 +325,9 @@ def plot_offset_convergence(initial_offset, aggregated_offsets):
                 (coors_prev[2], coors_new[2]),
                 color="r", linewidth=1)
 
-    ax.set_xlim3d(-20, 5)
-    ax.set_ylim3d(-20, 5)
-    ax.set_zlim3d(-20, 5)
+    ax.set_xlim3d(-16, 16)
+    ax.set_ylim3d(-16, 16)
+    ax.set_zlim3d(-16, 16)
 
     # label axes
     ax.set_xlabel("x")
