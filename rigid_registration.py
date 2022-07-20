@@ -1,14 +1,8 @@
-# script to test inference one patch at a time
 import argparse
 import numpy as np
-import torch
-from ast import literal_eval
 import matplotlib.pyplot as plt
-import glob
-import os
-import nibabel as nib
-import scipy.ndimage as nd
 from time import perf_counter
+from scipy.ndimage import affine_transform
 
 from logic.patcher import Patcher
 import helpers.visualisations as visualisations
@@ -81,13 +75,8 @@ def main(params):
     patcher = Patcher(load_directory="", save_directory="", file_type="nii.gz",
                       centres_per_dimension=6, perfect_truth=False, rescale=True, save_type="float16")
 
-    volume_fixed = np.load(params.fixed_volume_path)
-    volume_offset = np.load(params.offset_volume_path)
-
-    # volume_fixed = np.load(params.fixed_volume_path).astype(np.float32)
-    # volume_offset = np.load(params.offset_volume_path).astype(np.float32)
-    # volume_fixed_shift = nd.shift(volume_fixed, (0, 16, 0))
-    # _ = visualisations.display_two_volume_slices(np.stack((volume_fixed, volume_fixed_shift), axis=0))
+    volume_fixed = np.load(params.fixed_volume_path).astype(np.float32)
+    volume_offset = np.load(params.offset_volume_path).astype(np.float32)
 
     model = utils.load_model_for_inference(params.model_path)
 
@@ -104,13 +93,20 @@ def main(params):
 
     counter = 0
 
+    transform = np.eye(4)
+    transform[0:3, 3] = offset
+    volume_offset_t = affine_transform(volume_offset, transform)
+    volume_offset_t_original = np.copy(volume_offset_t)
+
     while True:
+        _ = visualisations.display_two_volume_slices(np.stack((volume_offset_t, volume_offset_t_original), 0))
 
         variance_list = []
         ed_list = []
 
         for centre in patch_centres:
-            patch_fixed, patch_offset = patcher.extract_overlapping_patches(volume_fixed, volume_offset, centre, offset)
+            patch_fixed, patch_offset = patcher.extract_overlapping_patches(volume_fixed, volume_offset_t, centre, None)
+            # patch_fixed, patch_offset = patcher.extract_overlapping_patches(volume_fixed, volume_offset, centre, offset)
             patch = np.stack((patch_fixed, patch_offset), 0)
 
             e_d, model_output, predicted_probabilities = utils.patch_inference(model, patch, original_offsets)
@@ -120,18 +116,21 @@ def main(params):
             ed_list.append(e_d)
             ss = 7
 
-        resulting_vector = calculate_resulting_vector(variance_list, ed_list, mode="inverse")
+        resulting_vector = calculate_resulting_vector(variance_list, ed_list, mode="oneminus")
 
         resulting_vector_list.append(resulting_vector)
 
         offset = offset - resulting_vector
+
+        transform[0:3, 3] = - np.sum(np.array(resulting_vector_list), 0)
+        volume_offset_t = affine_transform(volume_offset_t_original, transform)
 
         print(f"It: {counter+1}, predicted vector {resulting_vector}, current acc vector {np.sum(np.array(resulting_vector_list), 0)}, new offset {offset}")
         counter += 1
 
         if all(np.abs(offset[i]) <= 1 for i in range(3)) or counter >= 40:
             break
-        if all(np.abs(resulting_vector[i]) <= 0.2 for i in range(3)):
+        if counter >= 20 or all(np.abs(resulting_vector[i]) <= 0.2 for i in range(3)):
             break
 
     print(f"\n\n\nTrue vector: {initial_offset}")
