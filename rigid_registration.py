@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import glob
 import os
 import nibabel as nib
+import scipy.ndimage as nd
 from time import perf_counter
 
 from logic.patcher import Patcher
@@ -15,29 +16,29 @@ import helpers.utils as utils
 from helpers.volumes import mark_patch_borders
 
 
-def main(params):
-    fig = None
-    np.set_printoptions(suppress=True)
-    np.set_printoptions(formatter={'float': '{: 0.4f}'.format})
+def calculate_resulting_vector(variance_list, ed_list, mode="inverse"):
+    assert mode in ["inverse", "oneminus"], "mode must be either 'inverse' or 'oneminus'"
+    assert len(variance_list) == len(ed_list), "variance and ed lists must have the same length"
+    assert isinstance(variance_list, list), "variance list must be a list"
+    assert isinstance(ed_list, list), "ed list must be a list"
 
-    # generate patches
-    patcher = Patcher(load_directory="", save_directory="", file_type="nii.gz",
-                      centres_per_dimension=6, perfect_truth=False, rescale=True, save_type="float16")
+    variance_list = np.array(variance_list)
+    ed_list = np.array(ed_list)
 
-    volume_fixed = np.load(params.fixed_volume_path)
-    volume_offset = np.load(params.offset_volume_path)
+    if mode == "inverse":
+        variance = 1 / variance_list
+        resulting_vector = np.dot(variance, ed_list) / np.sum(variance)
+    else:
+        variance_list = variance_list / np.max(variance_list)
+        variance_list = 1 - variance_list
+        resulting_vector = np.dot(variance_list, ed_list) / np.sum(variance_list)
 
-    model = utils.load_model_for_inference(params.model_path)
+    return resulting_vector# * 1.5
 
-    original_offsets = patcher.offsets
-    original_offsets[0, :] = np.array([0., 0., 0.])
+
+def get_uniform_patch_centres(volume_size, cpd=10, patch_size=32):
 
     patch_centres = []
-
-    cpd = 10
-    patch_size = 32
-
-    volume_size = volume_fixed.shape
 
     # get maximum dimension
     max_dim = np.max(volume_size)
@@ -68,7 +69,34 @@ def main(params):
 
                 patch_centres.append(centre)
 
-    offset = np.array([2., -2., 0.])
+    return patch_centres
+
+
+def main(params):
+    fig = None
+    np.set_printoptions(suppress=True)
+    np.set_printoptions(formatter={'float': '{: 0.4f}'.format})
+
+    # generate patches
+    patcher = Patcher(load_directory="", save_directory="", file_type="nii.gz",
+                      centres_per_dimension=6, perfect_truth=False, rescale=True, save_type="float16")
+
+    volume_fixed = np.load(params.fixed_volume_path)
+    volume_offset = np.load(params.offset_volume_path)
+
+    # volume_fixed = np.load(params.fixed_volume_path).astype(np.float32)
+    # volume_offset = np.load(params.offset_volume_path).astype(np.float32)
+    # volume_fixed_shift = nd.shift(volume_fixed, (0, 16, 0))
+    # _ = visualisations.display_two_volume_slices(np.stack((volume_fixed, volume_fixed_shift), axis=0))
+
+    model = utils.load_model_for_inference(params.model_path)
+
+    original_offsets = patcher.offsets
+    original_offsets[0, :] = np.array([0., 0., 0.])
+
+    patch_centres = get_uniform_patch_centres(volume_fixed.shape)
+
+    offset = np.array([12., 16., 16.])
     initial_offset = offset.copy()
     resulting_vector_list = []
 
@@ -78,10 +106,7 @@ def main(params):
 
     while True:
 
-        if all(np.abs(offset[i]) <= 1 for i in range(3)) or counter >= 40:
-            break
-
-        variance = []
+        variance_list = []
         ed_list = []
 
         for centre in patch_centres:
@@ -90,27 +115,29 @@ def main(params):
 
             e_d, model_output, predicted_probabilities = utils.patch_inference(model, patch, original_offsets)
 
-            variance.append(utils.calculate_variance(predicted_probabilities, original_offsets))
+            variance_list.append(utils.calculate_variance(predicted_probabilities, original_offsets))
 
             ed_list.append(e_d)
             ss = 7
 
-        variance = np.array(variance)
-        variance = 1 - (variance / np.max(variance))
-        ed_list = np.array(ed_list)
+        resulting_vector = calculate_resulting_vector(variance_list, ed_list, mode="inverse")
 
-        resulting_vector = np.dot(variance, ed_list) / len(variance)
         resulting_vector_list.append(resulting_vector)
 
-        new_offset = offset - resulting_vector
-        offset = new_offset
+        offset = offset - resulting_vector
 
-        print(f"It: {counter}, predicted vector {resulting_vector}, current acc vector {np.sum(np.array(resulting_vector_list), 0)}, new offset {offset}")
+        print(f"It: {counter+1}, predicted vector {resulting_vector}, current acc vector {np.sum(np.array(resulting_vector_list), 0)}, new offset {offset}")
         counter += 1
+
+        if all(np.abs(offset[i]) <= 1 for i in range(3)) or counter >= 40:
+            break
+        if all(np.abs(resulting_vector[i]) <= 0.2 for i in range(3)):
+            break
 
     print(f"\n\n\nTrue vector: {initial_offset}")
     print(f"Resulting vector: {np.sum(np.array(resulting_vector_list), 0)}")
     print(f"Time: {perf_counter() - start} for {counter} iterations")
+    print(f"{len(patch_centres)} patches used")
 
     plt.close(1)
     visualisations.plot_offset_convergence(initial_offset, resulting_vector_list)
