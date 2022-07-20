@@ -237,3 +237,26 @@ def calculate_variance(predictions: np.ndarray, offsets: np.ndarray) -> np.ndarr
 
     return np.sum(variance)
 
+
+def calculate_affine_transform(points_in, points_out, weights=None):
+    if weights is None:
+        weights = [1.0, 1.0, 1.0, 1.0, 1.0]
+
+    assert points_in.shape[0] == points_out.shape[0]
+    assert points_in.shape[1] == 3 and points_out.shape[1] == 3
+    assert len(points_in.shape) == 2 and len(points_out.shape) == 2
+
+    # transform to homogeneous coordinates
+    points_in = np.hstack([points_in, np.ones((points_in.shape[0], 1))])
+    points_out = np.hstack([points_out, np.ones((points_out.shape[0], 1))])
+
+    # create a diagonal matrix with the sqrt of the weights
+    W = np.sqrt(np.diag(weights))
+
+    # combine the weights with the matrices
+    points_in_w = np.dot(W, points_in)
+    points_out_w = np.dot(points_out.T, W)
+
+    A_w, _, _, _ = np.linalg.lstsq(points_in_w, points_out_w.T)
+
+    return A_w.T
