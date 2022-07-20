@@ -1,4 +1,5 @@
 import numpy as np
+from numpy import sin, cos
 import nibabel as nib
 from scipy.ndimage.interpolation import map_coordinates
 from scipy.ndimage.filters import gaussian_filter
@@ -300,3 +301,22 @@ def mark_patch_borders(volume: 'np.ndarray', centre: list, border_value: float, 
     volume[centre[0] + d, bounds[2]:bounds[3], bounds[4]:bounds[5]] = border_value
 
     return volume
+
+
+def rot_vector_to_matrix(vector):
+    """
+    Rotation vector in radians gets converted to rotation matrix
+    :param vector:
+    :return:
+    """
+    a = vector[0]
+    b = vector[1]
+    c = vector[2]
+
+    rot = np.array(
+        [[cos(a) * cos(b), cos(a) * sin(b) * sin(c) - sin(a) * cos(c), cos(a) * sin(b) * cos(c) + sin(a) * sin(c)],
+         [sin(a) * cos(b), sin(a) * sin(b) * sin(c) + cos(a) * cos(c), sin(a) * sin(b) * cos(c) - cos(a) * sin(c)],
+         [-sin(b), cos(b) * sin(c), cos(b) * cos(c)]]
+    )
+
+    return rot
