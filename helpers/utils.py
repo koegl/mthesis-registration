@@ -55,7 +55,6 @@ def initialise_wandb(params, len_train, len_val, project="Classification", entit
 
 
 def get_architecture(params):
-
     architecture_type = params.architecture_type
 
     patch_size = get_patch_size_from_data_folder(params.train_dir)
@@ -162,7 +161,6 @@ def patch_inference(model, patches, offsets):
     from helpers.visualisations import visualise_per_class_accuracies
 
     with torch.no_grad():
-
         softmax = torch.nn.Softmax(dim=1)
 
         # transform patches into a batch
@@ -186,6 +184,117 @@ def patch_inference(model, patches, offsets):
         result = e_d.squeeze()
 
         return result, model_output.detach().squeeze().numpy(), predicted_probabilities
+
+
+def patch_inference_simple(model, patches):
+    """
+    This function does inference for a patch_pair
+    :param model: the pretrained model
+    :param patches: the patch pair
+    :return: predicted probabilities
+    """
+
+    with torch.no_grad():
+        softmax = torch.nn.Softmax(dim=1)
+
+        # transform patches into a batch
+        patches = torch.from_numpy(patches).float().unsqueeze(0)
+
+        # get model predictions on patches
+        model_output = model(patches)
+
+        predicted_probabilities = softmax(model_output).detach().cpu().numpy().squeeze()
+
+        return predicted_probabilities
+
+
+def calculate_ed_and_variance(predicted_probabilities: np.ndarray,
+                              offsets: np.ndarray,
+                              remove_unrelated: bool = True) -> (np.ndarray, np.ndarray, list):
+
+    assert len(predicted_probabilities) == len(offsets)
+
+    e_d = np.matmul(predicted_probabilities, offsets)
+    e_d = e_d.squeeze()
+
+    variance = np.dot(predicted_probabilities, (offsets - e_d) ** 2)
+    variance = np.sum(variance)
+
+    if remove_unrelated is False:
+        return e_d, variance
+
+    # get probability of unrelated
+    probability_unrelated = predicted_probabilities[0]
+
+    # remove unrelated offset from probabilities and rescale the rest
+    predicted_probabilities = predicted_probabilities[1:]
+    predicted_probabilities /= np.sum(predicted_probabilities)
+
+    # remove unrelated offset from offsets
+    offsets = offsets[1:]
+
+    # calculate the expected displacement
+    e_d = np.matmul(predicted_probabilities, offsets)
+
+    # calculate variance and rescale with the probability of unrelated
+    variance = np.dot(predicted_probabilities, (offsets - e_d) ** 2)
+    variance = np.sum(variance)
+    if probability_unrelated == 1:
+        variance = 10e10
+    else:
+        variance /= 1 - probability_unrelated
+
+    return e_d, variance
+
+
+def calculate_expected_displacement(predicted_probabilities: np.ndarray,
+                                    offsets: np.ndarray,
+                                    remove_unrelated: bool = True) -> np.ndarray:
+
+    assert len(predicted_probabilities) == len(offsets)
+
+    e_d = np.matmul(predicted_probabilities, offsets)
+    e_d = e_d.squeeze()
+
+    if remove_unrelated is False:
+        return e_d
+
+    # remove unrelated offset from probabilities and rescale the rest
+    probability_unrelated = predicted_probabilities[0]
+    predicted_probabilities = predicted_probabilities[1:]
+    predicted_probabilities /= np.sum(predicted_probabilities)
+
+    # remove unrelated offset from offsets
+    offsets = offsets[1:]
+
+    # calculate the expected displacement
+    e_d = np.matmul(predicted_probabilities, offsets)
+
+    return e_d
+
+
+def calculate_variance(predicted_probabilities: np.ndarray,
+                       offsets: np.ndarray,
+                       remove_unrelated: bool = True) -> np.ndarray:
+
+    e_d = np.matmul(predicted_probabilities, offsets)
+    e_d = e_d.squeeze()
+
+    if remove_unrelated is False:
+        return e_d
+
+    # remove unrelated offset from probabilities and rescale the rest
+    probability_unrelated = predicted_probabilities[0]
+    predicted_probabilities = predicted_probabilities[1:]
+    predicted_probabilities /= np.sum(predicted_probabilities)
+
+    # remove unrelated offset from offsets
+    offsets = offsets[1:]
+
+    # calculate the expected displacement
+    e_d = np.matmul(predicted_probabilities, offsets)
+
+    return e_d
 
 
 def get_patch_size_from_data_folder(data_path):
@@ -213,7 +322,6 @@ def softmax_sq(array):
 
 
 def load_model_for_inference(model_path, init_features=64):
-
     model = DenseNet(num_init_features=init_features)
     model_params = torch.load(model_path, map_location=torch.device('cpu'))
     model.load_state_dict(model_params['model_state_dict'])

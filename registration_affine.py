@@ -32,8 +32,11 @@ def calculate_resulting_vector(variance_list, ed_list, mode="inverse"):
 
 
 def main(params):
+    print("oneminus")
+
     np.set_printoptions(suppress=True)
     np.set_printoptions(formatter={'float': '{: 0.4f}'.format})
+    np.set_printoptions(precision=2)
 
     # create Patcher
     patcher = Patcher()
@@ -52,7 +55,7 @@ def main(params):
 
     counter = 0
 
-    transform = volumes.create_transform_matrix(0, 0, 0, 7, -5, 15)
+    transform = volumes.create_transform_matrix(0, 0, 0, 16, 16, 16)
     volume_offset_t = ndimage.affine_transform(volume_offset, transform)
     volume_offset_t_original = np.copy(volume_offset_t)
 
@@ -69,17 +72,22 @@ def main(params):
 
             patch = np.stack((patch_fixed, patch_offset), 0)
 
-            e_d, model_output, predicted_probabilities = utils.patch_inference(model, patch, original_offsets)
+            predicted_probabilities = utils.patch_inference_simple(model, patch)
 
-            variance_list.append(utils.calculate_variance(predicted_probabilities, original_offsets))
-
+            e_d, variance = utils.calculate_ed_and_variance(predicted_probabilities, original_offsets, remove_unrelated=True)
             ed_list.append(e_d)
+            variance_list.append(variance)
+
+        plt.show()
 
         points_in = np.array(patch_centres)
         temp_points_in = np.array(points_in)
         temp_ed_list = np.array(ed_list)
         points_out = temp_points_in + temp_ed_list
-        affine_transformation = utils.calculate_affine_transform(points_in, points_out, variance_list)
+
+        # weights = 1 / np.array(variance_list)
+        weights = 1 - (np.array(variance_list) / np.max(np.array(variance_list)))
+        affine_transformation = utils.calculate_affine_transform(points_in, points_out, weights)
 
         for ix, iy in np.ndindex(affine_transformation.shape):
             if np.abs(affine_transformation[ix, iy]) < 0.001:
@@ -111,7 +119,7 @@ def main(params):
     np.set_printoptions(formatter={'float': '{: 0.3f}'.format})
 
     print(f"\n\n\nTrue transform:\n{transform}\n")
-    print(f"Resulting transform:\n{compounded_transform}\n")
+    print(f"Resulting transform:\n{np.linalg.inv(compounded_transform)}\n")
     print(f"Time: {perf_counter() - start} for {counter} iterations")
     print(f"{len(patch_centres)} patches used")
 
