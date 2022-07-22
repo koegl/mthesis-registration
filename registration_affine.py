@@ -11,26 +11,6 @@ import helpers.utils as utils
 import helpers.volumes as volumes
 
 
-def calculate_resulting_vector(variance_list, ed_list, mode="inverse"):
-    assert mode in ["inverse", "oneminus"], "mode must be either 'inverse' or 'oneminus'"
-    assert len(variance_list) == len(ed_list), "variance and ed lists must have the same length"
-    assert isinstance(variance_list, list), "variance list must be a list"
-    assert isinstance(ed_list, list), "ed list must be a list"
-
-    variance_list = np.array(variance_list)
-    ed_list = np.array(ed_list)
-
-    if mode == "inverse":
-        variance = 1 / variance_list
-        resulting_vector = np.dot(variance, ed_list) / np.sum(variance)
-    else:
-        variance_list = variance_list / np.max(variance_list)
-        variance_list = 1 - variance_list
-        resulting_vector = np.dot(variance_list, ed_list) / np.sum(variance_list)
-
-    return resulting_vector
-
-
 def main(params):
     print("oneminus")
 
@@ -55,7 +35,8 @@ def main(params):
 
     counter = 0
 
-    transform = volumes.create_transform_matrix(0, 0, 0, 16, 16, 16)
+    transform = volumes.create_transform_matrix(0, 0, 0, 3, 16, -10)
+    # volume_offset_t = volumes.apply_affine_transform_sitk(volume_offset, transform)
     volume_offset_t = ndimage.affine_transform(volume_offset, transform)
     volume_offset_t_original = np.copy(volume_offset_t)
 
@@ -99,6 +80,7 @@ def main(params):
         compounded_transform[3, 2] = 0
         compounded_transform[3, 3] = 1
 
+        # volume_offset_t = volumes.apply_affine_transform_sitk(volume_offset_t_original, compounded_transform)
         volume_offset_t = ndimage.affine_transform(volume_offset_t_original, compounded_transform)
 
         print(f"It: {counter+1}\n"
@@ -113,7 +95,9 @@ def main(params):
         temp[2, 2] = 0
         temp[3, 3] = 0
 
-        if counter >= 20 or all(np.abs(temp[iy, ix]) <= 0.5 for iy, ix in np.ndindex(temp.shape)):
+        if counter >= 20 or \
+           all(np.abs(temp[iy, ix]) <= 0.5 for iy, ix in np.ndindex(temp.shape)) or \
+           any(np.abs(compounded_transform[i, 3]) >= 25 for i in range(3)):
             break
 
     np.set_printoptions(formatter={'float': '{: 0.3f}'.format})
