@@ -320,3 +320,17 @@ def rot_vector_to_matrix(vector):
     )
 
     return rot
+
+
+def create_transform_matrix(alpha, beta, gamma, dx, dy, dz):
+
+    rotation_matrix = rot_vector_to_matrix([alpha, beta, gamma])
+
+    transform = np.eye(4)
+
+    transform[0:3, 0:3] = rotation_matrix
+    transform[0:3, 3] = [dx, dy, dz]
+
+    transform[transform < 0] = 0
+
+    return transform
