@@ -36,8 +36,7 @@ def main(params):
     np.set_printoptions(formatter={'float': '{: 0.4f}'.format})
 
     # create Patcher
-    patcher = Patcher(load_directory="", save_directory="", file_type="nii.gz",
-                      centres_per_dimension=6, perfect_truth=False, rescale=True, save_type="float16")
+    patcher = Patcher()
 
     volume_fixed = np.load(params.fixed_volume_path).astype(np.float32)
     volume_offset = np.load(params.offset_volume_path).astype(np.float32)
@@ -49,16 +48,11 @@ def main(params):
 
     patch_centres = logic.patcher.Patcher.get_uniform_patch_centres(volume_fixed.shape)
 
-    offset = np.array([12., 16., 16.])
-    initial_offset = offset.copy()
-    resulting_vector_list = []
-
     start = perf_counter()
 
     counter = 0
 
-    transform = volumes.create_transform_matrix(0, 0, 0, 16, 16, 16)
-    # transform[0:3, 3] = offset
+    transform = volumes.create_transform_matrix(0, 0, 0, 7, -5, 15)
     volume_offset_t = ndimage.affine_transform(volume_offset, transform)
     volume_offset_t_original = np.copy(volume_offset_t)
 
@@ -72,7 +66,7 @@ def main(params):
 
         for centre in patch_centres:
             patch_fixed, patch_offset = patcher.extract_overlapping_patches(volume_fixed, volume_offset_t, centre, None)
-            # patch_fixed, patch_offset = patcher.extract_overlapping_patches(volume_fixed, volume_offset, centre, offset)
+
             patch = np.stack((patch_fixed, patch_offset), 0)
 
             e_d, model_output, predicted_probabilities = utils.patch_inference(model, patch, original_offsets)
@@ -80,9 +74,6 @@ def main(params):
             variance_list.append(utils.calculate_variance(predicted_probabilities, original_offsets))
 
             ed_list.append(e_d)
-            ss = 7
-
-        resulting_vector = calculate_resulting_vector(variance_list, ed_list, mode="oneminus")
 
         points_in = np.array(patch_centres)
         temp_points_in = np.array(points_in)
@@ -90,14 +81,15 @@ def main(params):
         points_out = temp_points_in + temp_ed_list
         affine_transformation = utils.calculate_affine_transform(points_in, points_out, variance_list)
 
+        for ix, iy in np.ndindex(affine_transformation.shape):
+            if np.abs(affine_transformation[ix, iy]) < 0.001:
+                affine_transformation[ix, iy] = 0.0
+
         compounded_transform = np.matmul(compounded_transform, np.linalg.inv(affine_transformation))
         compounded_transform[3, 0] = 0
         compounded_transform[3, 1] = 0
         compounded_transform[3, 2] = 0
         compounded_transform[3, 3] = 1
-        resulting_vector_list.append(resulting_vector)
-
-        offset = offset - resulting_vector
 
         volume_offset_t = ndimage.affine_transform(volume_offset_t_original, compounded_transform)
 
@@ -113,16 +105,15 @@ def main(params):
         temp[2, 2] = 0
         temp[3, 3] = 0
 
-        if counter >= 20 or all(np.abs(temp[iy, ix]) <= 0.3 for iy, ix in np.ndindex(temp.shape)):
+        if counter >= 20 or all(np.abs(temp[iy, ix]) <= 0.5 for iy, ix in np.ndindex(temp.shape)):
             break
 
-    print(f"\n\n\nTrue vector: {initial_offset}")
-    print(f"Resulting vector: {np.sum(np.array(resulting_vector_list), 0)}")
+    np.set_printoptions(formatter={'float': '{: 0.3f}'.format})
+
+    print(f"\n\n\nTrue transform:\n{transform}\n")
+    print(f"Resulting transform:\n{compounded_transform}\n")
     print(f"Time: {perf_counter() - start} for {counter} iterations")
     print(f"{len(patch_centres)} patches used")
-
-    plt.close(1)
-    visualisations.plot_offset_convergence(initial_offset, resulting_vector_list)
 
     print("\n\nDONE\n\n")
 
