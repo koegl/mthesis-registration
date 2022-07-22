@@ -336,3 +336,61 @@ def create_transform_matrix(alpha, beta, gamma, dx, dy, dz):
             transform[ix, iy] = 0.0
 
     return transform
+
+
+def apply_affine_transform_sitk(volume: 'np.ndarray', transform: 'np.ndarray') -> 'np.ndarray':
+
+    rotation_matrix = transform[0:3, 0:3]
+    translation = transform[0:3, 3]
+
+    transform = sitk.AffineTransform(3)
+    transform.SetMatrix(tuple(rotation_matrix.flatten()))
+    transform.SetTranslation(tuple(translation.flatten()))
+
+    sitk_volume = sitk.GetImageFromArray(volume, isVector=False)
+
+    # create resampler
+    resampler = sitk.ResampleImageFilter()
+    resampler.SetReferenceImage(sitk_volume)
+    resampler.SetInterpolator(sitk.sitkBSpline)
+    resampler.SetDefaultPixelValue(0)
+    resampler.SetTransform(transform)
+    resampler.SetDefaultPixelValue(0)
+
+    # deform the volume
+    deformed_volume = resampler.Execute(sitk_volume)
+    deformed_volume = sitk.GetArrayFromImage(deformed_volume)
+    deformed_volume = deformed_volume.astype(dtype=np.float32)
+
+    return deformed_volume
+
+
+def create_checkerboard(dimension, shape):
+    assert dimension == 2 or dimension == 3, 'dimension must be 2 or 3'
+    assert len(shape) == dimension, 'shape must be of length dimension'
+
+    for sh in shape:
+        assert sh % 10 == 0, 'shape must be divisible by 10'
+
+    # create 2D checkerboard
+    x = np.ones((shape[0]//10, shape[1]//10), dtype=float)
+    x[::2] = 0
+    x[:, ::2] = 1 - x[:, ::2]
+    checkerboard_2d = x.repeat(10, axis=0).repeat(10, axis=1)
+
+    if dimension == 2:
+        return checkerboard_2d
+
+    assert shape[2] % 20 == 0, 'shape must be divisible by 20'
+    assert shape[0] == shape[1], 'first 2 shapes must be a square'
+
+    # create 3D checkerboard
+    checkerboard_2d_r = np.rot90(checkerboard_2d)
+
+    checkerboard_2d_3 = np.tile(checkerboard_2d, (10, 1, 1))
+    checkerboard_2d_r_3 = np.tile(checkerboard_2d_r, (10, 1, 1))
+
+    packet = np.concatenate((checkerboard_2d_3, checkerboard_2d_r_3))
+    checkerboard_3d = np.tile(packet, (shape[2]//20, 1, 1))
+
+    return checkerboard_3d.T
