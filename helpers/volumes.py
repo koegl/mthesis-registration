@@ -331,6 +331,8 @@ def create_transform_matrix(alpha, beta, gamma, dx, dy, dz):
     transform[0:3, 0:3] = rotation_matrix
     transform[0:3, 3] = [dx, dy, dz]
 
-    transform[transform < 0] = 0
+    for ix, iy in np.ndindex(transform.shape):
+        if np.abs(transform[ix, iy]) < 0.001:
+            transform[ix, iy] = 0.0
 
     return transform
