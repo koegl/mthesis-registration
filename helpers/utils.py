@@ -330,7 +330,7 @@ def load_model_for_inference(model_path, init_features=64):
     return model
 
 
-def calculate_variance(predictions: np.ndarray, offsets: np.ndarray) -> np.ndarray:
+def calculate_variance_old(predictions: np.ndarray, offsets: np.ndarray) -> np.ndarray:
     """
     This function calculates the variance of the predictions in x, y and z
     Var(X) = E[X^2] - E[X]^2
