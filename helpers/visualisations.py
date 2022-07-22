@@ -7,12 +7,7 @@ from matplotlib.lines import Line2D
 import sys
 
 
-def display_two_volume_slices(volumes, title=None):
-
-    assert len(volumes.shape) == 4, "Volume must be 4D"
-
-    volume_0 = volumes[0, :, :, :]
-    volume_1 = volumes[1, :, :, :]
+def display_two_volume_slices(volume_0, volume_1, title=None):
 
     fig, ax = plt.subplots(1, 3, figsize=(8, 4), gridspec_kw={'width_ratios': [1, 1, 1.1]})
     # plt.subplots_adjust(top=0.2)
