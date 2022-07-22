@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from time import perf_counter
 from scipy.ndimage import affine_transform
 
+import logic.patcher
 from logic.patcher import Patcher
 import helpers.visualisations as visualisations
 import helpers.utils as utils
@@ -36,8 +37,7 @@ def main(params):
     np.set_printoptions(formatter={'float': '{: 0.4f}'.format})
 
     # generate patches
-    patcher = Patcher(load_directory="", save_directory="", file_type="nii.gz",
-                      centres_per_dimension=6, perfect_truth=False, rescale=True, save_type="float16")
+    patcher = Patcher()
 
     volume_fixed = np.load(params.fixed_volume_path).astype(np.float32)
     volume_offset = np.load(params.offset_volume_path).astype(np.float32)
@@ -47,7 +47,7 @@ def main(params):
     original_offsets = patcher.offsets
     original_offsets[0, :] = np.array([0., 0., 0.])
 
-    patch_centres = get_uniform_patch_centres(volume_fixed.shape)
+    patch_centres = logic.patcher.Patcher.get_uniform_patch_centres(volume_fixed.shape, cpd=10, patch_size=32)
 
     offset = np.array([12., 16., 16.])
     initial_offset = offset.copy()
