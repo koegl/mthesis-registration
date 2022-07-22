@@ -257,6 +257,6 @@ def calculate_affine_transform(points_in, points_out, weights=None):
     points_in_w = np.dot(W, points_in)
     points_out_w = np.dot(points_out.T, W)
 
-    A_w, _, _, _ = np.linalg.lstsq(points_in_w, points_out_w.T)
+    A_w, _, _, _ = np.linalg.lstsq(points_in_w, points_out_w.T, rcond=None)
 
     return A_w.T
