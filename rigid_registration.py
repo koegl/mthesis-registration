@@ -30,42 +30,6 @@ def calculate_resulting_vector(variance_list, ed_list, mode="inverse"):
     return resulting_vector# * 1.5
 
 
-def get_uniform_patch_centres(volume_size, cpd=10, patch_size=32):
-
-    patch_centres = []
-
-    # get maximum dimension
-    max_dim = np.max(volume_size)
-    dimension_factor = volume_size / max_dim  # so we have a uniform grid in all dimensions
-
-    offset_x = volume_size[0] / int(cpd * dimension_factor[0])
-    offset_y = volume_size[1] / int(cpd * dimension_factor[1])
-    offset_z = volume_size[2] / int(cpd * dimension_factor[2])
-
-    for i in range(int(cpd * dimension_factor[0])):
-        for j in range(int(cpd * dimension_factor[1])):
-            for k in range(int(cpd * dimension_factor[2])):
-
-                # multiply the offsets with the indices to get the i,j,k centre (starting at 16)
-                centre_x = int(i * offset_x + 16)
-                centre_y = int(j * offset_y + 16)
-                centre_z = int(k * offset_z + 16)
-
-                # check for out of bounds
-                if centre_x < patch_size or centre_x > volume_size[0] - patch_size:
-                    continue
-                if centre_y < patch_size or centre_y > volume_size[1] - patch_size:
-                    continue
-                if centre_z < patch_size or centre_z > volume_size[2] - patch_size:
-                    continue
-
-                centre = [centre_x, centre_y, centre_z]
-
-                patch_centres.append(centre)
-
-    return patch_centres
-
-
 def main(params):
     fig = None
     np.set_printoptions(suppress=True)
