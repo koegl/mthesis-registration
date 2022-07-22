@@ -12,7 +12,7 @@ from helpers.volumes import crop_volume_borders
 
 
 class Patcher:
-    def __init__(self, load_directory, save_directory, file_type, centres_per_dimension, perfect_truth,
+    def __init__(self, load_directory="", save_directory="", file_type="nii", centres_per_dimension=6, perfect_truth=False,
                  patch_size=32, scale_dist=1.5, offset_multiplier=4, rescale=False, save_type='uint8', offsets="default"):
         """
         :param load_directory: Directory with the niftis
